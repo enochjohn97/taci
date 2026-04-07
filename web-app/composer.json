@@ -1,0 +1,93 @@
+{
+    "name": "taci/petroleum-web-app",
+    "description": "TACI Petroleum Fuel Station Management System",
+    "type": "project",
+    "license": "proprietary",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.1",
+        "symfony/console": "^6.0",
+        "symfony/doctrine-bundle": "^2.5",
+        "symfony/dotenv": "^6.0",
+        "symfony/flex": "^2.0",
+        "symfony/form": "^6.0",
+        "symfony/framework-bundle": "^6.0",
+        "symfony/mailer": "^6.0",
+        "symfony/maker-bundle": "^1.44",
+        "symfony/messenger": "^6.0",
+        "symfony/monolog-bundle": "^3.8",
+        "symfony/orm-pack": "^2.2",
+        "symfony/security-bundle": "^6.0",
+        "symfony/serializer": "^6.0",
+        "symfony/twig-bundle": "^6.0",
+        "symfony/validator": "^6.0",
+        "symfony/var-dumper": "^6.0",
+        "symfony/webpack-encore-bundle": "^1.16",
+        "symfony/yaml": "^6.0",
+        "doctrine/orm": "^2.12",
+        "doctrine/doctrine-bundle": "^2.7",
+        "doctrine/doctrine-migrations-bundle": "^3.2",
+        "doctrine/fixtures-bundle": "^3.4",
+        "phpoffice/phpspreadsheet": "^1.25",
+        "dompdf/dompdf": "^2.0",
+        "twig/twig": "^3.0",
+        "twig/extra-bundle": "^3.0",
+        "intervention/image": "^2.7",
+        "symfony/http-client": "^6.0",
+        "guzzlehttp/guzzle": "^7.5",
+        "firebase/php-jwt": "^6.3",
+        "sensio/framework-extra-bundle": "^6.2",
+        "symfony/asset": "^6.0"
+    },
+    "require-dev": {
+        "symfony/debug-bundle": "^6.0",
+        "symfony/test-pack": "^1.0",
+        "phpunit/phpunit": "^9.5",
+        "phpstan/phpstan": "^1.9",
+        "squizlabs/php_codesniffer": "^3.7"
+    },
+    "config": {
+        "allow-plugins": {
+            "composer/package-versions-deprecated": true,
+            "symfony/flex": true,
+            "symfony/runtime": true
+        },
+        "optimize-autoloader": true,
+        "preferred-install": {
+            "*": "dist"
+        },
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "App\\Tests\\": "tests/"
+        }
+    },
+    "replace": {
+        "symfony/polyfill-ctype": "*",
+        "symfony/polyfill-iconv": "*",
+        "symfony/polyfill-php72": "*",
+        "symfony/polyfill-php73": "*",
+        "symfony/polyfill-php74": "*",
+        "symfony/polyfill-php80": "*",
+        "symfony/polyfill-php81": "*"
+    },
+    "scripts": {
+        "auto-scripts": {
+            "cache:clear": "symfony-cmd",
+            "assets:install %PUBLIC_DIR%": "symfony-cmd"
+        },
+        "post-install-cmd": [
+            "@auto-scripts"
+        ],
+        "post-update-cmd": [
+            "@auto-scripts"
+        ]
+    }
+}

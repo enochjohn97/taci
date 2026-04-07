@@ -1,0 +1,157 @@
+{# Role Selection Page #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Select Role - TACI Petroleum{% endblock %}
+
+{% block content %}
+<div class="container-fluid role-selection-page">
+    <div class="min-vh-100 d-flex align-items-center justify-content-center">
+        <div class="role-selection-container">
+            <div class="text-center mb-5">
+                <h1 class="display-4 fw-bold mb-3">
+                    <svg class="logo-icon" viewBox="0 0 40 40" width="50" height="50" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="40" height="40" fill="#F5A623" opacity="0.1"/>
+                        <path d="M20 5 L28 25 L20 35 L12 25 Z" fill="#F5A623"/>
+                    </svg>
+                    TACI Petroleum
+                </h1>
+                <p class="text-muted fs-5">Select Your Role to Continue</p>
+            </div>
+            
+            <div class="row g-4 justify-content-center">
+                <!-- Super Admin Card -->
+                <div class="col-md-4">
+                    <a href="{{ path('app_login') }}?role=super_admin" class="role-card role-card-admin text-decoration-none">
+                        <div class="role-card-content">
+                            <div class="role-icon">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <h3 class="role-title">Super Admin</h3>
+                            <p class="role-description">Full access to all modules and management features</p>
+                            <div class="role-features">
+                                <small class="d-block">✓ User Management</small>
+                                <small class="d-block">✓ System Settings</small>
+                                <small class="d-block">✓ Approvals & Reports</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Sub Admin Card -->
+                <div class="col-md-4">
+                    <a href="{{ path('app_login') }}?role=sub_admin" class="role-card role-card-subadmin text-decoration-none">
+                        <div class="role-card-content">
+                            <div class="role-icon">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <h3 class="role-title">Sub Admin</h3>
+                            <p class="role-description">Manage fuel operations and view analytics</p>
+                            <div class="role-features">
+                                <small class="d-block">✓ Fuel Management</small>
+                                <small class="d-block">✓ Dashboard Analytics</small>
+                                <small class="d-block">✓ Memo Communication</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Staff Card -->
+                <div class="col-md-4">
+                    <a href="{{ path('app_login') }}?role=staff" class="role-card role-card-staff text-decoration-none">
+                        <div class="role-card-content">
+                            <div class="role-icon">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <h3 class="role-title">Staff</h3>
+                            <p class="role-description">Store operations and inventory management</p>
+                            <div class="role-features">
+                                <small class="d-block">✓ Store/Receptionist</small>
+                                <small class="d-block">✓ Inventory Input</small>
+                                <small class="d-block">✓ Daily Operations</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="text-center mt-5">
+                <p class="text-muted">
+                    Need help? <a href="mailto:support@tacipetroleum.com">Contact Support</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .role-selection-page {
+        background: linear-gradient(135deg, #0A1628 0%, #050B14 100%);
+        min-height: 100vh;
+    }
+    
+    .role-card {
+        display: block;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        text-align: center;
+    }
+    
+    .role-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(245, 166, 35, 0.2);
+        border-color: #F5A623;
+    }
+    
+    .role-card-admin {
+        border-color: #007bff;
+    }
+    
+    .role-card-subadmin {
+        border-color: #6c757d;
+    }
+    
+    .role-card-staff {
+        border-color: #28a745;
+    }
+    
+    .role-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .role-card-admin .role-icon {
+        color: #007bff;
+    }
+    
+    .role-card-subadmin .role-icon {
+        color: #6c757d;
+    }
+    
+    .role-card-staff .role-icon {
+        color: #28a745;
+    }
+    
+    .role-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: #0A1628;
+    }
+    
+    .role-description {
+        color: #666;
+        margin-bottom: 1.5rem;
+    }
+    
+    .role-features {
+        text-align: left;
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}

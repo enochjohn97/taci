@@ -1,0 +1,92 @@
+{# templates/auth/login.html.twig #}
+{% extends "base.html.twig" %}
+
+{% block title %}{{ role_display }} Login - TACI Petroleum{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="card shadow-lg" style="width: 100%; max-width: 450px;">
+        <div class="card-header bg-primary text-white text-center py-4">
+            <h3 class="mb-0"><i class="bi bi-door-open"></i> {{ role_display }} Login</h3>
+        </div>
+        <div class="card-body p-5">
+            {% if error %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Login Failed!</strong> {{ error.messageKey|trans(error.messageData, 'security') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endif %}
+
+            <form method="post">
+                <div class="mb-3">
+                    <label for="username" class="form-label fw-bold">Username</label>
+                    <input type="text" 
+                           id="username" 
+                           name="username" 
+                           class="form-control form-control-lg" 
+                           value="{{ last_username }}" 
+                           required 
+                           autofocus
+                           placeholder="Enter your username">
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-bold">Password</label>
+                    <input type="password" 
+                           id="password" 
+                           name="password" 
+                           class="form-control form-control-lg" 
+                           required
+                           placeholder="Enter your password">
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" 
+                           class="form-check-input" 
+                           id="remember_me" 
+                           name="_remember_me">
+                    <label class="form-check-label" for="remember_me">
+                        Remember me
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                    <i class="bi bi-box-arrow-in-right"></i> Sign In
+                </button>
+
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+            </form>
+
+            <hr>
+
+            <div class="text-center">
+                <p class="text-muted mb-2">
+                    <a href="{{ path('app_password_recovery') }}">Forgot your password?</a>
+                </p>
+                <p class="text-muted">
+                    <small>
+                        <a href="{{ path('app_role_select') }}">← Back to Role Selection</a>
+                    </small>
+                </p>
+            </div>
+        </div>
+        <div class="card-footer text-center text-muted small py-3">
+            Test Credentials: <strong>{{ role == 'super-admin' ? 'superadmin' : (role == 'sub-admin' ? 'subadmin' : 'staff') }}</strong> / password
+        </div>
+    </div>
+</div>
+
+<style>
+    .min-vh-100 {
+        min-height: 100vh;
+    }
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
