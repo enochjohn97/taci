@@ -36,7 +36,7 @@ class LoyaltyController extends AbstractController
     }
 
     #[Route('/my-points', name: 'app_loyalty_my_points')]
-    #[IsGranted('ROLE_SUPER_ADMIN|ROLE_SUB_ADMIN|ROLE_STAFF')]
+    #[IsGranted('ROLE_SUPER_ADMIN|ROLE_SUB_ADMIN|ROLE_MANAGER|ROLE_STAFF')]
     public function myPoints(): Response
     {
         $user = $this->getUser();

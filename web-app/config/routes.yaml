@@ -1,0 +1,4 @@
+app_routes:
+  resource: ../src/Controller/
+  type: attribute
+  prefix: /

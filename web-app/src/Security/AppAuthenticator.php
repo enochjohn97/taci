@@ -34,17 +34,22 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
 
     public function authenticate(Request $request): Passport
     {
-        $username = $request->getPayload()->getString('username');
-        $password = $request->getPayload()->getString('password');
-        $csrf_token = $request->getPayload()->getString('_csrf_token');
+        $username = $request->request->getString('username', '');
+        $password = $request->request->getString('password', '');
+        $csrfToken = $request->request->getString('_csrf_token', '');
 
         $request->getSession()->set(SecurityRequestAttributes::LAST_USERNAME, $username);
+
+        $role = $request->attributes->get('role') ?? $request->query->get('role');
+        if ($role) {
+            $request->getSession()->set('LAST_LOGIN_ROLE', $role);
+        }
 
         return new Passport(
             new UserLoadingBadge('username', $username),
             new PasswordCredentials($password),
             [
-                new CsrfTokenBadge('authenticate', $csrf_token),
+                new CsrfTokenBadge('authenticate', $csrfToken),
                 new RememberMeBadge(),
             ]
         );
@@ -70,46 +75,66 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
             return new RedirectResponse($targetPath);
         }
 
-        // Redirect based on role
         $roles = $user->getRoles();
-        if (in_array('ROLE_SUPER_ADMIN', $roles)) {
+        if (in_array('ROLE_SUPER_ADMIN', $roles, true) || in_array('ROLE_SUB_ADMIN', $roles, true)) {
             return new RedirectResponse($this->urlGenerator->generate('app_dashboard'));
-        } elseif (in_array('ROLE_SUB_ADMIN', $roles)) {
-            return new RedirectResponse($this->urlGenerator->generate('app_dashboard'));
-        } else {
-            return new RedirectResponse($this->urlGenerator->generate('app_store_dashboard'));
         }
+
+        return new RedirectResponse($this->urlGenerator->generate('app_store_dashboard'));
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response
     {
-        $username = $request->getPayload()->getString('username');
-        
-        // Log failed login attempt
+        $username = $request->request->getString('username', '');
+        $ipAddress = $request->getClientIp() ?? '0.0.0.0';
+
         $attempt = new LoginAttempt();
         $attempt->setUsername($username);
-        $attempt->setIpAddress($request->getClientIp() ?? '0.0.0.0');
+        $attempt->setIpAddress($ipAddress);
         $attempt->setSuccessful(false);
         $this->em->persist($attempt);
         $this->em->flush();
 
-        // Check for rate limiting (5 failed attempts in 15 minutes)
-        $fifteenMinutesAgo = (new \DateTime())->modify('-15 minutes');
-        $failedAttempts = $this->em->getRepository(LoginAttempt::class)->count([
-            'username' => $username,
-            'ipAddress' => $request->getClientIp() ?? '0.0.0.0',
-            'successful' => false,
-        ]);
+        $fifteenMinutesAgo = (new \DateTimeImmutable())->modify('-15 minutes');
+        $failedAttempts = (int) $this->em->createQueryBuilder()
+            ->select('COUNT(a.id)')
+            ->from(LoginAttempt::class, 'a')
+            ->where('a.username = :username')
+            ->andWhere('a.ipAddress = :ipAddress')
+            ->andWhere('a.successful = false')
+            ->andWhere('a.attemptedAt > :since')
+            ->setParameters([
+                'username' => $username,
+                'ipAddress' => $ipAddress,
+                'since' => $fifteenMinutesAgo,
+            ])
+            ->getQuery()
+            ->getSingleScalarResult();
 
         if ($failedAttempts >= 5) {
-            throw new AuthenticationException('Too many failed login attempts. Please try again in 15 minutes.');
+            $request->getSession()->getFlashBag()->add('error', 'Too many failed login attempts. Please try again in 15 minutes.');
         }
 
-        return new RedirectResponse($this->urlGenerator->generate(self::LOGIN_ROUTE));
+        $routeParams = [];
+        $role = $request->attributes->get('role') ?? $request->query->get('role');
+        if ($role) {
+            $routeParams['role'] = str_replace('_', '-', strtolower($role));
+        }
+
+        if (empty($routeParams)) {
+            return new RedirectResponse($this->urlGenerator->generate('app_role_select'));
+        }
+
+        return new RedirectResponse($this->urlGenerator->generate(self::LOGIN_ROUTE, $routeParams));
     }
 
     protected function getLoginUrl(Request $request): string
     {
-        return $this->urlGenerator->generate(self::LOGIN_ROUTE);
+        $role = $request->attributes->get('role') ?? $request->query->get('role');
+        if ($role) {
+            return $this->urlGenerator->generate(self::LOGIN_ROUTE, ['role' => str_replace('_', '-', strtolower($role))]);
+        }
+
+        return $this->urlGenerator->generate('app_role_select');
     }
 }

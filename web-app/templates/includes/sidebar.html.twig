@@ -53,7 +53,7 @@
         {% endif %}
 
         {# POS/Store #}
-        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_STAFF') %}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF') %}
             <li class="nav-item">
                 <a class="nav-link {% if app.request.get('_route') starts with 'app_pos' %}active{% endif %}" 
                    data-bs-toggle="collapse" href="#posMenu">
@@ -189,7 +189,7 @@
 
 .sidebar .nav-link.active {
     background-color: #007bff;
-}
+} 
 
 @media (max-width: 768px) {
     .sidebar {

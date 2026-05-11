@@ -21,7 +21,7 @@
             <div class="row g-4 justify-content-center">
                 <!-- Super Admin Card -->
                 <div class="col-md-4">
-                    <a href="{{ path('app_login') }}?role=super_admin" class="role-card role-card-admin text-decoration-none">
+                    <a href="{{ path('app_login', {'role': 'super-admin'}) }}" class="role-card role-card-admin text-decoration-none">
                         <div class="role-card-content">
                             <div class="role-icon">
                                 <i class="fas fa-crown"></i>
@@ -39,7 +39,7 @@
                 
                 <!-- Sub Admin Card -->
                 <div class="col-md-4">
-                    <a href="{{ path('app_login') }}?role=sub_admin" class="role-card role-card-subadmin text-decoration-none">
+                    <a href="{{ path('app_login', {'role': 'sub-admin'}) }}" class="role-card role-card-subadmin text-decoration-none">
                         <div class="role-card-content">
                             <div class="role-icon">
                                 <i class="fas fa-user-tie"></i>
@@ -57,7 +57,7 @@
                 
                 <!-- Staff Card -->
                 <div class="col-md-4">
-                    <a href="{{ path('app_login') }}?role=staff" class="role-card role-card-staff text-decoration-none">
+                    <a href="{{ path('app_login', {'role': 'staff'}) }}" class="role-card role-card-staff text-decoration-none">
                         <div class="role-card-content">
                             <div class="role-icon">
                                 <i class="fas fa-user"></i>

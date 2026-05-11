@@ -1,0 +1,17 @@
+parameters:
+  kernel.secret: "%env(APP_SECRET)%"
+
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    bind:
+      $paystackPublicKey: "%env(PAYSTACK_PUBLIC_KEY)%"
+      $paystackSecretKey: "%env(PAYSTACK_SECRET_KEY)%"
+      $adminEmail: "%env(ADMIN_EMAIL)%"
+      $mercureUrl: "%env(MERCURE_URL)%"
+      $mercureJwtSecret: "%env(MERCURE_JWT_SECRET)%"
+
+  App\:
+    resource: "../src/*"
+    exclude: "../src/{DependencyInjection,Entity,Tests,Kernel.php}"

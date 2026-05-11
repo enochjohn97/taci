@@ -51,6 +51,16 @@ class CreateDefaultUsersCommand extends Command
         $this->em->persist($subAdmin);
         $io->success('Created Sub Admin: subadmin / subadmin@123');
 
+        // Manager
+        $manager = new User();
+        $manager->setUsername('manager');
+        $manager->setEmail('manager@tacipetroleum.com');
+        $manager->setRole(UserRole::ROLE_MANAGER);
+        $hashedPassword = $this->passwordHasher->hashPassword($manager, 'manager@123');
+        $manager->setPassword($hashedPassword);
+        $this->em->persist($manager);
+        $io->success('Created Manager: manager / manager@123');
+
         // Staff
         $staff = new User();
         $staff->setUsername('staff');

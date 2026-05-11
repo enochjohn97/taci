@@ -1,16 +1,18 @@
 # TACI Petroleum - Web App Documentation
 
 ## Project Overview
+
 A complete fuel station management system built with PHP Symfony, PostgreSQL, and Bootstrap 5. Handles fuel quotas, inventory, POS, memos, loyalty programs, and reporting with role-based access control.
 
 ## 🏗️ Architecture
 
 ### Technology Stack
+
 - **Backend**: PHP 8.1+ with Symfony 6+
 - **Database**: PostgreSQL 12+
 - **Frontend**: Twig templates, Bootstrap 5, JavaScript (vanilla)
-- **APIs**: Paystack, Flutterwave, Firebase Cloud Messaging (FCM)
-- **Real-time**: Mercure for WebSockets
+- **APIs**: Paystack for secure payments
+- **Real-time**: Mercure for WebSocket notifications and PWA support
 - **PDF/Excel**: TCPDF/Dompdf, PhpSpreadsheet
 
 ## 📁 Project Structure
@@ -129,7 +131,7 @@ web-app/
 │   │   ├── security.yaml      # Authentication config
 │   │   ├── doctrine.yaml      # Database config
 │   │   ├── paystack.yaml      # Payment config
-│   │   └── firebase.yaml      # Notifications config
+│   │   └── session.yaml       # Session timeout config
 │   ├── services.yaml          # Service definitions
 │   ├── routes.yaml            # Route definitions
 │   └── bundles.php
@@ -149,6 +151,7 @@ web-app/
 ## 🔐 Role-Based Access Control (RBAC)
 
 ### Super Admin
+
 - ✓ Full access to all modules
 - ✓ Approve/decline memos, orders, transfers
 - ✓ Set fuel prices
@@ -157,6 +160,7 @@ web-app/
 - ✓ Audit logs
 
 ### Sub Admin
+
 - ✓ Dashboard (read-only analytics)
 - ✓ Fuel Management (input liters, view quota)
 - ✓ Memos (send/receive)
@@ -164,6 +168,7 @@ web-app/
 - ✓ Notifications
 
 ### Staff
+
 - ✓ Store module (receptionist)
 - ✓ Inventory input
 - ✓ Memos (receive only)
@@ -172,6 +177,7 @@ web-app/
 ## 🗄️ Database Schema
 
 ### Users Table
+
 ```sql
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -187,6 +193,7 @@ CREATE TABLE users (
 ```
 
 ### Fuel Entries Table
+
 ```sql
 CREATE TABLE fuel_entries (
     id SERIAL PRIMARY KEY,
@@ -197,6 +204,7 @@ CREATE TABLE fuel_entries (
 ```
 
 ### Products Table
+
 ```sql
 CREATE TABLE products (
     id SERIAL PRIMARY KEY,
@@ -212,6 +220,7 @@ CREATE TABLE products (
 ```
 
 ### Sales Table
+
 ```sql
 CREATE TABLE sales (
     id SERIAL PRIMARY KEY,
@@ -223,6 +232,7 @@ CREATE TABLE sales (
 ```
 
 ### Memos Table
+
 ```sql
 CREATE TABLE memos (
     id SERIAL PRIMARY KEY,
@@ -236,6 +246,7 @@ CREATE TABLE memos (
 ```
 
 ### Notifications Table
+
 ```sql
 CREATE TABLE notifications (
     id SERIAL PRIMARY KEY,
@@ -250,6 +261,7 @@ CREATE TABLE notifications (
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - PHP 8.1+
 - PostgreSQL 12+
 - Composer
@@ -258,18 +270,21 @@ CREATE TABLE notifications (
 ### Installation
 
 1. **Clone/Setup Repository**
+
 ```bash
 cd web-app
 composer install
 ```
 
 2. **Configure Environment**
+
 ```bash
 cp .env.example .env
 # Edit .env with your database credentials, API keys, etc.
 ```
 
 3. **Database Setup**
+
 ```bash
 php bin/console doctrine:database:create
 php bin/console doctrine:migrations:migrate
@@ -277,6 +292,7 @@ php bin/console doctrine:fixtures:load  # (optional, for demo data)
 ```
 
 4. **Create Admin User**
+
 ```bash
 php bin/console app:create-user superadmin superadmin@123 super_admin
 php bin/console app:create-user subadmin subadmin@123 sub_admin
@@ -284,6 +300,7 @@ php bin/console app:create-user staff staff@123 staff
 ```
 
 5. **Run Development Server**
+
 ```bash
 symfony server:start
 # Or with Symfony CLI not installed:
@@ -291,11 +308,13 @@ php -S localhost:8000 -t public
 ```
 
 6. **Access Application**
+
 - Landing Page: http://localhost:8000/
 - Web App: http://localhost:8000/web-app/login
 - Role Selection: http://localhost:8000/web-app/role-select
 
 ### Login Credentials
+
 - **Super Admin**: `superadmin` / `superadmin@123`
 - **Sub Admin**: `subadmin` / `subadmin@123`
 - **Staff**: `staff` / `staff@123`
@@ -303,34 +322,41 @@ php -S localhost:8000 -t public
 ## 📦 Key Features Implementation
 
 ### 1. Fuel Quota Engine
+
 - Location: `src/Service/FuelQuotaService.php`
 - Computes daily fuel allocation across configurable periods
 - Factors in good/bad days with multipliers
 - Generates PDF reports with projections
 
 ### 2. Store Module
+
 - POS system with barcode scanning
 - Real-time inventory deduction
 - Receipt generation (PDF)
 - Profit/loss calculation
 
 ### 3. Barcode Integration
+
 - QuaggaJS for browser-based scanning
 - Barcode generation using picqer library
 - Barcode display on receipts and labels
 
 ### 4. Payment Integration
-- Paystack API (cards, transfers)
-- Flutterwave API (alternative gateway)
-- Multiple payment methods (cash, card, USSD)
+
+- Paystack API with full card, transfer, and USSD support
+- Multiple payment methods (cash, card, USSD, bank transfers)
+- Secure webhook verification
+- Automatic payment status tracking
 
 ### 5. Memo System
+
 - Rich text editor (Quill.js)
 - File attachments (PDF, DOCX, XLSX, images)
 - Memo threading/replies
 - Super Admin approval workflow
 
 ### 6. Inventory Management
+
 - Real-time stock tracking
 - Low stock alerts with notifications
 - Automatic deduction on sales
@@ -338,13 +364,15 @@ php -S localhost:8000 -t public
 - Barcode label printing
 
 ### 7. Real-time Notifications
+
 - Mercure protocol for WebSocket updates
-- Firebase Cloud Messaging (FCM)
-- Browser push notifications
+- Browser push notifications via Service Worker PWA
 - In-app notification center
-- Notification history
+- Notification history and audit trail
+- Offline-first design with background sync
 
 ### 8. Loyalty Program
+
 - Points per liter/transaction
 - Customer tiers (Bronze, Silver, Gold, Platinum)
 - Tier-based discounts
@@ -352,6 +380,7 @@ php -S localhost:8000 -t public
 - Promotional campaigns
 
 ### 9. Reports & Analytics
+
 - Sales reports (daily, weekly, monthly, yearly)
 - Profit/loss analysis
 - Fuel quota vs. actual sales comparison
@@ -359,6 +388,7 @@ php -S localhost:8000 -t public
 - Multi-format export (PDF, Excel, CSV, DOCX)
 
 ### 10. Security
+
 - Symfony Security Bundle
 - CSRF protection
 - Bcrypt password hashing
@@ -370,39 +400,48 @@ php -S localhost:8000 -t public
 ## 🔧 Configuration
 
 ### Environment Variables (.env)
+
 ```
 DATABASE_URL="postgresql://user:password@localhost:5432/taci_db"
-PAYSTACK_SECRET_KEY="sk_live_..."
-FLUTTERWAVE_SECRET_KEY="FLWSECK_LIVE_..."
-FIREBASE_API_KEY="..."
+PAYSTACK_PUBLIC_KEY="pk_live_your_key"
+PAYSTACK_SECRET_KEY="sk_live_your_key"
 MERCURE_URL="http://localhost:3000"
+MERCURE_PUBLIC_URL="http://localhost:3000"
+MERCURE_JWT_SECRET="your-256-bit-secret"
 MAILER_DSN="smtp://user:password@smtp.gmail.com:587"
+JWT_SECRET="your-256-bit-jwt-secret"
+SESSION_TIMEOUT=3600
 ```
 
 ### Services Configuration
+
 Edit `config/services.yaml` to register custom services:
+
 ```yaml
 services:
   App\Service\FuelQuotaService:
     arguments:
       - '@Doctrine\ORM\EntityManagerInterface'
-      - '@service_container'
+      - "@service_container"
 ```
 
 ## 📱 Frontend
 
 ### Bootstrap 5
+
 - Pre-built responsive components
 - Dark mode support (CSS variables)
 - Mobile-first design
 
 ### JavaScript Utilities
+
 - Form validation
 - Barcode scanning (QuaggaJS)
 - Chart.js for analytics
 - DataTables for data management
 
 ### Custom Styling
+
 - CSS variables for theming
 - Dark mode toggle
 - Responsive grid system
@@ -411,6 +450,7 @@ services:
 ## 🚢 Deployment
 
 ### Production Checklist
+
 - [ ] Update `.env` with production credentials
 - [ ] Set `APP_ENV=prod` and `APP_DEBUG=false`
 - [ ] Run migrations: `php bin/console doctrine:migrations:migrate --env=prod`
@@ -421,6 +461,7 @@ services:
 - [ ] Configure CDN for static assets (optional)
 
 ### Docker Deployment
+
 ```bash
 docker-compose up -d
 ```
@@ -430,6 +471,7 @@ See `docker-compose.yml` for configuration.
 ## 🧪 Testing
 
 Run tests:
+
 ```bash
 php bin/phpunit
 ```
@@ -437,26 +479,31 @@ php bin/phpunit
 ## 📚 API Documentation
 
 ### Authentication Endpoints
+
 - `POST /api/login` — User login
 - `POST /api/logout` — User logout
 - `POST /api/refresh-token` — Refresh JWT token
 
 ### Fuel Management
+
 - `GET /api/fuel/quota` — Get fuel quota data
 - `POST /api/fuel/quota` — Create/update quota
 - `GET /api/fuel/stock` — Get current stock
 
 ### Sales
+
 - `POST /api/sales` — Create sale transaction
 - `GET /api/sales/{id}` — Get sale details
 - `POST /api/sales/{id}/receipt` — Generate receipt
 
 ### Memos
+
 - `POST /api/memos` — Create memo
 - `GET /api/memos` — Get user memos
 - `POST /api/memos/{id}/approve` — Approve memo (Super Admin only)
 
 ### Reports
+
 - `GET /api/reports/sales` — Sales report
 - `GET /api/reports/inventory` — Inventory report
 - `GET /api/reports/export` — Export to PDF/Excel
@@ -464,6 +511,7 @@ php bin/phpunit
 ## 🤝 Contributing
 
 Follow PSR-12 coding standards:
+
 ```bash
 php vendor/bin/phpcs --standard=PSR12 src/
 ```

@@ -1,0 +1,128 @@
+{# templates/admin/delegates/index.html.twig #}
+{% extends "base.html.twig" %}
+
+{% block title %}Manage Delegates - TACI Petroleum{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1 class="h3 d-inline-block">
+                <i class="fas fa-users-cog"></i> Sub-Admin Delegates
+            </h1>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{{ path('app_delegates_create') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create New Delegate
+            </a>
+        </div>
+    </div>
+
+    {% if app.flashes %}
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ type }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Active Delegates</h5>
+        </div>
+        <div class="card-body">
+            {% if delegates is empty %}
+                <p class="text-muted text-center py-4">
+                    No delegates created yet. <a href="{{ path('app_delegates_create') }}">Create one now</a>
+                </p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for delegate in delegates %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ delegate.username }}</strong>
+                                    </td>
+                                    <td>{{ delegate.email }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ delegate.status == 'active' ? 'success' : 'danger' }}">
+                                            {{ delegate.status|capitalize }}
+                                        </span>
+                                    </td>
+                                    <td>{{ delegate.createdAt|date('M d, Y') }}</td>
+                                    <td>
+                                        {% if delegate.lastLogin %}
+                                            {{ delegate.lastLogin|date('M d, Y H:i') }}
+                                        {% else %}
+                                            <span class="text-muted">Never</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ path('app_delegates_edit', {'id': delegate.id}) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#resetPasswordModal" data-delegate-id="{{ delegate.id }}" data-delegate-username="{{ delegate.username }}">
+                                            <i class="fas fa-key"></i>
+                                        </button>
+                                        <form action="{{ path('app_delegates_delete', {'id': delegate.id}) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure?')">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reset Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reset the password for <strong id="delegateUsernameDisplay"></strong>?</p>
+                <p class="text-muted small">A new temporary password will be generated.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="resetPasswordForm" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-warning">Reset Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('resetPasswordModal').addEventListener('show.bs.modal', function (e) {
+        const button = e.relatedTarget;
+        const delegateId = button.dataset.delegateId;
+        const delegateUsername = button.dataset.delegateUsername;
+        document.getElementById('delegateUsernameDisplay').textContent = delegateUsername;
+        document.getElementById('resetPasswordForm').action = '{{ path('app_delegates_reset_password', {'id': '__ID__'}) }}'.replace('__ID__', delegateId);
+    });
+</script>
+{% endblock %}

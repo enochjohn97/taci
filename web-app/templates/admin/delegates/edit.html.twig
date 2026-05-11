@@ -1,0 +1,71 @@
+{# templates/admin/delegates/edit.html.twig #}
+{% extends "base.html.twig" %}
+
+{% block title %}Edit Delegate - TACI Petroleum{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-edit"></i> Edit Delegate: {{ delegate.username }}</h5>
+                </div>
+                <div class="card-body p-5">
+                    <form method="POST" novalidate>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Username</label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   value="{{ delegate.username }}"
+                                   disabled>
+                            <small class="form-text text-muted">Username cannot be changed</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="email" class="form-label fw-bold">Email Address</label>
+                            <input type="email" 
+                                   class="form-control form-control-lg" 
+                                   id="email" 
+                                   name="email" 
+                                   value="{{ delegate.email }}"
+                                   placeholder="delegate@tacipetroleum.com">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="status" class="form-label fw-bold">Account Status</label>
+                            <select class="form-select form-select-lg" id="status" name="status">
+                                <option value="active" {% if delegate.status == 'active' %}selected{% endif %}>
+                                    Active
+                                </option>
+                                <option value="inactive" {% if delegate.status == 'inactive' %}selected{% endif %}>
+                                    Inactive
+                                </option>
+                                <option value="suspended" {% if delegate.status == 'suspended' %}selected{% endif %}>
+                                    Suspended
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Account Info</strong>
+                            <ul class="mb-0 mt-2">
+                                <li><strong>Created:</strong> {{ delegate.createdAt|date('F d, Y H:i') }}</li>
+                                <li><strong>Last Login:</strong> {% if delegate.lastLogin %}{{ delegate.lastLogin|date('F d, Y H:i') }}{% else %}Never{% endif %}</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <a href="{{ path('app_delegates_index') }}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

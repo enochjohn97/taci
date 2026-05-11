@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/memos')]
-#[IsGranted('ROLE_SUPER_ADMIN|ROLE_SUB_ADMIN|ROLE_STAFF')]
+#[IsGranted('ROLE_SUPER_ADMIN|ROLE_SUB_ADMIN|ROLE_MANAGER|ROLE_STAFF')]
 class MemoController extends AbstractController
 {
     public function __construct(private EntityManagerInterface $em) {}

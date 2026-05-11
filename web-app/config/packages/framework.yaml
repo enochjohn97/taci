@@ -1,0 +1,23 @@
+framework:
+  secret: "%env(APP_SECRET)%"
+  http_method_override: true
+  php_errors:
+    log: true
+
+  session:
+    handler_id: null
+    cookie_secure: auto
+    cookie_httponly: true
+    cookie_samesite: lax
+    gc_maxlifetime: 3600
+    cookie_lifetime: 3600
+    cookie_path: /
+    name: PHPSESSID
+
+  csrf_protection:
+    enabled: true
+
+  # Cache configuration
+  cache:
+    app: cache.adapter.filesystem
+    system: cache.adapter.filesystem

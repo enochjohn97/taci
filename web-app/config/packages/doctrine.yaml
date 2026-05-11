@@ -1,0 +1,26 @@
+doctrine:
+  dbal:
+    url: "%env(resolve:DATABASE_URL)%"
+    driver: "pdo_pgsql"
+    charset: utf8
+    server_version: "15"
+
+  orm:
+    auto_generate_proxy_classes: "%kernel.debug%"
+    auto_mapping: true
+    mappings:
+      App:
+        is_bundle: false
+        dir: "%kernel.project_dir%/src/Entity"
+        prefix: 'App\Entity'
+        alias: App
+
+when@test:
+  doctrine:
+    dbal:
+      url: "%env(resolve:DATABASE_URL_TEST)%"
+
+when@prod:
+  doctrine:
+    orm:
+      auto_generate_proxy_classes: false

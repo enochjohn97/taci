@@ -1,0 +1,79 @@
+# Project-wide ignores
+/.idea/
+/.vscode/
+/.history/
+/.DS_Store
+Thumbs.db
+
+# OS files
+*.log
+*.tmp
+*.swp
+*.swo
+*.bak
+*.cache
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Symfony / PHP
+/web-app/vendor/
+/web-app/.env
+/web-app/.env.local
+/web-app/.env.*.local
+/web-app/var/
+/web-app/public/bundles/
+/web-app/public/build/
+/web-app/public/hot
+/web-app/public/manifest.json
+/web-app/public/runtime.
+/web-app/public/hot
+/web-app/public/bundles/
+/web-app/public/build/
+/web-app/public/.htaccess
+/web-app/.sass-cache/
+
+# Composer
+/vendor/
+/composer.phar
+
+# PHPStorm / IDE
+/.idea/
+*.iml
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Build / distribution
+/dist/
+/build/
+
+# Landing page specific
+landing-page/.DS_Store
+landing-page/node_modules/
+landing-page/build/
+landing-page/dist/

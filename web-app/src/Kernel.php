@@ -4,15 +4,16 @@
 namespace App;
 
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
+use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 
 class Kernel extends BaseKernel
 {
     use MicroKernelTrait;
 
-    protected function configureContainer(): void
+    protected function configureContainer(ContainerConfigurator $container): void
     {
-        $container = $this->container;
         $confDir = $this->getProjectDir().'/config';
 
         $container->import($confDir.'/{packages}/*.yaml');
@@ -24,16 +25,16 @@ class Kernel extends BaseKernel
         }
     }
 
-    protected function configureRoutes(): void
+    protected function configureRoutes(RoutingConfigurator $routes): void
     {
         $confDir = $this->getProjectDir().'/config';
 
         if (is_file($confDir.'/routes.yaml')) {
-            $this->import($confDir.'/routes.yaml');
+            $routes->import($confDir.'/routes.yaml');
         }
 
-        if (is_file($confDir.'/routes/'.$this->environment.'.yaml')) {
-            $this->import($confDir.'/routes/'.$this->environment.'.yaml');
+        if (is_dir($confDir.'/routes/'.$this->environment)) {
+            $routes->import($confDir.'/routes/'.$this->environment.'/*.yaml');
         }
     }
 }

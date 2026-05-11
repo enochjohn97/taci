@@ -17,9 +17,18 @@
                 </div>
             {% endif %}
 
-            <form method="post">
+            <form method="post" id="login-form" action="{{ path('app_login', {'role': role}) }}">
+                {% if has_delegates and role in ['super-admin', 'sub-admin'] %}
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="delegateToggle" {% if role == 'sub-admin' %}checked{% endif %}>
+                        <label class="form-check-label" for="delegateToggle">
+                            Login as Delegate/Sub-Admin
+                        </label>
+                    </div>
+                {% endif %}
+
                 <div class="mb-3">
-                    <label for="username" class="form-label fw-bold">Username</label>
+                    <label id="username-label" for="username" class="form-label fw-bold">{{ role == 'sub-admin' ? 'Sub-Admin Username' : 'Username' }}</label>
                     <input type="text" 
                            id="username" 
                            name="username" 
@@ -27,7 +36,7 @@
                            value="{{ last_username }}" 
                            required 
                            autofocus
-                           placeholder="Enter your username">
+                           placeholder="{{ role == 'sub-admin' ? 'Sub-Admin username' : 'Enter your username' }}">
                 </div>
 
                 <div class="mb-4">
@@ -81,12 +90,49 @@
         min-height: 100vh;
     }
     body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #202c44 0%, #0a1628 100%);
     }
     .card {
         border: none;
-        border-radius: 15px;
+        border-radius: 18px;
         overflow: hidden;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(10px);
+    }
+    .form-check-label {
+        user-select: none;
     }
 </style>
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const delegateToggle = document.getElementById('delegateToggle');
+        const usernameLabel = document.getElementById('username-label');
+        const usernameInput = document.getElementById('username');
+        const loginForm = document.getElementById('login-form');
+
+        if (!delegateToggle || !loginForm) {
+            return;
+        }
+
+        const superLoginUrl = '{{ path('app_login', {'role': 'super-admin'}) }}';
+        const subLoginUrl = '{{ path('app_login', {'role': 'sub-admin'}) }}';
+
+        function updateLoginMode() {
+            if (delegateToggle.checked) {
+                loginForm.action = subLoginUrl;
+                usernameLabel.textContent = 'Sub-Admin Username';
+                usernameInput.placeholder = 'Sub-Admin username';
+            } else {
+                loginForm.action = superLoginUrl;
+                usernameLabel.textContent = 'Username';
+                usernameInput.placeholder = 'Enter your username';
+            }
+        }
+
+        delegateToggle.addEventListener('change', updateLoginMode);
+        updateLoginMode();
+    });
+</script>
 {% endblock %}

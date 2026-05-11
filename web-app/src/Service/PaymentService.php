@@ -10,16 +10,25 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * PaymentService - Handles payment processing via Paystack
+ * 
+ * This service manages:
+ * - Payment initialization
+ * - Transaction verification
+ * - Webhook handling
+ * - Refunds
+ */
 class PaymentService
 {
     private HttpClientInterface $httpClient;
+    private const PAYSTACK_API_URL = 'https://api.paystack.co';
 
     public function __construct(
         private EntityManagerInterface $em,
         private string $paystackPublicKey,
         private string $paystackSecretKey,
-        private string $flutterwavePublicKey,
-        private string $flutterwaveSecretKey,
+        private string $adminEmail,
     ) {
         $this->httpClient = HttpClient::create();
     }
@@ -35,18 +44,22 @@ class PaymentService
         $this->em->persist($payment);
         $this->em->flush();
 
+        // Get customer email from cashier (transaction handler)
+        $customerEmail = $sale->getCashier()->getEmail();
+
         $payload = [
-            'email' => 'customer@example.com', // TODO: Get from customer entity
+            'email' => $customerEmail,
             'amount' => (int) ($amount * 100), // Convert to kobo
-            'reference' => 'TXN-' . $payment->getId() . '-' . time(),
+            'reference' => 'TACI-' . $payment->getId() . '-' . time(),
             'metadata' => [
                 'payment_id' => $payment->getId(),
                 'sale_id' => $sale->getId(),
+                'store' => 'TACI Petroleum',
             ],
         ];
 
         try {
-            $response = $this->httpClient->request('POST', 'https://api.paystack.co/transaction/initialize', [
+            $response = $this->httpClient->request('POST', self::PAYSTACK_API_URL . '/transaction/initialize', [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $this->paystackSecretKey,
                     'Content-Type' => 'application/json',
@@ -59,6 +72,7 @@ class PaymentService
             if ($data['status'] ?? false) {
                 $payment->setReference($data['data']['reference']);
                 $payment->setTransactionId($data['data']['access_code']);
+                $payment->setGatewayResponse(json_encode($data['data']));
                 $this->em->flush();
 
                 return [
@@ -69,6 +83,9 @@ class PaymentService
                 ];
             }
         } catch (\Exception $e) {
+            $payment->setStatus('failed');
+            $payment->setGatewayResponse($e->getMessage());
+            $this->em->flush();
             return ['success' => false, 'error' => $e->getMessage()];
         }
 
@@ -78,7 +95,7 @@ class PaymentService
     public function verifyPaystackTransaction(string $reference): bool
     {
         try {
-            $response = $this->httpClient->request('GET', 'https://api.paystack.co/transaction/verify/' . $reference, [
+            $response = $this->httpClient->request('GET', self::PAYSTACK_API_URL . '/transaction/verify/' . urlencode($reference), [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $this->paystackSecretKey,
                 ],
@@ -87,7 +104,7 @@ class PaymentService
             $data = $response->toArray();
 
             if (($data['status'] ?? false) && ($data['data']['status'] ?? false) === 'success') {
-                $this->markPaymentAsCompleted($reference);
+                $this->markPaymentAsCompleted($reference, $data['data']);
                 return true;
             }
         } catch (\Exception $e) {
@@ -97,101 +114,24 @@ class PaymentService
         return false;
     }
 
-    public function initializeFlutterwaveTransaction(Sale $sale, float $amount): array
-    {
-        $payment = new Payment();
-        $payment->setSale($sale);
-        $payment->setMethod('card');
-        $payment->setAmount($amount);
-        $payment->setStatus('pending');
-
-        $this->em->persist($payment);
-        $this->em->flush();
-
-        $payload = [
-            'public_key' => $this->flutterwavePublicKey,
-            'tx_ref' => 'TXN-' . $payment->getId() . '-' . time(),
-            'amount' => $amount,
-            'currency' => 'NGN',
-            'payment_options' => 'card,ussd,bank_account',
-            'customer' => [
-                'email' => 'customer@example.com',
-                'phone_number' => '08000000000',
-                'name' => 'Customer',
-            ],
-            'customizations' => [
-                'title' => 'TACI Petroleum',
-                'logo' => 'https://tacipetroleum.com/logo.png',
-            ],
-        ];
-
-        try {
-            $response = $this->httpClient->request('POST', 'https://api.flutterwave.com/v3/payments', [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $this->flutterwaveSecretKey,
-                    'Content-Type' => 'application/json',
-                ],
-                'json' => $payload,
-            ]);
-
-            $data = $response->toArray();
-
-            if ($data['status'] === 'success') {
-                $payment->setReference($data['data']['link']);
-                $payment->setTransactionId($data['data']['id']);
-                $this->em->flush();
-
-                return [
-                    'success' => true,
-                    'link' => $data['data']['link'],
-                    'reference' => $data['data']['flw_ref'],
-                ];
-            }
-        } catch (\Exception $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
-        }
-
-        return ['success' => false, 'error' => 'Failed to initialize payment'];
-    }
-
-    public function verifyFlutterwaveTransaction(string $transactionId): bool
-    {
-        try {
-            $response = $this->httpClient->request('GET', 'https://api.flutterwave.com/v3/transactions/' . $transactionId . '/verify', [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $this->flutterwaveSecretKey,
-                ],
-            ]);
-
-            $data = $response->toArray();
-
-            if ($data['status'] === 'success' && $data['data']['status'] === 'successful') {
-                $this->markPaymentAsCompleted($data['data']['flw_ref']);
-                return true;
-            }
-        } catch (\Exception $e) {
-            return false;
-        }
-
-        return false;
-    }
-
-    private function markPaymentAsCompleted(string $reference): void
+    private function markPaymentAsCompleted(string $reference, array $gatewayData = []): void
     {
         $payment = $this->em->getRepository(Payment::class)
             ->findOneBy(['reference' => $reference]);
 
         if ($payment) {
-            $payment->markAsCompleted();
+            $payment->setStatus('completed');
+            $payment->setCompletedAt(new \DateTime());
+            $payment->setGatewayResponse(json_encode($gatewayData));
             $payment->getSale()->setStatus('completed');
 
-            // Notify admin
-            $notif = new Notification();
-            $notif->setUser($payment->getSale()->getCashier());
-            $notif->setType('payment_received');
-            $notif->setMessage('Payment of ₦' . number_format($payment->getAmount(), 2) . ' received');
-            $notif->setLink('/sales/' . $payment->getSale()->getId());
-            $this->em->persist($notif);
+            // Notify admin of payment completion
+            $adminNotif = new Notification();
+            $adminNotif->setUser($payment->getSale()->getCashier());
+            $adminNotif->setType('payment_received');
+            $adminNotif->setMessage('Payment of ₦' . number_format($payment->getAmount(), 2) . ' received for Sale #' . $payment->getSale()->getId());
+            $adminNotif->setLink('/sales/' . $payment->getSale()->getId());
+            $this->em->persist($adminNotif);
 
             $this->em->flush();
         }
@@ -205,16 +145,6 @@ class PaymentService
         }
 
         return $this->verifyPaystackTransaction($reference);
-    }
-
-    public function handleFlutterwaveWebhook(array $data): bool
-    {
-        $transactionId = $data['id'] ?? null;
-        if (!$transactionId) {
-            return false;
-        }
-
-        return $this->verifyFlutterwaveTransaction($transactionId);
     }
 
     public function processRefund(Payment $payment, float $amount): bool

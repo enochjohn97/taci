@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline - TACI Petroleum</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .container {
+        text-align: center;
+        padding: 2rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 500px;
+        width: 100%;
+      }
+      .icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 2rem;
+        background: #f3f4f6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+      }
+      h1 {
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+        font-size: 1.75rem;
+      }
+      p {
+        color: #6b7280;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+      }
+      .features {
+        text-align: left;
+        background: #f9fafb;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+      }
+      .features h3 {
+        color: #1f2937;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .features ul {
+        list-style: none;
+      }
+      .features li {
+        color: #6b7280;
+        padding: 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .features li:before {
+        content: "✓";
+        color: #10b981;
+        font-weight: bold;
+        font-size: 1.2rem;
+      }
+      .button {
+        display: inline-block;
+        padding: 0.75rem 2rem;
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: background 0.3s ease;
+        border: none;
+        cursor: pointer;
+        font-size: 0.95rem;
+      }
+      .button:hover {
+        background: #764ba2;
+      }
+      .button.secondary {
+        background: #e5e7eb;
+        color: #1f2937;
+        margin-left: 0.5rem;
+      }
+      .button.secondary:hover {
+        background: #d1d5db;
+      }
+      .reconnect-status {
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e5e7eb;
+        font-size: 0.85rem;
+        color: #9ca3af;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="icon">📡</div>
+      <h1>You're Offline</h1>
+      <p>
+        It looks like you've lost your internet connection. Don't worry, some
+        features are still available offline.
+      </p>
+
+      <div class="features">
+        <h3>Available Offline</h3>
+        <ul>
+          <li>View cached dashboard data</li>
+          <li>Check previous transactions</li>
+          <li>Review inventory snapshots</li>
+          <li>Read cached reports</li>
+        </ul>
+      </div>
+
+      <div>
+        <button class="button" onclick="tryReconnect()">Try Again</button>
+        <button class="button secondary" onclick="goHome()">Go Home</button>
+      </div>
+
+      <div class="reconnect-status">
+        We'll automatically notify you when you're back online.
+      </div>
+    </div>
+
+    <script>
+      function tryReconnect() {
+        location.reload();
+      }
+
+      function goHome() {
+        window.location.href = "/dashboard";
+      }
+
+      // Monitor connection status
+      window.addEventListener("online", function () {
+        console.log("Connection restored");
+        const status = document.querySelector(".reconnect-status");
+        status.textContent = "Connection restored! Reloading...";
+        status.style.color = "#10b981";
+        setTimeout(() => {
+          location.reload();
+        }, 2000);
+      });
+
+      window.addEventListener("offline", function () {
+        console.log("Connection lost");
+      });
+
+      // Check connection periodically
+      setInterval(function () {
+        fetch("/offline.html", { method: "HEAD", cache: "no-cache" })
+          .then(() => {
+            if (navigator.onLine) {
+              location.reload();
+            }
+          })
+          .catch(() => {
+            // Still offline
+          });
+      }, 10000);
+    </script>
+  </body>
+</html>
