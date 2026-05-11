@@ -40,8 +40,11 @@ try {
     $response->send();
     $kernel->terminate($request, $response);
 } catch (\Exception $e) {
-    // Fallback demo page if error
-    http_response_code(200);
-    include __DIR__ . '/demo.html';
+    // Basic error page if something fails
+    http_response_code(500);
+    echo "<h1>System Error</h1><p>The system encountered an error. Please contact administrator.</p>";
+    if (($_ENV['APP_DEBUG'] ?? true)) {
+        echo "<pre>" . $e->getMessage() . "\n" . $e->getTraceAsString() . "</pre>";
+    }
 }
 

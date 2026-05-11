@@ -1,7 +1,17 @@
 {# templates/dashboard/index.html.twig #}
 {% extends "base.html.twig" %}
 
-{% block title %}Dashboard - TACI Petroleum{% endblock %}
+{% set view_mode = view_mode|default('dashboard') %}
+
+{% block title %}
+    {% if view_mode == 'inventory_dashboard' %}Inventory - TACI Petroleum
+    {% elseif view_mode == 'fuel_dashboard' %}Fuel - TACI Petroleum
+    {% elseif view_mode == 'memo_dashboard' %}Memos - TACI Petroleum
+    {% elseif view_mode == 'pos_dashboard' %}POS - TACI Petroleum
+    {% elseif view_mode == 'reports_dashboard' %}Reports - TACI Petroleum
+    {% else %}Dashboard - TACI Petroleum
+    {% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="page-header d-print-none">
@@ -9,165 +19,219 @@
         <div class="row align-items-center">
             <div class="col">
                 <h2 class="page-title mt-4">
-                    <i class="bi bi-speedometer2"></i> Dashboard
+                    {% if view_mode == 'dashboard' %}<i class="bi bi-speedometer2"></i> Dashboard
+                    {% elseif view_mode starts with 'inventory' %}<i class="bi bi-box-seam"></i> Inventory Management
+                    {% elseif view_mode starts with 'fuel' %}<i class="bi bi-fuel-pump"></i> Fuel Management
+                    {% elseif view_mode starts with 'memo' %}<i class="bi bi-envelope-paper"></i> Internal Memos
+                    {% elseif view_mode starts with 'pos' %}<i class="bi bi-cart4"></i> Point of Sale
+                    {% elseif view_mode starts with 'reports' %}<i class="bi bi-graph-up"></i> Business Intelligence
+                    {% elseif view_mode starts with 'loyalty' %}<i class="bi bi-star"></i> Loyalty Program
+                    {% elseif view_mode starts with 'notifications' %}<i class="bi bi-bell"></i> Notifications
+                    {% else %}<i class="bi bi-grid"></i> System Module
+                    {% endif %}
                 </h2>
             </div>
         </div>
     </div>
 </div>
 
-<div class="page-wrapper">
+<div class="page-wrapper mt-4">
     <div class="container-xl">
-        <!-- Key Metrics -->
-        <div class="row row-deck row-cards">
-            <div class="col-sm-6 col-lg-3">
-                <div class="card">
-                    <div class="card-body">
+        
+        {# --- DASHBOARD VIEW --- #}
+        {% if view_mode == 'dashboard' %}
+            <div class="row row-deck row-cards">
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card p-3">
                         <div class="text-truncate">
-                            <h3 class="card-title">Today's Sales</h3>
+                            <h3 class="card-title text-muted">Today's Sales</h3>
                             <div class="h2">₦{{ total_sales_amount|number_format(2) }}</div>
-                            <div class="text-muted">
-                                {{ total_transactions }} transactions
-                            </div>
+                            <div class="small text-success">{{ total_transactions }} transactions</div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="col-sm-6 col-lg-3">
-                <div class="card">
-                    <div class="card-body">
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card p-3">
                         <div class="text-truncate">
-                            <h3 class="card-title">Low Stock Items</h3>
-                            <div class="h2">{{ low_stock_products|length }}</div>
-                            <div class="text-muted">
-                                Items below reorder level
-                            </div>
+                            <h3 class="card-title text-muted">Low Stock</h3>
+                            <div class="h2 text-warning">{{ low_stock_products|length }}</div>
+                            <div class="small text-muted">Items requiring restock</div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="col-sm-6 col-lg-3">
-                <div class="card">
-                    <div class="card-body">
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card p-3">
                         <div class="text-truncate">
-                            <h3 class="card-title">Notifications</h3>
-                            <div class="h2">{{ unread_notifications_count }}</div>
-                            <div class="text-muted">
-                                Unread messages
-                            </div>
+                            <h3 class="card-title text-muted">Unread Alerts</h3>
+                            <div class="h2 text-info">{{ unread_notifications_count }}</div>
+                            <div class="small text-muted">Recent updates</div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="col-sm-6 col-lg-3">
-                <div class="card">
-                    <div class="card-body">
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card p-3">
                         <div class="text-truncate">
-                            <h3 class="card-title">System Status</h3>
+                            <h3 class="card-title text-muted">System Status</h3>
                             <div class="h2"><span class="badge bg-success">Online</span></div>
-                            <div class="text-muted">
-                                All systems operational
-                            </div>
+                            <div class="small text-muted">All services operational</div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Low Stock Alert -->
-        {% if low_stock_products %}
-            <div class="row row-deck row-cards mt-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title"><i class="bi bi-exclamation-triangle"></i> Low Stock Alert</h3>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover card-table">
-                                <thead>
+            {% if low_stock_products %}
+                <div class="card mt-4">
+                    <div class="card-header border-bottom">
+                        <h3 class="card-title">Low Stock Alert</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover card-table m-0">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Stock</th>
+                                    <th>Reorder Level</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in low_stock_products %}
                                     <tr>
-                                        <th>Product Name</th>
-                                        <th>Category</th>
-                                        <th>Current Stock</th>
-                                        <th>Reorder Level</th>
-                                        <th>Action</th>
+                                        <td>{{ product.name }}</td>
+                                        <td><span class="text-danger">{{ product.stockQuantity }}</span></td>
+                                        <td>{{ product.reorderLevel }}</td>
+                                        <td><a href="#" class="btn btn-sm btn-outline-primary">Order</a></td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {% for product in low_stock_products %}
-                                        <tr>
-                                            <td>{{ product.name }}</td>
-                                            <td>{{ product.category }}</td>
-                                            <td>{{ product.stockQuantity }}</td>
-                                            <td>{{ product.reorderLevel }}</td>
-                                            <td>
-                                                <a href="#" class="btn btn-sm btn-primary">Restock</a>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                                {% endfor %}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
+            {% endif %}
+
+        {# --- INVENTORY VIEWS --- #}
+        {% elseif view_mode == 'inventory_dashboard' %}
+            <div class="row row-cards">
+                <div class="col-md-4">
+                    <div class="card p-4">
+                        <h3>Total Products: {{ total_products }}</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-4">
+                        <h3 class="text-warning">Low Stock: {{ low_stock_count }}</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card p-4">
+                        <h3>Stock Value: ₦{{ total_stock_value|number_format(2) }}</h3>
+                    </div>
+                </div>
+            </div>
+            <!-- Inventory Table Placeholder -->
+            <div class="card mt-4">
+                <div class="card-body text-center py-5">
+                    <p class="text-muted">Detailed inventory listing is being optimized for your desktop.</p>
+                    <a href="{{ path('app_inventory_products') }}" class="btn btn-primary">View All Products</a>
+                </div>
+            </div>
+
+        {# --- FUEL VIEWS --- #}
+        {% elseif view_mode == 'fuel_dashboard' %}
+            <div class="card p-5 text-center">
+                <h2>Fuel Management Dashboard</h2>
+                <p>Total Fuel Received: {{ total_fuel_received }} Liters</p>
+                <div class="mt-4">
+                    <a href="{{ path('app_fuel_entry') }}" class="btn btn-primary">Log New Entry</a>
+                </div>
+            </div>
+
+        {# --- MEMO VIEWS --- #}
+        {% elseif view_mode == 'memo_dashboard' %}
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="list-group">
+                        <a href="#" class="list-group-item list-group-item-action active">Inbox ({{ unread_count }})</a>
+                        <a href="#" class="list-group-item list-group-item-action">Sent</a>
+                        <a href="#" class="list-group-item list-group-item-action">Drafts</a>
+                    </div>
+                </div>
+                <div class="col-md-9">
+                    <div class="card p-4">
+                        <h3>Recent Memos</h3>
+                        <p class="text-muted italic">Secure, distraction-free internal communication.</p>
+                    </div>
+                </div>
+            </div>
+
+        {# --- POS VIEWS --- #}
+        {% elseif view_mode == 'pos_dashboard' or view_mode == 'pos_register' %}
+            <div class="card bg-dark border-primary p-5 text-center">
+                <h1 class="display-4 text-primary">Terminal Ready</h1>
+                <p class="lead">Select products to begin transaction.</p>
+                <div class="row mt-4">
+                    {% for product in products|slice(0, 8) %}
+                        <div class="col-md-3 mb-3">
+                            <div class="card h-100 p-2 text-center">
+                                <h6>{{ product.name }}</h6>
+                                <div class="text-primary fw-bold">₦{{ product.unitPrice|number_format(2) }}</div>
+                                <button class="btn btn-sm btn-primary mt-2">Add</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        {# --- ANALYTICS/REPORTS --- #}
+        {% elseif view_mode == 'analytics' or view_mode == 'reports_dashboard' %}
+            <div class="card p-4">
+                <h3>System Intelligence</h3>
+                <div class="mt-4" style="height: 400px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px dashed rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center;">
+                    <div class="text-center">
+                        <i class="bi bi-cpu" style="font-size: 3rem;"></i>
+                        <p class="mt-2">Real-time data visualization loading...</p>
+                    </div>
+                </div>
+            </div>
+
+        {# --- AUTH RECOVERY VIEWS --- #}
+        {% elseif view_mode == 'auth_password_recovery' %}
+            <div class="card p-5 mx-auto" style="max-width: 500px;">
+                <h3 class="text-center mb-4">Recover Password</h3>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="email" class="form-control" required placeholder="Enter your registered email">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Send Recovery Link</button>
+                </form>
+            </div>
+
+        {% elseif view_mode == 'auth_password_reset' %}
+            <div class="card p-5 mx-auto" style="max-width: 500px;">
+                <h3 class="text-center mb-4">Reset Password</h3>
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">New Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" name="confirm_password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Update Password</button>
+                </form>
+            </div>
+
+        {# --- FALLBACK --- #}
+        {% else %}
+            <div class="card p-5 text-center">
+                <h2 class="text-warning">Module Incomplete</h2>
+                <p>The <strong>{{ view_mode }}</strong> module is currently being refined for the distraction-free interface.</p>
+                <a href="{{ path('app_dashboard') }}" class="btn btn-outline-secondary mt-3">Return to Dashboard</a>
             </div>
         {% endif %}
-
-        <!-- Analytics Chart -->
-        <div class="row row-deck row-cards mt-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="bi bi-graph-up"></i> Sales Analytics</h3>
-                        <div class="card-options">
-                            <a href="{{ path('app_analytics') }}" class="btn btn-primary btn-sm">View Full Analytics</a>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <canvas id="salesChart" style="height: 300px;"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
+        
     </div>
 </div>
-
-<script>
-    // Chart.js setup - sample data
-    const ctx = document.getElementById('salesChart')?.getContext('2d');
-    if (ctx) {
-        const chart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Daily Sales (₦)',
-                    data: [12000, 19000, 3000, 5000, 2000, 3000, 15000],
-                    borderColor: '#0066cc',
-                    backgroundColor: 'rgba(0, 102, 204, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    }
-</script>
 {% endblock %}

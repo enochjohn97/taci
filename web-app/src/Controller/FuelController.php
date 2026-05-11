@@ -33,7 +33,8 @@ class FuelController extends AbstractController
 
         $totalFuelReceived = array_sum(array_map(fn($e) => $e->getLiterQuantity(), $entries));
 
-        return $this->render('fuel/dashboard.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'fuel_dashboard',
             'entries' => $entries,
             'reports' => $reports,
             'total_fuel_received' => $totalFuelReceived,
@@ -46,6 +47,10 @@ class FuelController extends AbstractController
         if ($request->isMethod('POST')) {
             $data = json_decode($request->getContent(), true);
             
+            if (!$data || !isset($data['liters'])) {
+                return $this->json(['error' => 'Invalid data: liters is required'], 400);
+            }
+            
             $entry = new FuelEntry();
             $entry->setLiterQuantity((float) $data['liters']);
             $entry->setUnitPrice((float) ($data['unitPrice'] ?? null));
@@ -57,13 +62,18 @@ class FuelController extends AbstractController
             return $this->json(['success' => true, 'entryId' => $entry->getId()]);
         }
 
-        return $this->render('fuel/entry.html.twig');
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'fuel_entry',
+        ]);
     }
 
     #[Route('/quota/compute', name: 'app_fuel_quota_compute', methods: ['POST'])]
     public function computeQuota(Request $request): Response
     {
         $data = json_decode($request->getContent(), true);
+        if (!$data || !isset($data['entryId'])) {
+            return $this->json(['error' => 'Invalid data: entryId is required'], 400);
+        }
         $entryId = $data['entryId'];
         $daysInPeriod = (int) ($data['daysInPeriod'] ?? 30);
         $goodDayMultiplier = (float) ($data['goodDayMultiplier'] ?? 1.2);
@@ -96,7 +106,8 @@ class FuelController extends AbstractController
     #[Route('/quota/{id}', name: 'app_fuel_quota_view')]
     public function viewQuota(FuelQuotaReport $report): Response
     {
-        return $this->render('fuel/quota-report.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'fuel_quota_view',
             'report' => $report,
         ]);
     }
@@ -135,7 +146,8 @@ class FuelController extends AbstractController
         $entries = $this->em->getRepository(FuelEntry::class)
             ->findBy([], ['createdAt' => 'DESC']);
 
-        return $this->render('fuel/price-history.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'fuel_price_history',
             'entries' => $entries,
         ]);
     }

@@ -32,7 +32,8 @@ class PosController extends AbstractController
     {
         $products = $this->em->getRepository(Product::class)->findAll();
         
-        return $this->render('pos/dashboard.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'pos_dashboard',
             'products' => $products,
         ]);
     }
@@ -42,7 +43,8 @@ class PosController extends AbstractController
     {
         $products = $this->em->getRepository(Product::class)->findAll();
         
-        return $this->render('pos/register.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'pos_register',
             'products' => $products,
         ]);
     }
@@ -83,15 +85,14 @@ class PosController extends AbstractController
     public function createTransaction(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $items = $data['items'] ?? [];
+        if (!$data || !isset($data['items'])) {
+            return $this->json(['error' => 'Invalid data: items are required'], JsonResponse::HTTP_BAD_REQUEST);
+        }
+        $items = $data['items'];
         $paymentMethod = $data['paymentMethod'] ?? 'cash';
         $discountAmount = (float) ($data['discountAmount'] ?? 0);
         $loyaltyPointsUsed = (float) ($data['loyaltyPointsUsed'] ?? 0);
         $customerId = $data['customerId'] ?? null;
-
-        if (empty($items)) {
-            return $this->json(['error' => 'No items in transaction'], JsonResponse::HTTP_BAD_REQUEST);
-        }
 
         $sale = new Sale();
         $sale->setCashier($this->getUser());
@@ -271,7 +272,8 @@ class PosController extends AbstractController
             $byMethod[$method]['amount'] += $sale->getTotalAmount();
         }
 
-        return $this->render('pos/daily-summary.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'pos_daily_summary',
             'total_revenue' => $totalRevenue,
             'total_transactions' => $totalTransactions,
             'average_transaction' => $averageTransaction,

@@ -27,10 +27,68 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    
-    <!-- Chart.js for Analytics -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS (Inlined to fix missing app.css) -->
+    <style>
+        :root {
+            --primary: #0066cc;
+            --primary-dark: #004d99;
+            --accent: #F5A623;
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar {
+            background: rgba(15, 23, 42, 0.9) !important;
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            color: var(--text-main);
+            transition: transform 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-link {
+            color: var(--text-muted) !important;
+        }
+
+        .nav-link.active {
+            color: white !important;
+            background: var(--primary) !important;
+        }
+
+        .badge-success {
+            background-color: #10b981;
+        }
+
+        /* Lightning-fast, distraction-free interface tweaks */
+        #main-content {
+            padding: 2rem;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
     
     {% block styles %}{% endblock %}
 </head>
@@ -54,29 +112,39 @@
         </div>
     {% else %}
         <main class="flex-grow-1" id="main-content">
-            {% include 'includes/alerts.html.twig' %}
-            {% block content %}{% endblock %}
+            <div class="container py-5">
+                {% include 'includes/alerts.html.twig' %}
+                {% block content %}{% endblock %}
+            </div>
         </main>
     {% endif %}
     
     <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-3 mt-5">
-        <p>&copy; 2026 TACI Petroleum Company Limited. All Rights Reserved.</p>
-        <p class="text-muted"><small>Built for Excellence.</small></p>
+    <footer class="bg-dark text-white text-center py-4 mt-5 border-top border-secondary">
+        <div class="container">
+            <p class="mb-1">&copy; 2026 TACI Petroleum Company Limited. All Rights Reserved.</p>
+            <p class="text-muted small">Bold discovery, refined for your desktop.</p>
+        </div>
     </footer>
     
     <!-- Bootstrap Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- User Context (for PWA) -->
-    {% if app.user %}
+    <!-- Custom JS (Inlined to fix missing app.js) -->
     <script>
-        window.userRoles = {{ app.user.roles|json_encode|raw }};
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('TACI Petroleum - Interface Loaded');
+            
+            // Auto-hide alerts after 5 seconds
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+        });
     </script>
-    {% endif %}
-    
-    <!-- Custom JS -->
-    <script src="{{ asset('js/app.js') }}"></script>
     
     <!-- PWA Initialization (Admin/SubAdmin only) -->
     {% if app.user and ('ROLE_SUPER_ADMIN' in app.user.roles or 'ROLE_SUB_ADMIN' in app.user.roles) %}

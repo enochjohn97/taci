@@ -47,7 +47,8 @@ class ReportsController extends AbstractController
             $salesByDate[$date] += $sale->getTotalAmount();
         }
 
-        return $this->render('reports/dashboard.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'reports_dashboard',
             'start_date' => $startDate,
             'end_date' => $endDate,
             'total_revenue' => $totalRevenue,
@@ -92,7 +93,8 @@ class ReportsController extends AbstractController
             $groupedSales[$key]['discount'] += $sale->getDiscountAmount();
         }
 
-        return $this->render('reports/sales.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'reports_sales',
             'period' => $period,
             'grouped_sales' => $groupedSales,
             'total_amount' => array_sum(array_map(fn($g) => $g['amount'], $groupedSales)),
@@ -123,7 +125,8 @@ class ReportsController extends AbstractController
             }
         }
 
-        return $this->render('reports/inventory.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'reports_inventory',
             'inventory' => $inventory,
             'total_value' => $totalValue,
             'low_stock_count' => $lowStockCount,
@@ -158,7 +161,8 @@ class ReportsController extends AbstractController
         $netProfit = $grossProfit - $totalDiscount;
         $profitMargin = $totalRevenue > 0 ? ($netProfit / $totalRevenue) * 100 : 0;
 
-        return $this->render('reports/profit-loss.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'reports_profit_loss',
             'start_date' => $startDate,
             'end_date' => $endDate,
             'total_revenue' => $totalRevenue,

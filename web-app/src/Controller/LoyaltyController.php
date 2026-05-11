@@ -29,7 +29,8 @@ class LoyaltyController extends AbstractController
         $stats = $this->loyaltyService->getLoyaltyStats();
         $topCustomers = $this->loyaltyService->getTopCustomers(10);
 
-        return $this->render('loyalty/dashboard.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'loyalty_dashboard',
             'stats' => $stats,
             'top_customers' => $topCustomers,
         ]);
@@ -42,7 +43,8 @@ class LoyaltyController extends AbstractController
         $user = $this->getUser();
         $loyalty = $this->loyaltyService->getOrCreateLoyaltyAccount($user);
 
-        return $this->render('loyalty/my-points.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'loyalty_my_points',
             'loyalty' => $loyalty,
         ]);
     }
@@ -53,7 +55,8 @@ class LoyaltyController extends AbstractController
     {
         $loyalty = $this->loyaltyService->getOrCreateLoyaltyAccount($customer);
 
-        return $this->render('loyalty/customer-loyalty.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'loyalty_customer_view',
             'customer' => $customer,
             'loyalty' => $loyalty,
         ]);
@@ -140,7 +143,8 @@ class LoyaltyController extends AbstractController
             ]
         ];
 
-        return $this->render('loyalty/tiers.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'loyalty_tiers',
             'tiers' => $tierBenefits,
         ]);
     }
@@ -169,7 +173,8 @@ class LoyaltyController extends AbstractController
             ]
         ];
 
-        return $this->render('loyalty/promotions.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'loyalty_promotions',
             'promotions' => $promotions,
         ]);
     }
@@ -217,7 +222,8 @@ class LoyaltyController extends AbstractController
             $totalRedeemed += $loyalty->getTotalPointsRedeemed();
         }
 
-        return $this->render('loyalty/reports.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'loyalty_reports',
             'by_tier' => $byTier,
             'total_points' => $totalPoints,
             'total_redeemed' => $totalRedeemed,

@@ -114,11 +114,12 @@ class AuthController extends AbstractController
                     ->from($this->getParameter('noreply_email'))
                     ->to($user->getEmail())
                     ->subject('Password Recovery - TACI Petroleum')
-                    ->html($this->renderView('auth/password-recovery-email.html.twig', [
-                        'user' => $user,
-                        'resetUrl' => $resetUrl,
-                        'expiresAt' => $passwordReset->getExpiresAt(),
-                    ]));
+                    ->html("
+                        <h1>Password Recovery</h1>
+                        <p>Hello, " . $user->getUsername() . "</p>
+                        <p>Click the link below to reset your password. It expires at " . $passwordReset->getExpiresAt()->format('H:i') . "</p>
+                        <p><a href='" . $resetUrl . "'>Reset Password</a></p>
+                    ");
 
                 $mailer->send($emailMessage);
             }
@@ -127,7 +128,9 @@ class AuthController extends AbstractController
             return $this->redirectToRoute('app_role_select');
         }
 
-        return $this->render('auth/password-recovery.html.twig');
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'auth_password_recovery',
+        ]);
     }
 
     #[Route('/password-reset/{token}', name: 'app_password_reset', methods: ['GET', 'POST'])]
@@ -181,7 +184,8 @@ class AuthController extends AbstractController
             return $this->redirectToRoute('app_login');
         }
 
-        return $this->render('auth/password-reset.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'auth_password_reset',
             'token' => $token,
         ]);
     }

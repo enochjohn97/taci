@@ -48,7 +48,8 @@ class MemoController extends AbstractController
         $unreadCount = $this->em->getRepository(MemoRecipient::class)
             ->count(['recipient' => $user, 'isRead' => false]);
 
-        return $this->render('memos/dashboard.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'memo_dashboard',
             'inbox' => $inbox,
             'sent' => $sent,
             'drafts' => $drafts,
@@ -61,6 +62,11 @@ class MemoController extends AbstractController
     {
         if ($request->isMethod('POST')) {
             $data = $request->request->all();
+            
+            if (empty($data['subject']) || empty($data['body'])) {
+                $this->addFlash('error', 'Subject and body are required');
+                return $this->redirectToRoute('app_memo_new');
+            }
             
             $memo = new Memo();
             $memo->setSender($this->getUser());
@@ -137,7 +143,8 @@ class MemoController extends AbstractController
             UserRole::ROLE_STAFF->value,
         ];
 
-        return $this->render('memos/form.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'memo_form',
             'users' => $users,
             'roles' => $roles,
         ]);
@@ -161,7 +168,8 @@ class MemoController extends AbstractController
         $replies = $this->em->getRepository(Memo::class)
             ->findBy(['parentMemo' => $memo], ['createdAt' => 'ASC']);
 
-        return $this->render('memos/view.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'memo_view',
             'memo' => $memo,
             'replies' => $replies,
         ]);

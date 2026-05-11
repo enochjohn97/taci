@@ -28,7 +28,8 @@ class NotificationController extends AbstractController
         $unreadCount = $this->em->getRepository(Notification::class)
             ->count(['user' => $user, 'isRead' => false]);
 
-        return $this->render('notifications/index.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'notifications_index',
             'notifications' => $notifications,
             'unread_count' => $unreadCount,
         ]);
@@ -130,6 +131,8 @@ class NotificationController extends AbstractController
     public function settings(): Response
     {
         // TODO: Implement notification preferences per user
-        return $this->render('notifications/settings.html.twig');
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'notifications_settings',
+        ]);
     }
 }

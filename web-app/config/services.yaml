@@ -1,5 +1,6 @@
 parameters:
   kernel.secret: "%env(APP_SECRET)%"
+  noreply_email: "noreply@taci-petroleum.com"
 
 services:
   _defaults:

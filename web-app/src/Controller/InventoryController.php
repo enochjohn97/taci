@@ -30,7 +30,8 @@ class InventoryController extends AbstractController
             $products
         ));
 
-        return $this->render('inventory/dashboard.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'inventory_dashboard',
             'total_products' => count($products),
             'low_stock_count' => count($lowStockProducts),
             'total_stock_value' => $totalStockValue,
@@ -58,7 +59,8 @@ class InventoryController extends AbstractController
 
         $products = $qb->getQuery()->getResult();
 
-        return $this->render('inventory/products.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'inventory_products',
             'products' => $products,
             'search' => $search,
             'category' => $category,
@@ -70,6 +72,11 @@ class InventoryController extends AbstractController
     {
         if ($request->isMethod('POST')) {
             $data = $request->request->all();
+            
+            if (empty($data['name']) || empty($data['barcode']) || empty($data['unitPrice'])) {
+                $this->addFlash('error', 'Product name, barcode, and unit price are required');
+                return $this->redirectToRoute('app_inventory_product_new');
+            }
 
             $product = new Product();
             $product->setName($data['name']);
@@ -88,7 +95,8 @@ class InventoryController extends AbstractController
             return $this->redirectToRoute('app_inventory_products');
         }
 
-        return $this->render('inventory/product-form.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'inventory_product_form',
             'edit' => false,
         ]);
     }
@@ -113,7 +121,8 @@ class InventoryController extends AbstractController
             return $this->redirectToRoute('app_inventory_products');
         }
 
-        return $this->render('inventory/product-form.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'inventory_product_form',
             'product' => $product,
             'edit' => true,
         ]);

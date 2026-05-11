@@ -54,6 +54,7 @@ class DashboardController extends AbstractController
             ->findBy(['user' => $user, 'isRead' => false]);
 
         return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'dashboard',
             'total_sales_amount' => $totalSalesAmount,
             'total_transactions' => $totalTransactions,
             'low_stock_products' => $lowStockProducts,
@@ -85,7 +86,8 @@ class DashboardController extends AbstractController
             $salesByDay[$day] += $sale->getTotalAmount();
         }
 
-        return $this->render('dashboard/analytics.html.twig', [
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'analytics',
             'sales_by_day' => json_encode($salesByDay),
         ]);
     }
