@@ -113,7 +113,7 @@ class AuthController extends AbstractController
                 $emailMessage
                     ->from($this->getParameter('noreply_email'))
                     ->to($user->getEmail())
-                    ->subject('Password Recovery - TACI Petroleum')
+                    ->subject('Password Recovery - ' . $this->getParameter('app_name'))
                     ->html("
                         <h1>Password Recovery</h1>
                         <p>Hello, " . $user->getUsername() . "</p>

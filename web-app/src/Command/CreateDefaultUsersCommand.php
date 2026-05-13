@@ -15,7 +15,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 #[AsCommand(
     name: 'app:create-default-users',
-    description: 'Creates default users for TACI Petroleum system',
+    description: 'Creates default users for the application',
 )]
 class CreateDefaultUsersCommand extends Command
 {

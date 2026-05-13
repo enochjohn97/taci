@@ -1,6 +1,7 @@
 parameters:
   kernel.secret: "%env(APP_SECRET)%"
   noreply_email: "%env(NOREPLY_EMAIL)%"
+  app_name: "%env(APP_NAME)%"
 
 services:
   _defaults:
