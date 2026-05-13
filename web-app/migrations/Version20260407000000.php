@@ -12,7 +12,7 @@ final class Version20260407000000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'Create TACI Petroleum database schema';
+        return 'Create database schema';
     }
 
     public function up(Schema $schema): void

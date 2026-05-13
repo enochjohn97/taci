@@ -190,7 +190,8 @@ class SettingsController extends AbstractController
         // TODO: Implement database backup logic
         // For now, return a placeholder response
         $timestamp = date('Y-m-d-H-i-s');
-        $filename = 'taci-petroleum-backup-' . $timestamp . '.sql';
+        $slug = strtoupper(preg_replace('/[^A-Za-z0-9]/', '-', ($_ENV['APP_NAME'] ?? 'APP')));
+        $filename = $slug . '-backup-' . $timestamp . '.sql';
 
         $this->addFlash('success', 'Database backup initiated: ' . $filename);
 
