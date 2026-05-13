@@ -52,7 +52,8 @@ class DelegateController extends AbstractController
 
             // Auto-generate username
             $firstName = explode(' ', trim($fullName))[0];
-            $randomSuffix = str_pad(mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
+            // Use cryptographically secure random suffix for uniqueness
+            $randomSuffix = str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
             $username = 'delegate_' . strtolower($firstName) . $randomSuffix;
 
             // Check for username uniqueness
@@ -201,13 +202,13 @@ class DelegateController extends AbstractController
      */
     private function generateTemporaryPassword(): string
     {
-        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz!@#$%';
-        $password = '';
-        
-        for ($i = 0; $i < 8; $i++) {
-            $password .= $chars[mt_rand(0, strlen($chars) - 1)];
-        }
-        
+        // Generate a 12-character cryptographically secure password
+        $bytes = random_bytes(9); // 9 bytes -> 12-character base64 without padding approx
+        $password = rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
+        // Ensure it contains an extra symbol for complexity
+        $symbols = '!@#$%&*?';
+        $password .= $symbols[random_int(0, strlen($symbols) - 1)];
+
         return $password;
     }
 }

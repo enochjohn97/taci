@@ -27,12 +27,7 @@ if (!isset($_ENV['APP_ENV'])) {
     }
 }
 
-// Set default DATABASE_URL if not set (for demo)
-if (!isset($_ENV['DATABASE_URL'])) {
-    $_ENV['DATABASE_URL'] = 'sqlite:///:memory:';
-    $_SERVER['DATABASE_URL'] = 'sqlite:///:memory:';
-    putenv('DATABASE_URL=sqlite:///:memory:');
-}
+// Do not set a default DATABASE_URL here. DATABASE_URL must be provided via environment (.env or server env).
 
 $kernel = new Kernel($_ENV['APP_ENV'] ?? 'dev', (bool) ($_ENV['APP_DEBUG'] ?? true));
 $request = Request::createFromGlobals();

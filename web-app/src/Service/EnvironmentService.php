@@ -48,14 +48,18 @@ class EnvironmentService
     {
         $request = $this->requestStack->getCurrentRequest();
         
-        if (!$request) {
-            return $_ENV['APP_URL'] ?? 'http://localhost:8000';
+        if ($request) {
+            $protocol = $request->isSecure() ? 'https' : 'http';
+            $host = $request->getHost();
+            return "{$protocol}://{$host}";
         }
 
-        $protocol = $request->isSecure() ? 'https' : 'http';
-        $host = $request->getHost();
-        
-        return "{$protocol}://{$host}";
+        // CLI context: require APP_URL to be set explicitly
+        if (empty($_ENV['APP_URL'])) {
+            throw new \RuntimeException('APP_URL environment variable is not set and current request is not available. Please set APP_URL.');
+        }
+
+        return rtrim($_ENV['APP_URL'], '/');
     }
 
     /**
@@ -71,11 +75,11 @@ class EnvironmentService
      */
     public function getMercureUrl(): string
     {
-        if ($this->isDevelopment()) {
-            return $_ENV['MERCURE_PUBLIC_URL'] ?? 'http://localhost:3000/.well-known/mercure';
+        if (empty($_ENV['MERCURE_PUBLIC_URL'])) {
+            throw new \RuntimeException('MERCURE_PUBLIC_URL environment variable is not set. Please configure Mercure public URL.');
         }
-        
-        return $_ENV['MERCURE_PUBLIC_URL'] ?? 'https://mercure.tacipetroleum.com/.well-known/mercure';
+
+        return rtrim($_ENV['MERCURE_PUBLIC_URL'], '/');
     }
 
     /**
@@ -95,7 +99,11 @@ class EnvironmentService
      */
     public function getDatabaseUrl(): string
     {
-        return $_ENV['DATABASE_URL'] ?? 'postgresql://postgres:password@127.0.0.1:5432/taci_petroleum_db';
+        if (empty($_ENV['DATABASE_URL'])) {
+            throw new \RuntimeException('DATABASE_URL environment variable is not set. Please configure DATABASE_URL in your environment.');
+        }
+
+        return $_ENV['DATABASE_URL'];
     }
 
     /**
@@ -119,7 +127,11 @@ class EnvironmentService
      */
     public function getAllowedHosts(): array
     {
-        $hosts = $_ENV['ALLOWED_HOSTS'] ?? 'localhost,127.0.0.1';
+        if (empty($_ENV['ALLOWED_HOSTS'])) {
+            throw new \RuntimeException('ALLOWED_HOSTS environment variable is not set. Please configure allowed hosts (comma-separated).');
+        }
+
+        $hosts = $_ENV['ALLOWED_HOSTS'];
         return array_map('trim', explode(',', $hosts));
     }
 
@@ -151,7 +163,11 @@ class EnvironmentService
     public function getCurrentHost(): string
     {
         $request = $this->requestStack->getCurrentRequest();
-        return $request?->getHost() ?? 'localhost';
+        if ($request) {
+            return $request->getHost();
+        }
+
+        throw new \RuntimeException('No current HTTP request available and ALLOWED_HOSTS is required for host resolution.');
     }
 
     /**
