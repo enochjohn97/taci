@@ -26,7 +26,7 @@ class ApprovalVoter extends Voter
         }
 
         // Only Super Admin and Sub Admin can approve
-        $allowedRoles = ['ROLE_SUPER_ADMIN', 'ROLE_SUB_ADMIN'];
+        $allowedRoles = ['ROLE_SUPER_ADMIN', 'ROLE_MANAGER'];
         $userRoles = $user->getRoles();
 
         if (!array_intersect($userRoles, $allowedRoles)) {
@@ -43,12 +43,12 @@ class ApprovalVoter extends Voter
     private function canApprove(User $user): bool
     {
         $userRoles = $user->getRoles();
-        return in_array('ROLE_SUPER_ADMIN', $userRoles) || in_array('ROLE_SUB_ADMIN', $userRoles);
+        return in_array('ROLE_SUPER_ADMIN', $userRoles) || in_array('ROLE_MANAGER', $userRoles);
     }
 
     private function canViewRequests(User $user): bool
     {
         $userRoles = $user->getRoles();
-        return in_array('ROLE_SUPER_ADMIN', $userRoles) || in_array('ROLE_SUB_ADMIN', $userRoles);
+        return in_array('ROLE_SUPER_ADMIN', $userRoles) || in_array('ROLE_MANAGER', $userRoles);
     }
 }

@@ -14,7 +14,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[IsGranted('ROLE_SUPER_ADMIN')]
+#[IsGranted('ROLE_SUPER_ADMIN|ROLE_MANAGER')]
 #[Route('/admin/delegates', name: 'app_delegates_')]
 class DelegateController extends AbstractController
 {
@@ -27,13 +27,14 @@ class DelegateController extends AbstractController
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
-        $delegates = $this->em->getRepository(User::class)->findByRole(UserRole::ROLE_SUB_ADMIN->value);
+        $delegates = $this->em->getRepository(User::class)->findByRole(UserRole::ROLE_MANAGER->value);
 
         return $this->render('admin/delegates/index.html.twig', [
             'delegates' => $delegates,
         ]);
     }
 
+    #[IsGranted('ROLE_SUPER_ADMIN')]
     #[Route('/create', name: 'create', methods: ['GET', 'POST'])]
     public function create(Request $request): Response
     {
@@ -67,7 +68,7 @@ class DelegateController extends AbstractController
             $delegate = new User();
             $delegate->setUsername($username);
             $delegate->setEmail($data['email'] ?? '');
-            $delegate->setRole(UserRole::ROLE_SUB_ADMIN);
+            $delegate->setRole(UserRole::ROLE_MANAGER);
             $delegate->setStatus('active');
 
             $hashedPassword = $this->passwordHasher->hashPassword($delegate, $tempPassword);
@@ -108,12 +109,13 @@ class DelegateController extends AbstractController
         ]);
     }
 
+    #[IsGranted('ROLE_SUPER_ADMIN')]
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
     public function edit(int $id, Request $request): Response
     {
         $delegate = $this->em->getRepository(User::class)->find($id);
         
-        if (!$delegate || $delegate->getRole() !== UserRole::ROLE_SUB_ADMIN) {
+        if (!$delegate || $delegate->getRole() !== UserRole::ROLE_MANAGER) {
             throw $this->createNotFoundException('Delegate not found.');
         }
 
@@ -135,12 +137,13 @@ class DelegateController extends AbstractController
         ]);
     }
 
+    #[IsGranted('ROLE_SUPER_ADMIN')]
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
     public function delete(int $id, Request $request): Response
     {
         $delegate = $this->em->getRepository(User::class)->find($id);
         
-        if (!$delegate || $delegate->getRole() !== UserRole::ROLE_SUB_ADMIN) {
+        if (!$delegate || $delegate->getRole() !== UserRole::ROLE_MANAGER) {
             throw $this->createNotFoundException('Delegate not found.');
         }
 
@@ -151,12 +154,13 @@ class DelegateController extends AbstractController
         return $this->redirectToRoute('app_delegates_index');
     }
 
+    #[IsGranted('ROLE_SUPER_ADMIN')]
     #[Route('/{id}/reset-password', name: 'reset_password', methods: ['POST'])]
     public function resetPassword(int $id, Request $request): Response
     {
         $delegate = $this->em->getRepository(User::class)->find($id);
         
-        if (!$delegate || $delegate->getRole() !== UserRole::ROLE_SUB_ADMIN) {
+        if (!$delegate || $delegate->getRole() !== UserRole::ROLE_MANAGER) {
             throw $this->createNotFoundException('Delegate not found.');
         }
 

@@ -18,17 +18,17 @@
             {% endif %}
 
             <form method="post" id="login-form" action="{{ path('app_login', {'role': role}) }}">
-                {% if has_delegates and role in ['super-admin', 'sub-admin'] %}
+                {% if has_delegates and role in ['super-admin', 'manager'] %}
                     <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="delegateToggle" {% if role == 'sub-admin' %}checked{% endif %}>
+                        <input type="checkbox" class="form-check-input" id="delegateToggle" {% if role == 'manager' %}checked{% endif %}>
                         <label class="form-check-label" for="delegateToggle">
-                            Login as Delegate/Sub-Admin
+                            Login as Delegate/Manager
                         </label>
                     </div>
                 {% endif %}
 
                 <div class="mb-3">
-                    <label id="username-label" for="username" class="form-label fw-bold">{{ role == 'sub-admin' ? 'Sub-Admin Username' : 'Username' }}</label>
+                    <label id="username-label" for="username" class="form-label fw-bold">{{ role == 'manager' ? 'Manager Username' : 'Username' }}</label>
                     <input type="text" 
                            id="username" 
                            name="username" 
@@ -36,7 +36,7 @@
                            value="{{ last_username }}" 
                            required 
                            autofocus
-                           placeholder="{{ role == 'sub-admin' ? 'Sub-Admin username' : 'Enter your username' }}">
+                           placeholder="{{ role == 'manager' ? 'Manager username' : 'Enter your username' }}">
                 </div>
 
                 <div class="mb-4">
@@ -80,7 +80,7 @@
             </div>
         </div>
         <div class="card-footer text-center text-muted small py-3">
-            Test Credentials: <strong>{{ role == 'super-admin' ? 'superadmin' : (role == 'sub-admin' ? 'subadmin' : 'staff') }}</strong> / password
+            Test Credentials: <strong>{{ role == 'super-admin' ? 'superadmin' : (role == 'manager' ? 'manager' : 'staff') }}</strong> / password
         </div>
     </div>
 </div>
@@ -117,13 +117,13 @@
         }
 
         const superLoginUrl = '{{ path('app_login', {'role': 'super-admin'}) }}';
-        const subLoginUrl = '{{ path('app_login', {'role': 'sub-admin'}) }}';
+        const managerLoginUrl = '{{ path('app_login', {'role': 'manager'}) }}';
 
         function updateLoginMode() {
             if (delegateToggle.checked) {
-                loginForm.action = subLoginUrl;
-                usernameLabel.textContent = 'Sub-Admin Username';
-                usernameInput.placeholder = 'Sub-Admin username';
+                loginForm.action = managerLoginUrl;
+                usernameLabel.textContent = 'Manager Username';
+                usernameInput.placeholder = 'Manager username';
             } else {
                 loginForm.action = superLoginUrl;
                 usernameLabel.textContent = 'Username';

@@ -23,7 +23,7 @@ class LoyaltyController extends AbstractController
     ) {}
 
     #[Route('', name: 'app_loyalty_dashboard')]
-    #[IsGranted('ROLE_SUPER_ADMIN|ROLE_SUB_ADMIN')]
+    #[IsGranted('ROLE_SUPER_ADMIN|ROLE_MANAGER')]
     public function dashboard(): Response
     {
         $stats = $this->loyaltyService->getLoyaltyStats();
@@ -37,7 +37,7 @@ class LoyaltyController extends AbstractController
     }
 
     #[Route('/my-points', name: 'app_loyalty_my_points')]
-    #[IsGranted('ROLE_SUPER_ADMIN|ROLE_SUB_ADMIN|ROLE_MANAGER|ROLE_STAFF')]
+    #[IsGranted('ROLE_SUPER_ADMIN|ROLE_MANAGER|ROLE_STAFF')]
     public function myPoints(): Response
     {
         $user = $this->getUser();
@@ -50,7 +50,7 @@ class LoyaltyController extends AbstractController
     }
 
     #[Route('/customer/{id}', name: 'app_loyalty_customer')]
-    #[IsGranted('ROLE_SUPER_ADMIN|ROLE_SUB_ADMIN')]
+    #[IsGranted('ROLE_SUPER_ADMIN|ROLE_MANAGER')]
     public function customerLoyalty(User $customer): Response
     {
         $loyalty = $this->loyaltyService->getOrCreateLoyaltyAccount($customer);
@@ -79,7 +79,7 @@ class LoyaltyController extends AbstractController
     }
 
     #[Route('/api/redeem-points/{customerId}', name: 'app_loyalty_redeem_points', methods: ['POST'])]
-    #[IsGranted('ROLE_SUPER_ADMIN|ROLE_SUB_ADMIN')]
+    #[IsGranted('ROLE_SUPER_ADMIN|ROLE_MANAGER')]
     public function redeemPoints(User $customer, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -113,7 +113,7 @@ class LoyaltyController extends AbstractController
     }
 
     #[Route('/tiers', name: 'app_loyalty_tiers')]
-    #[IsGranted('ROLE_SUPER_ADMIN|ROLE_SUB_ADMIN')]
+    #[IsGranted('ROLE_SUPER_ADMIN|ROLE_MANAGER')]
     public function tiers(): Response
     {
         $tierBenefits = [

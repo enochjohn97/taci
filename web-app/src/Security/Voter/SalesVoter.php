@@ -35,10 +35,10 @@ class SalesVoter extends Voter
         $userRoles = $user->getRoles();
 
         return match ($attribute) {
-            self::CREATE_SALE => in_array('ROLE_STAFF', $userRoles) || in_array('ROLE_MANAGER', $userRoles) || in_array('ROLE_SUB_ADMIN', $userRoles) || in_array('ROLE_SUPER_ADMIN', $userRoles),
-            self::VIEW_SALES => in_array('ROLE_STAFF', $userRoles) || in_array('ROLE_MANAGER', $userRoles) || in_array('ROLE_SUB_ADMIN', $userRoles) || in_array('ROLE_SUPER_ADMIN', $userRoles),
-            self::DELETE_SALE => in_array('ROLE_SUPER_ADMIN', $userRoles) || in_array('ROLE_SUB_ADMIN', $userRoles),
-            self::PROCESS_PAYMENT => in_array('ROLE_STAFF', $userRoles) || in_array('ROLE_MANAGER', $userRoles) || in_array('ROLE_SUB_ADMIN', $userRoles) || in_array('ROLE_SUPER_ADMIN', $userRoles),
+            self::CREATE_SALE => in_array('ROLE_STAFF', $userRoles) || in_array('ROLE_MANAGER', $userRoles) || in_array('ROLE_SUPER_ADMIN', $userRoles),
+            self::VIEW_SALES => in_array('ROLE_STAFF', $userRoles) || in_array('ROLE_MANAGER', $userRoles) || in_array('ROLE_SUPER_ADMIN', $userRoles),
+            self::DELETE_SALE => in_array('ROLE_SUPER_ADMIN', $userRoles) || in_array('ROLE_MANAGER', $userRoles),
+            self::PROCESS_PAYMENT => in_array('ROLE_STAFF', $userRoles) || in_array('ROLE_MANAGER', $userRoles) || in_array('ROLE_SUPER_ADMIN', $userRoles),
             default => false,
         };
     }

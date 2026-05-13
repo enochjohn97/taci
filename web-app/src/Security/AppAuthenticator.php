@@ -76,7 +76,7 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
         }
 
         $roles = $user->getRoles();
-        if (in_array('ROLE_SUPER_ADMIN', $roles, true) || in_array('ROLE_SUB_ADMIN', $roles, true)) {
+        if (in_array('ROLE_SUPER_ADMIN', $roles, true) || in_array('ROLE_MANAGER', $roles, true)) {
             return new RedirectResponse($this->urlGenerator->generate('app_dashboard'));
         }
 

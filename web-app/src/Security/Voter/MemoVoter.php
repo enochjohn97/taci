@@ -33,12 +33,14 @@ class MemoVoter extends Voter
         }
 
         $userRoles = $user->getRoles();
+        $isStaff = in_array('ROLE_STAFF', $userRoles);
+        $isManager = in_array('ROLE_MANAGER', $userRoles);
+        $isSuperAdmin = in_array('ROLE_SUPER_ADMIN', $userRoles);
+        $isElevated = $isManager || $isSuperAdmin;
 
         return match ($attribute) {
-            self::CREATE_MEMO => in_array('ROLE_STAFF', $userRoles) || in_array('ROLE_MANAGER', $userRoles) || in_array('ROLE_SUB_ADMIN', $userRoles) || in_array('ROLE_SUPER_ADMIN', $userRoles),
-            self::VIEW_MEMO => in_array('ROLE_STAFF', $userRoles) || in_array('ROLE_MANAGER', $userRoles) || in_array('ROLE_SUB_ADMIN', $userRoles) || in_array('ROLE_SUPER_ADMIN', $userRoles),
-            self::DELETE_MEMO => in_array('ROLE_SUPER_ADMIN', $userRoles) || in_array('ROLE_SUB_ADMIN', $userRoles),
-            self::FORWARD_MEMO => in_array('ROLE_SUPER_ADMIN', $userRoles) || in_array('ROLE_SUB_ADMIN', $userRoles),
+            self::CREATE_MEMO, self::VIEW_MEMO => $isStaff || $isElevated,
+            self::DELETE_MEMO, self::FORWARD_MEMO => $isElevated,
             default => false,
         };
     }

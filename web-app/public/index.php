@@ -3,16 +3,18 @@
 use App\Kernel;
 use Symfony\Component\HttpFoundation\Request;
 
-require_once dirname(__DIR__).'/vendor/autoload.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 // Load .env files manually if Dotenv not available
 if (!isset($_ENV['APP_ENV'])) {
-    $envFile = dirname(__DIR__).'/.env';
+    $envFile = dirname(__DIR__) . '/.env';
     if (file_exists($envFile)) {
         $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         foreach ($lines as $line) {
-            if (strpos($line, '#') === 0) continue;
-            if (strpos($line, '=') === false) continue;
+            if (strpos($line, '#') === 0)
+                continue;
+            if (strpos($line, '=') === false)
+                continue;
             [$key, $value] = explode('=', $line, 2);
             $key = trim($key);
             $value = trim($value, ' "\'');

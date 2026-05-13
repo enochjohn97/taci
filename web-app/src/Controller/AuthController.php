@@ -59,18 +59,18 @@ class AuthController extends AbstractController
         }
 
         $normalizedRole = str_replace('_', '-', strtolower($requestedRole));
-        $validRoles = ['super-admin', 'sub-admin', 'staff'];
+        $validRoles = ['super-admin', 'manager', 'staff'];
         if (!in_array($normalizedRole, $validRoles, true)) {
             return $this->redirectToRoute('app_role_select');
         }
 
         $roleDisplay = match($normalizedRole) {
             'super-admin' => 'Super Admin',
-            'sub-admin' => 'Sub Admin',
+            'manager' => 'Manager',
             'staff' => 'Staff',
         };
 
-        $hasDelegates = (bool) count($this->userRepository->findByRole(UserRole::ROLE_SUB_ADMIN->value));
+        $hasDelegates = (bool) count($this->userRepository->findByRole(UserRole::ROLE_MANAGER->value));
 
         return $this->render('auth/login.html.twig', [
             'last_username' => $lastUsername,

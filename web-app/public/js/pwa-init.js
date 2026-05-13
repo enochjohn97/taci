@@ -9,7 +9,7 @@
   const userRoles = window.userRoles || [];
   const isAdminOrSubAdmin =
     userRoles.includes("ROLE_SUPER_ADMIN") ||
-    userRoles.includes("ROLE_SUB_ADMIN");
+    userRoles.includes("ROLE_MANAGER");
 
   if (!isAdminOrSubAdmin && ADMIN_ONLY) {
     console.log("[PWA] PWA disabled for non-admin users");

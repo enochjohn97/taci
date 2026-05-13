@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/inventory')]
-#[IsGranted('ROLE_SUB_ADMIN')]
+#[IsGranted('ROLE_MANAGER')]
 class InventoryController extends AbstractController
 {
     public function __construct(private EntityManagerInterface $em) {}

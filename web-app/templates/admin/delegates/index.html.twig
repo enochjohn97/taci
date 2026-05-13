@@ -8,13 +8,15 @@
     <div class="row mb-4">
         <div class="col-md-6">
             <h1 class="h3 d-inline-block">
-                <i class="fas fa-users-cog"></i> Sub-Admin Delegates
+                <i class="fas fa-users-cog"></i> Manager Delegates
             </h1>
         </div>
         <div class="col-md-6 text-end">
-            <a href="{{ path('app_delegates_create') }}" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Create New Delegate
-            </a>
+            {% if is_granted('ROLE_SUPER_ADMIN') %}
+                <a href="{{ path('app_delegates_create') }}" class="btn btn-primary">
+                        <h5 class="mb-0"><i class="fas fa-user-plus"></i> Create New Manager Delegate</h5>
+                </a>
+            {% endif %}
         </div>
     </div>
 
@@ -72,17 +74,21 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <a href="{{ path('app_delegates_edit', {'id': delegate.id}) }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#resetPasswordModal" data-delegate-id="{{ delegate.id }}" data-delegate-username="{{ delegate.username }}">
-                                            <i class="fas fa-key"></i>
-                                        </button>
-                                        <form action="{{ path('app_delegates_delete', {'id': delegate.id}) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure?')">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                <i class="fas fa-trash"></i>
+                                        {% if is_granted('ROLE_SUPER_ADMIN') %}
+                                            <a href="{{ path('app_delegates_edit', {'id': delegate.id}) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#resetPasswordModal" data-delegate-id="{{ delegate.id }}" data-delegate-username="{{ delegate.username }}">
+                                                <i class="fas fa-key"></i>
                                             </button>
-                                        </form>
+                                            <form action="{{ path('app_delegates_delete', {'id': delegate.id}) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure?')">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span class="badge bg-secondary">View Only</span>
+                                        {% endif %}
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -122,7 +128,7 @@
         const delegateId = button.dataset.delegateId;
         const delegateUsername = button.dataset.delegateUsername;
         document.getElementById('delegateUsernameDisplay').textContent = delegateUsername;
-        document.getElementById('resetPasswordForm').action = '{{ path('app_delegates_reset_password', {'id': '__ID__'}) }}'.replace('__ID__', delegateId);
+        document.getElementById('resetPasswordForm').action = "{{ path('app_delegates_reset_password', {'id': '__ID__'}) }}".replace('__ID__', delegateId);
     });
 </script>
 {% endblock %}

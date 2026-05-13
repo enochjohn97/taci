@@ -16,7 +16,7 @@
         </li>
 
         {# Fuel Management (Super/Sub Admin) #}
-        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') %}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER') %}
             <li class="nav-item">
                 <a class="nav-link {% if app.request.get('_route') starts with 'app_fuel' %}active{% endif %}" 
                    data-bs-toggle="collapse" href="#fuelMenu">
@@ -34,7 +34,7 @@
         {% endif %}
 
         {# Inventory (Sub/Super Admin) #}
-        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') %}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER') %}
             <li class="nav-item">
                 <a class="nav-link {% if app.request.get('_route') starts with 'app_inventory' %}active{% endif %}" 
                    data-bs-toggle="collapse" href="#inventoryMenu">
@@ -53,7 +53,7 @@
         {% endif %}
 
         {# POS/Store #}
-        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF') %}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF') %}
             <li class="nav-item">
                 <a class="nav-link {% if app.request.get('_route') starts with 'app_pos' %}active{% endif %}" 
                    data-bs-toggle="collapse" href="#posMenu">
@@ -86,7 +86,7 @@
         </li>
 
         {# Loyalty Program (Super/Sub Admin) #}
-        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') %}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER') %}
             <li class="nav-item">
                 <a class="nav-link {% if app.request.get('_route') starts with 'app_loyalty' %}active{% endif %}" 
                    data-bs-toggle="collapse" href="#loyaltyMenu">
@@ -105,7 +105,7 @@
         {% endif %}
 
         {# Reports (Super/Sub Admin) #}
-        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') %}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER') %}
             <li class="nav-item">
                 <a class="nav-link {% if app.request.get('_route') starts with 'app_reports' %}active{% endif %}" 
                    data-bs-toggle="collapse" href="#reportsMenu">
