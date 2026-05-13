@@ -12,6 +12,31 @@ class Kernel extends BaseKernel
 {
     use MicroKernelTrait;
 
+    public function __construct(string $environment, bool $debug)
+    {
+        parent::__construct($environment, $debug);
+
+        // Validate critical environment variables early to avoid hidden defaults
+        $required = [
+            'APP_SECRET',
+            'APP_URL',
+            'DATABASE_URL',
+            'ALLOWED_HOSTS',
+            'MERCURE_PUBLIC_URL',
+        ];
+
+        $missing = [];
+        foreach ($required as $key) {
+            if (empty($_ENV[$key]) && getenv($key) === false) {
+                $missing[] = $key;
+            }
+        }
+
+        if (!empty($missing)) {
+            throw new \RuntimeException('Missing required environment variables: ' . implode(', ', $missing));
+        }
+    }
+
     protected function configureContainer(ContainerConfigurator $container): void
     {
         $confDir = $this->getProjectDir().'/config';
