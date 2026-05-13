@@ -37,7 +37,7 @@ class CreateDefaultUsersCommand extends Command
             return Command::SUCCESS;
         }
 
-        $io->info('Creating default users for TACI Petroleum...');
+        $io->info('Creating default users...');
 
         // Use environment-provided passwords when available, otherwise generate secure random passwords
         $superPass = $_ENV['DEFAULT_SUPERADMIN_PASSWORD'] ?? getenv('DEFAULT_SUPERADMIN_PASSWORD') ?: bin2hex(random_bytes(12));
@@ -47,7 +47,7 @@ class CreateDefaultUsersCommand extends Command
         // Super Admin
         $superAdmin = new User();
         $superAdmin->setUsername('superadmin');
-        $superAdmin->setEmail('superadmin@tacipetroleum.com');
+        $superAdmin->setEmail('');
         $superAdmin->setRole(UserRole::ROLE_SUPER_ADMIN);
         $hashedPassword = $this->passwordHasher->hashPassword($superAdmin, $superPass);
         $superAdmin->setPassword($hashedPassword);
@@ -56,7 +56,7 @@ class CreateDefaultUsersCommand extends Command
         // Manager (Elevated)
         $manager = new User();
         $manager->setUsername('manager');
-        $manager->setEmail('manager@tacipetroleum.com');
+        $manager->setEmail('');
         $manager->setRole(UserRole::ROLE_MANAGER);
         $hashedPassword = $this->passwordHasher->hashPassword($manager, $managerPass);
         $manager->setPassword($hashedPassword);
@@ -65,7 +65,7 @@ class CreateDefaultUsersCommand extends Command
         // Staff
         $staff = new User();
         $staff->setUsername('staff');
-        $staff->setEmail('staff@tacipetroleum.com');
+        $staff->setEmail('');
         $staff->setRole(UserRole::ROLE_STAFF);
         $hashedPassword = $this->passwordHasher->hashPassword($staff, $staffPass);
         $staff->setPassword($hashedPassword);

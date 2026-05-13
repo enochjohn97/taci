@@ -50,7 +50,7 @@ class PaymentService
         $payload = [
             'email' => $customerEmail,
             'amount' => (int) ($amount * 100), // Convert to kobo
-            'reference' => 'TACI-' . $payment->getId() . '-' . time(),
+            'reference' => strtoupper(preg_replace('/[^A-Za-z0-9]/', '', ($_ENV['PAYSTACK_BUSINESS_NAME'] ?? $_ENV['APP_NAME'] ?? 'APP'))) . '-' . $payment->getId() . '-' . time(),
             'metadata' => [
                 'payment_id' => $payment->getId(),
                 'sale_id' => $sale->getId(),
