@@ -103,7 +103,7 @@ class AuthController extends AbstractController
                 $token = bin2hex(random_bytes(32));
                 
                 // Create password reset record
-                $passwordReset = new \App\Entity\PasswordReset($user, $token, 60);
+                $passwordReset = new PasswordReset($user, $token, 60);
                 $em->persist($passwordReset);
                 $em->flush();
                 
@@ -141,7 +141,7 @@ class AuthController extends AbstractController
         UserPasswordHasherInterface $passwordHasher
     ): Response {
         // Find valid password reset token
-        $passwordReset = $em->getRepository(\App\Entity\PasswordReset::class)
+        $passwordReset = $em->getRepository(PasswordReset::class)
             ->findOneBy(['token' => $token]);
 
         if (!$passwordReset || !$passwordReset->isValid()) {

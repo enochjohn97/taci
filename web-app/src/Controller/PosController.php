@@ -86,7 +86,7 @@ class PosController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         if (!$data || !isset($data['items'])) {
-            return $this->json(['error' => 'Invalid data: items are required'], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json(['error' => 'Invalid data: items are required'], Response::HTTP_BAD_REQUEST);
         }
         $items = $data['items'];
         $paymentMethod = $data['paymentMethod'] ?? 'cash';
@@ -106,11 +106,11 @@ class PosController extends AbstractController
         foreach ($items as $item) {
             $product = $this->em->getRepository(Product::class)->find($item['productId']);
             if (!$product) {
-                return $this->json(['error' => 'Product not found: ' . $item['productId']], JsonResponse::HTTP_BAD_REQUEST);
+                return $this->json(['error' => 'Product not found: ' . $item['productId']], Response::HTTP_BAD_REQUEST);
             }
 
             if ($product->getStockQuantity() < $item['quantity']) {
-                return $this->json(['error' => 'Insufficient stock for ' . $product->getName()], JsonResponse::HTTP_BAD_REQUEST);
+                return $this->json(['error' => 'Insufficient stock for ' . $product->getName()], Response::HTTP_BAD_REQUEST);
             }
 
             $saleItem = new SaleItem();

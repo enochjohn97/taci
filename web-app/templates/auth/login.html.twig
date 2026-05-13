@@ -116,8 +116,8 @@
             return;
         }
 
-        const superLoginUrl = '{{ path('app_login', {'role': 'super-admin'}) }}';
-        const managerLoginUrl = '{{ path('app_login', {'role': 'manager'}) }}';
+        const superLoginUrl = "{{ path('app_login', {'role': 'super-admin'}) }}";
+        const managerLoginUrl = "{{ path('app_login', {'role': 'manager'}) }}";
 
         function updateLoginMode() {
             if (delegateToggle.checked) {
