@@ -54,7 +54,8 @@ class PaymentService
             'metadata' => [
                 'payment_id' => $payment->getId(),
                 'sale_id' => $sale->getId(),
-                'store' => 'TACI Petroleum',
+                // Use PAYSTACK_BUSINESS_NAME or APP_NAME environment variables
+                'store' => ($_ENV['PAYSTACK_BUSINESS_NAME'] ?? $_ENV['APP_NAME']) ?? throw new \RuntimeException('PAYSTACK_BUSINESS_NAME or APP_NAME must be set in environment'),
             ],
         ];
 

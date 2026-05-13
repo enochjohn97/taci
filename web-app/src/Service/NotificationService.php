@@ -107,9 +107,16 @@ class NotificationService
      */
     private function generateMercureJwt(array $topics = []): string
     {
+        $iss = $_ENV['APP_URL'] ?? null;
+        $sub = $_ENV['APP_NAME'] ?? null;
+
+        if (empty($iss) || empty($sub)) {
+            throw new \RuntimeException('APP_URL and APP_NAME must be set for Mercure JWT generation');
+        }
+
         $payload = [
-            'iss' => 'https://tacipetroleum.local',
-            'sub' => 'taci_app',
+            'iss' => rtrim($iss, '/'),
+            'sub' => $sub,
             'mercure' => [
                 'publish' => $topics,
             ],
