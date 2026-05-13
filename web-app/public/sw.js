@@ -1,6 +1,6 @@
 // public/sw.js - Service Worker for PWA
 
-const CACHE_VERSION = "taci-v1";
+const CACHE_VERSION = "app-v1";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
@@ -210,7 +210,7 @@ self.addEventListener("push", (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || "TACI Petroleum", options),
+    self.registration.showNotification(data.title || "APP_NAME", options),
   );
 });
 

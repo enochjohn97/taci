@@ -71,7 +71,7 @@
     updatePrompt.className = "pwa-update-prompt";
     updatePrompt.innerHTML = `
       <div class="pwa-update-content">
-        <p>A new version of TACI Petroleum is available</p>
+        <p>A new version is available</p>
         <div class="pwa-update-actions">
           <button id="pwa-update-dismiss" class="pwa-btn-secondary">Later</button>
           <button id="pwa-update-apply" class="pwa-btn-primary">Update Now</button>
@@ -124,7 +124,7 @@
   });
 
   window.addEventListener("appinstalled", () => {
-    console.log("[PWA] TACI Petroleum installed as PWA");
+    console.log("[PWA] APP_NAME installed as PWA");
   });
 
   // Network status monitoring
