@@ -3,7 +3,7 @@ doctrine:
     url: "%env(resolve:DATABASE_URL)%"
     driver: "pdo_pgsql"
     charset: utf8
-    server_version: "15"
+    server_version: "16"
 
   orm:
     auto_generate_proxy_classes: "%kernel.debug%"

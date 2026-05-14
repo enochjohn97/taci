@@ -47,7 +47,7 @@ class CreateDefaultUsersCommand extends Command
         // Super Admin
         $superAdmin = new User();
         $superAdmin->setUsername('superadmin');
-        $superAdmin->setEmail('');
+        $superAdmin->setEmail('superadmin@taci.com');
         $superAdmin->setRole(UserRole::ROLE_SUPER_ADMIN);
         $hashedPassword = $this->passwordHasher->hashPassword($superAdmin, $superPass);
         $superAdmin->setPassword($hashedPassword);
@@ -56,7 +56,7 @@ class CreateDefaultUsersCommand extends Command
         // Manager (Elevated)
         $manager = new User();
         $manager->setUsername('manager');
-        $manager->setEmail('');
+        $manager->setEmail('manager@taci.com');
         $manager->setRole(UserRole::ROLE_MANAGER);
         $hashedPassword = $this->passwordHasher->hashPassword($manager, $managerPass);
         $manager->setPassword($hashedPassword);
@@ -65,7 +65,7 @@ class CreateDefaultUsersCommand extends Command
         // Staff
         $staff = new User();
         $staff->setUsername('staff');
-        $staff->setEmail('');
+        $staff->setEmail('staff@taci.com');
         $staff->setRole(UserRole::ROLE_STAFF);
         $hashedPassword = $this->passwordHasher->hashPassword($staff, $staffPass);
         $staff->setPassword($hashedPassword);

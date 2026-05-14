@@ -33,16 +33,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'string', length: 50, options: ['default' => 'active'])]
     private string $status = 'active'; // active, inactive, suspended
 
-    #[ORM\Column(type: 'datetime', nullable: true)]
+    #[ORM\Column(name: 'last_login', type: 'datetime', nullable: true)]
     private ?\DateTime $lastLogin = null;
 
-    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    #[ORM\Column(name: 'dark_mode_enabled', type: 'boolean', options: ['default' => false])]
     private bool $darkModeEnabled = false;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(name: 'created_at', type: 'datetime')]
     private \DateTime $createdAt;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(name: 'updated_at', type: 'datetime')]
     private \DateTime $updatedAt;
 
     public function __construct()
