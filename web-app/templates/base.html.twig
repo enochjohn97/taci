@@ -129,16 +129,109 @@
     
     <!-- Custom JS (Inlined to fix missing app.js) -->
     <script>
+        // Toast notification system
+        class ToastNotification {
+            constructor() {
+                this.container = this.createContainer();
+            }
+            
+            createContainer() {
+                let container = document.querySelector('.toast-container');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.className = 'toast-container';
+                    Object.assign(container.style, {
+                        position: 'fixed',
+                        top: '20px',
+                        right: '20px',
+                        zIndex: '1050'
+                    });
+                    document.body.appendChild(container);
+                }
+                return container;
+            }
+            
+            show(message, type = 'info', duration = 5000) {
+                const toastDiv = document.createElement('div');
+                Object.assign(toastDiv.style, {
+                    minWidth: '300px',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                    marginBottom: '10px'
+                });
+                
+                const typeColors = {
+                    success: { bg: '#d4edda', border: '#c3e6cb', text: '#155724' },
+                    error: { bg: '#f8d7da', border: '#f5c6cb', text: '#721c24' },
+                    warning: { bg: '#fff3cd', border: '#ffeaa7', text: '#856404' },
+                    info: { bg: '#d1ecf1', border: '#bee5eb', text: '#0c5460' }
+                };
+                
+                const colors = typeColors[type] || typeColors.info;
+                Object.assign(toastDiv.style, {
+                    backgroundColor: colors.bg,
+                    border: `1px solid ${colors.border}`,
+                    color: colors.text
+                });
+                
+                toastDiv.innerHTML = `
+                    <div style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>${message}</span>
+                        <button class="toast-close" aria-label="Close" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; opacity: 0.7; color: inherit;">×</button>
+                    </div>
+                `;
+                
+                this.container.appendChild(toastDiv);
+                
+                const closeBtn = toastDiv.querySelector('.toast-close');
+                closeBtn.addEventListener('click', () => toastDiv.remove());
+                closeBtn.addEventListener('mouseover', () => closeBtn.style.opacity = '1');
+                closeBtn.addEventListener('mouseout', () => closeBtn.style.opacity = '0.7');
+                
+                if (duration > 0) {
+                    setTimeout(() => toastDiv.remove(), duration);
+                }
+            }
+            
+            success(message, duration = 5000) {
+                this.show(message, 'success', duration);
+            }
+            
+            error(message, duration = 5000) {
+                this.show(message, 'error', duration);
+            }
+            
+            warning(message, duration = 5000) {
+                this.show(message, 'warning', duration);
+            }
+            
+            info(message, duration = 5000) {
+                this.show(message, 'info', duration);
+            }
+        }
+        
+        const toast = new ToastNotification();
+        
         document.addEventListener('DOMContentLoaded', function() {
             console.log('{{ app_name }} - Interface Loaded');
             
-            // Auto-hide alerts after 5 seconds
+            // Auto-hide alerts after 5 seconds and convert to toasts
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {
-                setTimeout(() => {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                }, 5000);
+                // Get alert type from Bootstrap class
+                let type = 'info';
+                if (alert.classList.contains('alert-success')) type = 'success';
+                else if (alert.classList.contains('alert-danger')) type = 'error';
+                else if (alert.classList.contains('alert-warning')) type = 'warning';
+                
+                // Get the message text
+                const message = alert.textContent.trim();
+                
+                // Show as toast
+                toast.show(message, type, 5000);
+                
+                // Hide the alert element
+                alert.style.display = 'none';
             });
         });
     </script>

@@ -10,8 +10,29 @@
             <h3 class="mb-0"><i class="bi bi-door-open"></i> {{ role_display }} Login</h3>
         </div>
         <div class="card-body p-5">
+            {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert" data-toast-type="success">
+                <strong>Success!</strong> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            
+            {% for message in app.flashes('error') %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert" data-toast-type="error">
+                <strong>Error!</strong> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            
+            {% for message in app.flashes('warning') %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert" data-toast-type="warning">
+                <strong>Warning!</strong> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            
             {% if error %}
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" data-toast-type="error">
                     <strong>Login Failed!</strong> {{ error.messageKey|trans(error.messageData, 'security') }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -215,6 +236,19 @@
     const toast = new ToastNotification();
     
     document.addEventListener('DOMContentLoaded', function () {
+        // Convert flash message alerts to toasts
+        const alerts = document.querySelectorAll('[data-toast-type]');
+        alerts.forEach(alert => {
+            const type = alert.getAttribute('data-toast-type');
+            const message = alert.textContent.trim();
+            // Remove the alert
+            alert.remove();
+            // Show as toast after a short delay
+            setTimeout(() => {
+                toast.show(message, type, 5000);
+            }, 100);
+        });
+        
         const delegateToggle = document.getElementById('delegateToggle');
         const usernameLabel = document.getElementById('username-label');
         const usernameInput = document.getElementById('username');

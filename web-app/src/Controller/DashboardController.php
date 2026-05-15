@@ -15,12 +15,13 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/dashboard')]
-#[IsGranted('ROLE_SUPER_ADMIN')]
 class DashboardController extends AbstractController
 {
     public function __construct(private EntityManagerInterface $em) {}
 
     #[Route('', name: 'app_dashboard')]
+    #[IsGranted('ROLE_SUPER_ADMIN')]
+    #[IsGranted('ROLE_MANAGER')]
     public function dashboard(): Response
     {
         $user = $this->getUser();

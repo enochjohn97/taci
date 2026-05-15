@@ -59,6 +59,9 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
     {
         $user = $token->getUser();
         
+        // Add success flash message
+        $request->getSession()->getFlashBag()->add('success', 'Login successful! Welcome ' . $user->getUsername() . '.');
+        
         // Log successful login attempt
         $attempt = new LoginAttempt();
         $attempt->setUsername($user->getUsername());
@@ -76,7 +79,11 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
         }
 
         $roles = $user->getRoles();
-        if (in_array('ROLE_SUPER_ADMIN', $roles, true) || in_array('ROLE_MANAGER', $roles, true)) {
+        if (in_array('ROLE_SUPER_ADMIN', $roles, true)) {
+            return new RedirectResponse($this->urlGenerator->generate('app_dashboard'));
+        }
+        
+        if (in_array('ROLE_MANAGER', $roles, true)) {
             return new RedirectResponse($this->urlGenerator->generate('app_dashboard'));
         }
 
@@ -87,6 +94,9 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
     {
         $username = $request->request->getString('username', '');
         $ipAddress = $request->getClientIp() ?? '0.0.0.0';
+
+        // Add error flash message
+        $request->getSession()->getFlashBag()->add('error', 'Login failed. Invalid username or password.');
 
         $attempt = new LoginAttempt();
         $attempt->setUsername($username);
