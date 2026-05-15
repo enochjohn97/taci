@@ -62,6 +62,8 @@
                            placeholder="Enter your password">
                 </div>
 
+                <br>
+
                 {% if has_delegates and role == 'super-admin' %}
                 <div class="mb-3">
                     <div class="form-check">
@@ -83,9 +85,6 @@
             <hr>
 
             <div class="text-center">
-                <p class="text-muted mb-2">
-                    <a href="{{ path('app_password_recovery') }}">Forgot your password?</a>
-                </p>
                 <p class="text-muted">
                     <small>
                         <a href="{{ path('app_role_select') }}">← Back to Role Selection</a>
