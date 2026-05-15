@@ -18,17 +18,17 @@
             {% endif %}
 
             <form method="post" id="login-form" action="{{ path('app_login', {'role': role}) }}">
-                {% if has_delegates and role in ['super-admin', 'manager'] %}
+                {% if has_delegates and role == 'super-admin' %}
                     <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="delegateToggle" {% if role == 'manager' %}checked{% endif %}>
+                        <input type="checkbox" class="form-check-input" id="delegateToggle">
                         <label class="form-check-label" for="delegateToggle">
-                            Login as Delegate/Manager
+                            Login as SubAdmin
                         </label>
                     </div>
                 {% endif %}
 
                 <div class="mb-3">
-                    <label id="username-label" for="username" class="form-label fw-bold">{{ role == 'manager' ? 'Manager Username' : 'Username' }}</label>
+                    <label id="username-label" for="username" class="form-label fw-bold">{{ role == 'super-admin' and delegateToggle == 'checked' ? 'SubAdmin Username' : 'Username' }}</label>
                     <input type="text" 
                            id="username" 
                            name="username" 
@@ -36,7 +36,7 @@
                            value="{{ last_username }}" 
                            required 
                            autofocus
-                           placeholder="{{ role == 'manager' ? 'Manager username' : 'Enter your username' }}">
+                           placeholder="Enter your username">
                 </div>
 
                 <div class="mb-4">
@@ -49,6 +49,7 @@
                            placeholder="Enter your password">
                 </div>
 
+                {% if role != 'super-admin' %}
                 <div class="mb-3 form-check">
                     <input type="checkbox" 
                            class="form-check-input" 
@@ -58,6 +59,7 @@
                         Remember me
                     </label>
                 </div>
+                {% endif %}
 
                 <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
                     <i class="bi bi-box-arrow-in-right"></i> Sign In
@@ -113,22 +115,16 @@
         const delegateToggle = document.getElementById('delegateToggle');
         const usernameLabel = document.getElementById('username-label');
         const usernameInput = document.getElementById('username');
-        const loginForm = document.getElementById('login-form');
 
-        if (!delegateToggle || !loginForm) {
+        if (!delegateToggle) {
             return;
         }
 
-        const superLoginUrl = "{{ path('app_login', {'role': 'super-admin'}) }}";
-        const managerLoginUrl = "{{ path('app_login', {'role': 'manager'}) }}";
-
         function updateLoginMode() {
             if (delegateToggle.checked) {
-                loginForm.action = managerLoginUrl;
-                usernameLabel.textContent = 'Manager Username';
-                usernameInput.placeholder = 'Manager username';
+                usernameLabel.textContent = 'SubAdmin Username';
+                usernameInput.placeholder = 'Enter SubAdmin username';
             } else {
-                loginForm.action = superLoginUrl;
                 usernameLabel.textContent = 'Username';
                 usernameInput.placeholder = 'Enter your username';
             }
