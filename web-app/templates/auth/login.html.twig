@@ -42,22 +42,10 @@
                 </div>
 
                 {% if has_delegates and role == 'super-admin' %}
-                <div class="mb-3 form-check">
+                <div class="mb-3 form-check d-flex align-items-center">
                     <input type="checkbox" class="form-check-input" id="delegateToggle">
-                    <label class="form-check-label" for="delegateToggle" style="margin-bottom: 0;">
+                    <label class="form-check-label ms-2" for="delegateToggle">
                         Login as SubAdmin
-                    </label>
-                </div>
-                {% endif %}
-
-                {% if role != 'super-admin' %}
-                <div class="mb-3 form-check">
-                    <input type="checkbox" 
-                           class="form-check-input" 
-                           id="remember_me" 
-                           name="_remember_me">
-                    <label class="form-check-label" for="remember_me">
-                        Remember me
                     </label>
                 </div>
                 {% endif %}
