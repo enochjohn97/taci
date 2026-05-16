@@ -246,11 +246,6 @@ php bin/console doctrine:migrations:migrate
 # Load demo data (optional)
 php bin/console doctrine:fixtures:load
 
-# Create admin users
-php bin/console app:create-user superadmin superadmin@123 super_admin
-php bin/console app:create-user subadmin subadmin@123 sub_admin
-php bin/console app:create-user staff staff@123 staff
-
 # Run development server
 symfony server:start
 ```
@@ -413,17 +408,6 @@ For internal development:
 
 ---
 
-## 📞 Contact & Support
-
-**TACI Petroleum Company Limited**
-
-- 📍 Kaduna-Kachia Road, Kujama, Kaduna State, Nigeria
-- 📞 +234 803-788-0018
-- 📧 info@tacipetroleum.com
-- 🌐 www.tacipetroleum.com
-
----
-
 ## 📄 License
 
 © 2026 TACI Petroleum Company Limited. All Rights Reserved.
@@ -487,26 +471,6 @@ You have received:
 2. Install web app dependencies: `composer install`
 3. Follow implementation guide for remaining features
 4. Refer to documentation for customization
-
----
-
-**Built with Excellence for TACI Petroleum.** ⚡
-
----
-
-## 🔗 Quick Links
-
-| Resource             | Link                                                               |
-| -------------------- | ------------------------------------------------------------------ |
-| Landing Page         | [landing-page/README.md](landing-page/README.md)                   |
-| Web App              | [web-app/README.md](web-app/README.md)                             |
-| Implementation Guide | [web-app/IMPLEMENTATION_GUIDE.md](web-app/IMPLEMENTATION_GUIDE.md) |
-| Setup Instructions   | [SETUP_GUIDE.md](SETUP_GUIDE.md)                                   |
-| Company Website      | https://www.tacipetroleum.com                                      |
-| Email                | info@tacipetroleum.com                                             |
-| Phone                | +234 803-788-0018                                                  |
-
----
-
+   
 _Last Updated: April 7, 2026_
 _Version: 1.0.0_
