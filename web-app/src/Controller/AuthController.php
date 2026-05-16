@@ -59,13 +59,14 @@ class AuthController extends AbstractController
         }
 
         $normalizedRole = str_replace('_', '-', strtolower($requestedRole));
-        $validRoles = ['super-admin', 'manager', 'staff'];
+        $validRoles = ['super-admin', 'sub-admin', 'manager', 'staff'];
         if (!in_array($normalizedRole, $validRoles, true)) {
             return $this->redirectToRoute('app_role_select');
         }
 
         $roleDisplay = match($normalizedRole) {
             'super-admin' => 'Super Admin',
+            'sub-admin' => 'Sub Admin',
             'manager' => 'Manager',
             'staff' => 'Staff',
         };

@@ -37,6 +37,24 @@
                     </a>
                 </div>
                 
+                <!-- Sub Admin Card -->
+                <div class="col-md-4">
+                    <a href="{{ path('app_login', {'role': 'sub-admin'}) }}" class="role-card role-card-subadmin text-decoration-none">
+                        <div class="role-card-content">
+                            <div class="role-icon">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
+                            <h3 class="role-title">Sub Admin</h3>
+                            <p class="role-description">Administrative access with limited permissions</p>
+                            <div class="role-features">
+                                <small class="d-block">✓ Dashboard Analytics</small>
+                                <small class="d-block">✓ Reports Management</small>
+                                <small class="d-block">✓ Staff Oversight</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                
                 <!-- Manager Card -->
                 <div class="col-md-4">
                     <a href="{{ path('app_login', {'role': 'manager'}) }}" class="role-card role-card-subadmin text-decoration-none">

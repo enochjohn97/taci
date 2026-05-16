@@ -79,15 +79,25 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
         }
 
         $roles = $user->getRoles();
+        
+        // Redirect based on role
         if (in_array('ROLE_SUPER_ADMIN', $roles, true)) {
-            return new RedirectResponse($this->urlGenerator->generate('app_dashboard'));
+            return new RedirectResponse($this->urlGenerator->generate('app_dashboard_super_admin'));
+        }
+        
+        if (in_array('ROLE_SUB_ADMIN', $roles, true)) {
+            return new RedirectResponse($this->urlGenerator->generate('app_dashboard_sub_admin'));
         }
         
         if (in_array('ROLE_MANAGER', $roles, true)) {
-            return new RedirectResponse($this->urlGenerator->generate('app_dashboard'));
+            return new RedirectResponse($this->urlGenerator->generate('app_dashboard_manager'));
+        }
+        
+        if (in_array('ROLE_STAFF', $roles, true)) {
+            return new RedirectResponse($this->urlGenerator->generate('app_store_dashboard'));
         }
 
-        return new RedirectResponse($this->urlGenerator->generate('app_store_dashboard'));
+        return new RedirectResponse($this->urlGenerator->generate('app_role_select'));
     }
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response

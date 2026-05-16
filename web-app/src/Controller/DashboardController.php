@@ -21,6 +21,7 @@ class DashboardController extends AbstractController
 
     #[Route('', name: 'app_dashboard')]
     #[IsGranted('ROLE_SUPER_ADMIN')]
+    #[IsGranted('ROLE_SUB_ADMIN')]
     #[IsGranted('ROLE_MANAGER')]
     public function dashboard(): Response
     {
@@ -61,6 +62,143 @@ class DashboardController extends AbstractController
             'low_stock_products' => $lowStockProducts,
             'unread_notifications_count' => count($unreadNotifications),
         ]);
+    }
+
+    #[Route('/super-admin', name: 'app_dashboard_super_admin')]
+    #[IsGranted('ROLE_SUPER_ADMIN')]
+    public function superAdminDashboard(): Response
+    {
+        $user = $this->getUser();
+        
+        // Get today's sales across all stores
+        $today = new \DateTime();
+        $today->setTime(0, 0);
+        
+        $sales = $this->em->getRepository(Sale::class)
+            ->createQueryBuilder('s')
+            ->where('s.createdAt >= :today')
+            ->andWhere('s.status = :status')
+            ->setParameter('today', $today)
+            ->setParameter('status', 'completed')
+            ->getQuery()
+            ->getResult();
+
+        $totalSalesAmount = array_sum(array_map(fn($s) => $s->getTotalAmount(), $sales));
+        $totalTransactions = count($sales);
+
+        // Low stock products
+        $lowStockProducts = $this->em->getRepository(Product::class)
+            ->createQueryBuilder('p')
+            ->where('p.stockQuantity <= p.reorderLevel')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult();
+
+        // Unread notifications
+        $unreadNotifications = $this->em->getRepository(Notification::class)
+            ->findBy(['user' => $user, 'isRead' => false]);
+
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'dashboard_super_admin',
+            'total_sales_amount' => $totalSalesAmount,
+            'total_transactions' => $totalTransactions,
+            'low_stock_products' => $lowStockProducts,
+            'unread_notifications_count' => count($unreadNotifications),
+        ]);
+    }
+
+    #[Route('/sub-admin', name: 'app_dashboard_sub_admin')]
+    #[IsGranted('ROLE_SUB_ADMIN')]
+    public function subAdminDashboard(): Response
+    {
+        $user = $this->getUser();
+        
+        // Get today's sales
+        $today = new \DateTime();
+        $today->setTime(0, 0);
+        
+        $sales = $this->em->getRepository(Sale::class)
+            ->createQueryBuilder('s')
+            ->where('s.createdAt >= :today')
+            ->andWhere('s.status = :status')
+            ->setParameter('today', $today)
+            ->setParameter('status', 'completed')
+            ->getQuery()
+            ->getResult();
+
+        $totalSalesAmount = array_sum(array_map(fn($s) => $s->getTotalAmount(), $sales));
+        $totalTransactions = count($sales);
+
+        // Low stock products
+        $lowStockProducts = $this->em->getRepository(Product::class)
+            ->createQueryBuilder('p')
+            ->where('p.stockQuantity <= p.reorderLevel')
+            ->setMaxResults(5)
+            ->getQuery()
+            ->getResult();
+
+        // Unread notifications
+        $unreadNotifications = $this->em->getRepository(Notification::class)
+            ->findBy(['user' => $user, 'isRead' => false]);
+
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'dashboard_sub_admin',
+            'total_sales_amount' => $totalSalesAmount,
+            'total_transactions' => $totalTransactions,
+            'low_stock_products' => $lowStockProducts,
+            'unread_notifications_count' => count($unreadNotifications),
+        ]);
+    }
+
+    #[Route('/manager', name: 'app_dashboard_manager')]
+    #[IsGranted('ROLE_MANAGER')]
+    public function managerDashboard(): Response
+    {
+        $user = $this->getUser();
+        
+        // Get today's sales
+        $today = new \DateTime();
+        $today->setTime(0, 0);
+        
+        $sales = $this->em->getRepository(Sale::class)
+            ->createQueryBuilder('s')
+            ->where('s.createdAt >= :today')
+            ->andWhere('s.status = :status')
+            ->setParameter('today', $today)
+            ->setParameter('status', 'completed')
+            ->getQuery()
+            ->getResult();
+
+        $totalSalesAmount = array_sum(array_map(fn($s) => $s->getTotalAmount(), $sales));
+        $totalTransactions = count($sales);
+
+        // Low stock products
+        $lowStockProducts = $this->em->getRepository(Product::class)
+            ->createQueryBuilder('p')
+            ->where('p.stockQuantity <= p.reorderLevel')
+            ->setMaxResults(5)
+            ->getQuery()
+            ->getResult();
+
+        // Unread notifications
+        $unreadNotifications = $this->em->getRepository(Notification::class)
+            ->findBy(['user' => $user, 'isRead' => false]);
+
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'dashboard_manager',
+            'total_sales_amount' => $totalSalesAmount,
+            'total_transactions' => $totalTransactions,
+            'low_stock_products' => $lowStockProducts,
+            'unread_notifications_count' => count($unreadNotifications),
+        ]);
+    }
+
+    #[Route('/staff', name: 'app_dashboard_staff')]
+    #[IsGranted('ROLE_STAFF')]
+    public function staffDashboard(): Response
+    {
+        // Staff dashboard - redirect to store dashboard for POS operations
+        return $this->redirectToRoute('app_store_dashboard');
     }
 
     #[Route('/analytics', name: 'app_analytics')]

@@ -44,5 +44,9 @@ security:
     - { path: ^/password-recovery, roles: PUBLIC_ACCESS }
     - { path: ^/admin, roles: ROLE_SUPER_ADMIN }
     - { path: ^/settings/admin, roles: ROLE_SUPER_ADMIN }
-    - { path: ^/api/, roles: ROLE_SUPER_ADMIN }
+    - { path: ^/api/, roles: ROLE_SUPER_ADMIN|ROLE_SUB_ADMIN }
+    - { path: ^/dashboard/super-admin, roles: ROLE_SUPER_ADMIN }
+    - { path: ^/dashboard/sub-admin, roles: ROLE_SUB_ADMIN }
+    - { path: ^/dashboard/manager, roles: ROLE_MANAGER }
+    - { path: ^/dashboard/staff, roles: ROLE_STAFF }
     - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
