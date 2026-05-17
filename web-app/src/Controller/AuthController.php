@@ -37,7 +37,12 @@ class AuthController extends AbstractController
     #[Route('/role-select', name: 'app_role_select')]
     public function roleSelect(): Response
     {
-        return $this->render('auth/role-select.html.twig');
+        // Check if sub-admins exist
+        $subAdminsExist = (bool) count($this->userRepository->findByRole(UserRole::ROLE_SUB_ADMIN->value));
+
+        return $this->render('auth/role-select.html.twig', [
+            'sub_admins_exist' => $subAdminsExist,
+        ]);
     }
 
     #[Route('/login/{role?}', name: 'app_login', methods: ['GET', 'POST'])]

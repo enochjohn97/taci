@@ -4,6 +4,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Entity\UserRole;
 use App\Entity\AuditLog;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,7 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/settings')]
-#[IsGranted('ROLE_SUPER_ADMIN|ROLE_MANAGER|ROLE_STAFF')]
+#[IsGranted('ROLE_SUPER_ADMIN|ROLE_SUB_ADMIN|ROLE_MANAGER|ROLE_STAFF')]
 class SettingsController extends AbstractController
 {
     public function __construct(
@@ -226,5 +227,109 @@ class SettingsController extends AbstractController
             'sale_count' => $saleCount,
             'product_count' => $productCount,
         ]);
+    }
+
+    #[Route('/admin/sub-admins', name: 'app_settings_sub_admins')]
+    #[IsGranted('ROLE_SUPER_ADMIN')]
+    public function manageSubAdmins(): Response
+    {
+        $subAdmins = $this->em->getRepository(User::class)->findByRole(UserRole::ROLE_SUB_ADMIN->value);
+
+        return $this->render('settings/sub-admins.html.twig', [
+            'sub_admins' => $subAdmins,
+        ]);
+    }
+
+    #[Route('/admin/sub-admin/create', name: 'app_settings_sub_admin_create', methods: ['GET', 'POST'])]
+    #[IsGranted('ROLE_SUPER_ADMIN')]
+    public function createSubAdmin(Request $request): Response
+    {
+        if ($request->isMethod('POST')) {
+            $data = $request->request->all();
+            $username = trim($data['username'] ?? '');
+            $email = trim($data['email'] ?? '');
+            $name = trim($data['name'] ?? '');
+            $password = $data['password'] ?? '';
+            $confirmPassword = $data['confirm_password'] ?? '';
+
+            // Validation
+            $errors = [];
+            if (empty($username)) $errors[] = 'Username is required';
+            if (empty($email)) $errors[] = 'Email is required';
+            if (empty($name)) $errors[] = 'Name is required';
+            if (empty($password)) $errors[] = 'Password is required';
+            if ($password !== $confirmPassword) $errors[] = 'Passwords do not match';
+            if (strlen($password) < 8) $errors[] = 'Password must be at least 8 characters';
+
+            if (!$errors) {
+                // Check if username/email already exists
+                $existingUser = $this->em->getRepository(User::class)->findOneBy(['username' => $username]);
+                if ($existingUser) $errors[] = 'Username already exists';
+
+                $existingEmail = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
+                if ($existingEmail) $errors[] = 'Email already exists';
+            }
+
+            if ($errors) {
+                foreach ($errors as $error) {
+                    $this->addFlash('error', $error);
+                }
+                return $this->redirectToRoute('app_settings_sub_admin_create');
+            }
+
+            // Create sub-admin user
+            $subAdmin = new User();
+            $subAdmin->setUsername($username);
+            $subAdmin->setEmail($email);
+            $subAdmin->setRole(UserRole::ROLE_SUB_ADMIN);
+            $subAdmin->setStatus('active');
+            $hashedPassword = $this->passwordHasher->hashPassword($subAdmin, $password);
+            $subAdmin->setPassword($hashedPassword);
+
+            $this->em->persist($subAdmin);
+            $this->em->flush();
+
+            // Log action
+            $audit = new AuditLog();
+            $audit->setUser($this->getUser());
+            $audit->setAction('Sub Admin Created');
+            $audit->setModule('User Management');
+            $audit->setDescription('Sub Admin ' . $username . ' created');
+            $audit->setIpAddress($request->getClientIp());
+            $this->em->persist($audit);
+            $this->em->flush();
+
+            $this->addFlash('success', 'Sub Admin user created successfully');
+            return $this->redirectToRoute('app_settings_sub_admins');
+        }
+
+        return $this->render('settings/sub-admin-create.html.twig');
+    }
+
+    #[Route('/admin/sub-admin/{id}/delete', name: 'app_settings_sub_admin_delete', methods: ['POST'])]
+    #[IsGranted('ROLE_SUPER_ADMIN')]
+    public function deleteSubAdmin(User $user, Request $request): Response
+    {
+        if ($user->getRole()->value !== UserRole::ROLE_SUB_ADMIN->value) {
+            $this->addFlash('error', 'User is not a Sub Admin');
+            return $this->redirectToRoute('app_settings_sub_admins');
+        }
+
+        $username = $user->getUsername();
+        $this->em->remove($user);
+        $this->em->flush();
+
+        // Log action
+        $audit = new AuditLog();
+        $audit->setUser($this->getUser());
+        $audit->setAction('Sub Admin Deleted');
+        $audit->setModule('User Management');
+        $audit->setDescription('Sub Admin ' . $username . ' deleted');
+        $audit->setIpAddress($request->getClientIp());
+        $this->em->persist($audit);
+        $this->em->flush();
+
+        $this->addFlash('success', 'Sub Admin user deleted successfully');
+        return $this->redirectToRoute('app_settings_sub_admins');
     }
 }

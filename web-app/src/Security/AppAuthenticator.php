@@ -104,6 +104,7 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
     {
         $username = $request->request->getString('username', '');
         $ipAddress = $request->getClientIp() ?? '0.0.0.0';
+        $role = $request->attributes->get('role') ?? $request->query->get('role') ?? 'staff';
 
         // Add error flash message
         $request->getSession()->getFlashBag()->add('error', 'Login failed. Invalid username or password.');

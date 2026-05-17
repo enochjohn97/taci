@@ -1,0 +1,252 @@
+{# templates/settings/sub-admin-create.html.twig #}
+{% extends "base.html.twig" %}
+
+{% block title %}Create Sub Admin - TACI Petroleum{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h2">
+                <i class="fas fa-user-plus me-2"></i>Create Sub Admin User
+            </h1>
+            <p class="text-muted">Create a new sub-admin account with limited administrative privileges</p>
+        </div>
+    </div>
+
+    {% for message in app.flashes('error') %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ path('app_settings_sub_admin_create') }}" id="subAdminForm">
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label fw-bold">Full Name</label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="name" 
+                                   name="name" 
+                                   required
+                                   placeholder="Enter full name"
+                                   pattern="^[a-zA-Z\s]{3,100}$"
+                                   title="Name should contain only letters and spaces">
+                            <small class="text-muted">3-100 characters, letters only</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label fw-bold">Username</label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="username" 
+                                   name="username" 
+                                   required
+                                   placeholder="Enter username"
+                                   pattern="^[a-zA-Z0-9_]{3,30}$"
+                                   title="Username: 3-30 chars, letters, numbers, underscore only">
+                            <small class="text-muted">3-30 characters, letters, numbers, underscore only</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label fw-bold">Email Address</label>
+                            <input type="email" 
+                                   class="form-control form-control-lg" 
+                                   id="email" 
+                                   name="email" 
+                                   required
+                                   placeholder="example@domain.com">
+                            <small class="text-muted">Must be a valid email address</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label fw-bold">Password</label>
+                            <div class="input-group input-group-lg">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="password" 
+                                       name="password" 
+                                       required
+                                       placeholder="Enter password"
+                                       minlength="8">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Minimum 8 characters</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="confirm_password" class="form-label fw-bold">Confirm Password</label>
+                            <div class="input-group input-group-lg">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="confirm_password" 
+                                       name="confirm_password" 
+                                       required
+                                       placeholder="Confirm password"
+                                       minlength="8">
+                                <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                    <i class="bi bi-eye" id="toggleConfirmPasswordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check me-2"></i>Create Sub Admin
+                            </button>
+                        </div>
+
+                        <a href="{{ path('app_settings_sub_admins') }}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Sub Admins
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow bg-light">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-info-circle text-info me-2"></i>Permissions & Access
+                    </h5>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item bg-transparent">
+                            <i class="fas fa-chart-line text-success me-2"></i>
+                            <strong>Dashboard Analytics</strong>
+                            <p class="mb-0 text-muted small">View reports and analytics</p>
+                        </div>
+                        <div class="list-group-item bg-transparent">
+                            <i class="fas fa-users text-info me-2"></i>
+                            <strong>User Oversight</strong>
+                            <p class="mb-0 text-muted small">Monitor staff activities</p>
+                        </div>
+                        <div class="list-group-item bg-transparent">
+                            <i class="fas fa-file-contract text-warning me-2"></i>
+                            <strong>Memo Communication</strong>
+                            <p class="mb-0 text-muted small">Send memos to staff</p>
+                        </div>
+                        <div class="list-group-item bg-transparent">
+                            <i class="fas fa-history text-secondary me-2"></i>
+                            <strong>Audit Logs</strong>
+                            <p class="mb-0 text-muted small">View system activity logs</p>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-lock text-danger me-2"></i>Restrictions
+                    </h5>
+                    <ul class="small text-muted mb-0">
+                        <li>Cannot create other sub-admins</li>
+                        <li>Cannot modify system settings</li>
+                        <li>Cannot delete users</li>
+                        <li>Cannot access database backups</li>
+                        <li>Limited to assigned roles only</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('subAdminForm');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        const toggleConfirmPasswordBtn = document.getElementById('toggleConfirmPassword');
+        const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+        const toggleConfirmPasswordIcon = document.getElementById('toggleConfirmPasswordIcon');
+
+        // Toggle password visibility
+        function togglePasswordVisibility(btn, input, icon) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                
+                if (isPassword) {
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                } else {
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                }
+            });
+        }
+
+        togglePasswordVisibility(togglePasswordBtn, passwordInput, togglePasswordIcon);
+        togglePasswordVisibility(toggleConfirmPasswordBtn, confirmPasswordInput, toggleConfirmPasswordIcon);
+
+        // Form validation
+        form.addEventListener('submit', function(e) {
+            const name = document.getElementById('name').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            if (!name) {
+                e.preventDefault();
+                showError('Please enter a name');
+                return false;
+            }
+
+            if (!username) {
+                e.preventDefault();
+                showError('Please enter a username');
+                return false;
+            }
+
+            if (!email) {
+                e.preventDefault();
+                showError('Please enter an email');
+                return false;
+            }
+
+            if (!password) {
+                e.preventDefault();
+                showError('Please enter a password');
+                return false;
+            }
+
+            if (password.length < 8) {
+                e.preventDefault();
+                showError('Password must be at least 8 characters');
+                return false;
+            }
+
+            if (password !== confirmPassword) {
+                e.preventDefault();
+                showError('Passwords do not match');
+                return false;
+            }
+        });
+
+        function showError(message) {
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-danger alert-dismissible fade show';
+            alert.innerHTML = `
+                <i class="fas fa-exclamation-circle me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            const firstAlert = document.querySelector('.alert');
+            if (firstAlert) {
+                firstAlert.parentNode.insertBefore(alert, firstAlert);
+            } else {
+                form.parentNode.insertBefore(alert, form);
+            }
+        }
+    });
+</script>
+{% endblock %}

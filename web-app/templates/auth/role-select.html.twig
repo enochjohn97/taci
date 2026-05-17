@@ -18,83 +18,45 @@
                 <p class="text-muted fs-5">Select Your Role to Continue</p>
             </div>
             
-            <div class="row g-4 justify-content-center">
+            <div class="role-cards-grid">
                 <!-- Super Admin Card -->
-                <div class="col-md-4">
-                    <a href="{{ path('app_login', {'role': 'super-admin'}) }}" class="role-card role-card-admin text-decoration-none">
-                        <div class="role-card-content">
-                            <div class="role-icon">
-                                <i class="fas fa-crown"></i>
-                            </div>
-                            <h3 class="role-title">Super Admin</h3>
-                            <p class="role-description">Full access to all modules and management features</p>
-                            <div class="role-features">
-                                <small class="d-block">✓ User Management</small>
-                                <small class="d-block">✓ System Settings</small>
-                                <small class="d-block">✓ Approvals & Reports</small>
-                            </div>
-                        </div>
-                    </a>
-                </div>
+                <a href="{{ path('app_login', {'role': 'super-admin'}) }}" class="role-circle role-circle-admin" title="Super Admin">
+                    <div class="role-circle-icon">
+                        <i class="fas fa-crown"></i>
+                    </div>
+                    <div class="role-circle-label">Super Admin</div>
+                </a>
                 
-                <!-- Sub Admin Card -->
-                <div class="col-md-4">
-                    <a href="{{ path('app_login', {'role': 'sub-admin'}) }}" class="role-card role-card-subadmin text-decoration-none">
-                        <div class="role-card-content">
-                            <div class="role-icon">
-                                <i class="fas fa-user-shield"></i>
-                            </div>
-                            <h3 class="role-title">Sub Admin</h3>
-                            <p class="role-description">Administrative access with limited permissions</p>
-                            <div class="role-features">
-                                <small class="d-block">✓ Dashboard Analytics</small>
-                                <small class="d-block">✓ Reports Management</small>
-                                <small class="d-block">✓ Staff Oversight</small>
-                            </div>
-                        </div>
-                    </a>
-                </div>
+                <!-- Sub Admin Card (Only if exists) -->
+                {% if sub_admins_exist %}
+                <a href="{{ path('app_login', {'role': 'sub-admin'}) }}" class="role-circle role-circle-subadmin" title="Sub Admin">
+                    <div class="role-circle-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div class="role-circle-label">Sub Admin</div>
+                </a>
+                {% endif %}
                 
                 <!-- Manager Card -->
-                <div class="col-md-4">
-                    <a href="{{ path('app_login', {'role': 'manager'}) }}" class="role-card role-card-subadmin text-decoration-none">
-                        <div class="role-card-content">
-                            <div class="role-icon">
-                                <i class="fas fa-user-tie"></i>
-                            </div>
-                            <h3 class="role-title">Manager</h3>
-                            <p class="role-description">Manage fuel operations and view analytics</p>
-                            <div class="role-features">
-                                <small class="d-block">✓ Fuel Management</small>
-                                <small class="d-block">✓ Dashboard Analytics</small>
-                                <small class="d-block">✓ Memo Communication</small>
-                            </div>
-                        </div>
-                    </a>
-                </div>
+                <a href="{{ path('app_login', {'role': 'manager'}) }}" class="role-circle role-circle-manager" title="Manager">
+                    <div class="role-circle-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="role-circle-label">Manager</div>
+                </a>
                 
                 <!-- Staff Card -->
-                <div class="col-md-4">
-                    <a href="{{ path('app_login', {'role': 'staff'}) }}" class="role-card role-card-staff text-decoration-none">
-                        <div class="role-card-content">
-                            <div class="role-icon">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <h3 class="role-title">Staff</h3>
-                            <p class="role-description">Store operations and inventory management</p>
-                            <div class="role-features">
-                                <small class="d-block">✓ Store/Receptionist</small>
-                                <small class="d-block">✓ Inventory Input</small>
-                                <small class="d-block">✓ Daily Operations</small>
-                            </div>
-                        </div>
-                    </a>
-                </div>
+                <a href="{{ path('app_login', {'role': 'staff'}) }}" class="role-circle role-circle-staff" title="Staff">
+                    <div class="role-circle-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="role-circle-label">Staff</div>
+                </a>
             </div>
             
             <div class="text-center mt-5">
                 <p class="text-muted">
-                    Need help? <a href="mailto:{{ admin_email }}">Contact Support</a>
+                    Need help? <a href="mailto:support@taci.local">Contact Support</a>
                 </p>
             </div>
         </div>
@@ -106,70 +68,143 @@
         background: linear-gradient(135deg, #0A1628 0%, #050B14 100%);
         min-height: 100vh;
     }
-    
-    .role-card {
-        display: block;
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 12px;
+
+    .role-selection-container {
+        width: 100%;
+        max-width: 900px;
         padding: 2rem;
+    }
+    
+    .role-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 3.5rem;
+        justify-items: center;
+        margin: 3rem 0;
+    }
+    
+    .role-circle {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 230px;
+        height: 230px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.95);
+        border: 3px solid transparent;
+        text-decoration: none;
         transition: all 0.3s ease;
-        border: 2px solid transparent;
-        text-align: center;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+        position: relative;
+        overflow: hidden;
     }
     
-    .role-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(245, 166, 35, 0.2);
-        border-color: #F5A623;
+    .role-circle::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, transparent 0%, rgba(0, 0, 0, 0.05) 100%);
+        pointer-events: none;
     }
     
-    .role-card-admin {
+    .role-circle:hover {
+        transform: translateY(-12px) scale(1.05);
+        box-shadow: 0 16px 40px rgba(245, 166, 35, 0.25);
+    }
+    
+    .role-circle-admin {
         border-color: #007bff;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.97) 0%, rgba(0, 123, 255, 0.03) 100%);
     }
     
-    .role-card-subadmin {
+    .role-circle-admin:hover {
+        border-color: #0056b3;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(0, 123, 255, 0.08) 100%);
+    }
+    
+    .role-circle-subadmin {
         border-color: #6c757d;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.97) 0%, rgba(108, 117, 125, 0.03) 100%);
     }
     
-    .role-card-staff {
+    .role-circle-subadmin:hover {
+        border-color: #5a6268;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(108, 117, 125, 0.08) 100%);
+    }
+    
+    .role-circle-manager {
+        border-color: #ffc107;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.97) 0%, rgba(255, 193, 7, 0.03) 100%);
+    }
+    
+    .role-circle-manager:hover {
+        border-color: #e0a800;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(255, 193, 7, 0.08) 100%);
+    }
+    
+    .role-circle-staff {
         border-color: #28a745;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.97) 0%, rgba(40, 167, 69, 0.03) 100%);
     }
     
-    .role-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
+    .role-circle-staff:hover {
+        border-color: #1e7e34;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(40, 167, 69, 0.08) 100%);
     }
     
-    .role-card-admin .role-icon {
+    .role-circle-icon {
+        font-size: 3.5rem;
+        margin-bottom: 0.5rem;
+        z-index: 1;
+    }
+    
+    .role-circle-admin .role-circle-icon {
         color: #007bff;
     }
     
-    .role-card-subadmin .role-icon {
+    .role-circle-subadmin .role-circle-icon {
         color: #6c757d;
     }
     
-    .role-card-staff .role-icon {
+    .role-circle-manager .role-circle-icon {
+        color: #ffc107;
+    }
+    
+    .role-circle-staff .role-circle-icon {
         color: #28a745;
     }
     
-    .role-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-        color: #0A1628;
+    .role-circle-label {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #333;
+        text-align: center;
+        z-index: 1;
+        margin-top: 0.5rem;
     }
     
-    .role-description {
-        color: #666;
-        margin-bottom: 1.5rem;
-    }
-    
-    .role-features {
-        text-align: left;
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 8px;
-        font-size: 0.85rem;
+    @media (max-width: 768px) {
+        .role-cards-grid {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 2rem;
+        }
+        
+        .role-circle {
+            width: 180px;
+            height: 180px;
+        }
+        
+        .role-circle-icon {
+            font-size: 3rem;
+        }
+        
+        .role-circle-label {
+            font-size: 0.95rem;
+        }
     }
 </style>
 {% endblock %}

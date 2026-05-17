@@ -65,24 +65,13 @@
                                class="form-control" 
                                required
                                placeholder="Enter your password">
-                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                            <i class="bi bi-eye"></i>
+                        <button class="btn btn-outline-secondary" type="button" id="togglePassword" aria-pressed="false">
+                            <i class="bi bi-eye" id="togglePasswordIcon"></i>
                         </button>
                     </div>
                 </div>
 
                 <br>
-
-                {% if has_delegates and role == 'super-admin' %}
-                <div class="mb-3">
-                    <div class="form-check d-flex align-items-center">
-                        <input type="checkbox" class="form-check-input me-2" id="delegateToggle">
-                        <label class="form-check-label mb-0" for="delegateToggle" style="color: #555;">
-                            Login as SubAdmin
-                        </label>
-                    </div>
-                </div>
-                {% endif %}
 
                 <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
                     <i class="bi bi-box-arrow-in-right"></i> Sign In
@@ -224,93 +213,125 @@
             toastDiv.innerHTML = `
                 <div style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
                     <span>${message}</span>
-                    <button class="toast-close" aria-label="Close">×</button>
+                    <button class="toast-close" aria-label="Close" type="button">×</button>
                 </div>
             `;
             
             this.container.appendChild(toastDiv);
             
             const closeBtn = toastDiv.querySelector('.toast-close');
-            closeBtn.addEventListener('click', () => toastDiv.remove());
+            closeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                toastDiv.remove();
+            });
             
             if (duration > 0) {
-                setTimeout(() => toastDiv.remove(), duration);
+                setTimeout(() => {
+                    if (toastDiv.parentNode) {
+                        toastDiv.remove();
+                    }
+                }, duration);
             }
+            
+            return toastDiv;
         }
         
         success(message, duration = 5000) {
-            this.show(message, 'success', duration);
+            return this.show(message, 'success', duration);
         }
         
         error(message, duration = 5000) {
-            this.show(message, 'error', duration);
+            return this.show(message, 'error', duration);
         }
         
         warning(message, duration = 5000) {
-            this.show(message, 'warning', duration);
+            return this.show(message, 'warning', duration);
         }
         
         info(message, duration = 5000) {
-            this.show(message, 'info', duration);
+            return this.show(message, 'info', duration);
         }
     }
     
     const toast = new ToastNotification();
     
     document.addEventListener('DOMContentLoaded', function () {
+        // Move alerts to toasts
         const alerts = document.querySelectorAll('[data-toast-type]');
         alerts.forEach(alert => {
             const type = alert.getAttribute('data-toast-type');
-            const message = alert.textContent.trim();
+            const message = alert.textContent.replace(/^(Success!|Error!|Warning!)\s+/, '').trim();
             alert.remove();
+            
             setTimeout(() => {
-                toast.show(message, type, 5000);
+                if (type === 'success') {
+                    toast.success(message, 5000);
+                } else if (type === 'error') {
+                    toast.error(message, 5000);
+                } else if (type === 'warning') {
+                    toast.warning(message, 5000);
+                } else {
+                    toast.info(message, 5000);
+                }
             }, 100);
         });
         
-        const delegateToggle = document.getElementById('delegateToggle');
-        const usernameLabel = document.getElementById('username-label');
-        const usernameInput = document.getElementById('username');
-        const loginForm = document.getElementById('login-form');
-        const togglePassword = document.getElementById('togglePassword');
+        // Password toggle functionality
+        const togglePasswordBtn = document.getElementById('togglePassword');
         const passwordInput = document.getElementById('password');
-        const passwordIcon = togglePassword ? togglePassword.querySelector('i') : null;
+        const togglePasswordIcon = document.getElementById('togglePasswordIcon');
 
-        if (delegateToggle) {
-            function updateLoginMode() {
-                if (delegateToggle.checked) {
-                    usernameLabel.textContent = 'SubAdmin Username';
-                    usernameInput.placeholder = 'Enter SubAdmin username';
-                } else {
-                    usernameLabel.textContent = 'Username';
-                    usernameInput.placeholder = 'Enter your username';
-                }
+        function togglePasswordVisibility(e) {
+            if (e) {
+                e.preventDefault();
             }
 
-            delegateToggle.addEventListener('change', updateLoginMode);
-            updateLoginMode();
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+
+            if (isPassword) {
+                togglePasswordIcon.classList.remove('bi-eye');
+                togglePasswordIcon.classList.add('bi-eye-slash');
+                togglePasswordBtn.setAttribute('aria-pressed', 'true');
+            } else {
+                togglePasswordIcon.classList.remove('bi-eye-slash');
+                togglePasswordIcon.classList.add('bi-eye');
+                togglePasswordBtn.setAttribute('aria-pressed', 'false');
+            }
+
+            passwordInput.focus();
         }
 
-        if (togglePassword && passwordInput && passwordIcon) {
-            togglePassword.addEventListener('click', function () {
-                const isPassword = passwordInput.type === 'password';
-                passwordInput.type = isPassword ? 'text' : 'password'; 
-                passwordIcon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
-            });
+        if (togglePasswordBtn && passwordInput && togglePasswordIcon) {
+            togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
+            togglePasswordIcon.addEventListener('click', togglePasswordVisibility);
         }
         
+        // Form validation
+        const loginForm = document.getElementById('login-form');
         if (loginForm) {
             loginForm.addEventListener('submit', function(e) {
-                const username = document.getElementById('username').value;
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value;
+                
                 if (!username) {
                     e.preventDefault();
                     toast.error('Please enter your username');
+                    document.getElementById('username').focus();
                     return false;
                 }
-                const password = document.getElementById('password').value;
+                
                 if (!password) {
                     e.preventDefault();
                     toast.error('Please enter your password');
+                    document.getElementById('password').focus();
+                    return false;
+                }
+                
+                if (password.length < 3) {
+                    e.preventDefault();
+                    toast.error('Invalid password');
+                    document.getElementById('password').focus();
                     return false;
                 }
             });
