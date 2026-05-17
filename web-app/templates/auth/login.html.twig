@@ -192,25 +192,7 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Move alerts to toasts created by the global base script
-        const alerts = document.querySelectorAll('[data-toast-type]');
-        alerts.forEach(alert => {
-            const type = alert.getAttribute('data-toast-type');
-            const message = alert.textContent.replace(/^(Success!|Error!|Warning!)\s+/, '').trim();
-            alert.remove();
-
-            setTimeout(() => {
-                if (type === 'success') {
-                    toast.success(message, 5000);
-                } else if (type === 'error') {
-                    toast.error(message, 5000);
-                } else if (type === 'warning') {
-                    toast.warning(message, 5000);
-                } else {
-                    toast.info(message, 5000);
-                }
-            }, 100);
-        });
+        // Alerts are handled by the base layout's toast system
 
         // Password toggle functionality
         const togglePasswordBtn = document.getElementById('togglePassword');

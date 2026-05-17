@@ -42,7 +42,8 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
 
         $role = $request->attributes->get('role') ?? $request->query->get('role');
         if ($role) {
-            $request->getSession()->set('LAST_LOGIN_ROLE', $role);
+            $normalizedRole = str_replace('_', '-', strtolower($role));
+            $request->getSession()->set('LAST_LOGIN_ROLE', $normalizedRole);
         }
 
         return new Passport(
