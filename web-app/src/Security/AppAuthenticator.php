@@ -20,6 +20,10 @@ use Symfony\Component\Security\Http\Util\TargetPathTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\LoginAttempt;
 
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
+use Symfony\Component\Security\Core\Exception\UserNotFoundException;
+use App\Entity\User;
+
 class AppAuthenticator extends AbstractLoginFormAuthenticator
 {
     use TargetPathTrait;
@@ -47,7 +51,34 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
         }
 
         return new Passport(
-            new UserBadge($username),
+            new UserBadge($username, function (string $userIdentifier) use ($request) {
+                $user = $this->em->getRepository(User::class)->findOneBy(['username' => $userIdentifier]);
+                if (!$user) {
+                    throw new UserNotFoundException();
+                }
+
+                $requestedRole = $request->attributes->get('role') ?? $request->query->get('role');
+                if ($requestedRole) {
+                    $normalizedRole = str_replace('_', '-', strtolower($requestedRole));
+                    $userRoleValue = $user->getRole()->value;
+                    $expectedRole = match ($normalizedRole) {
+                        'super-admin' => 'ROLE_SUPER_ADMIN',
+                        'sub-admin' => 'ROLE_SUB_ADMIN',
+                        'manager' => 'ROLE_MANAGER',
+                        'staff' => 'ROLE_STAFF',
+                        default => null,
+                    };
+
+                    if ($expectedRole && $userRoleValue !== $expectedRole) {
+                        throw new CustomUserMessageAuthenticationException(sprintf(
+                            'Your account does not have permission to log in as %s.',
+                            str_replace('-', ' ', $requestedRole)
+                        ));
+                    }
+                }
+
+                return $user;
+            }),
             new PasswordCredentials($password),
             [
                 new CsrfTokenBadge('authenticate', $csrfToken),
@@ -76,7 +107,33 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
         $this->em->flush();
 
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
-            return new RedirectResponse($targetPath);
+            $path = parse_url($targetPath, PHP_URL_PATH);
+            $roles = $user->getRoles();
+            $isAuthorized = true;
+
+            if (str_contains($path, '/dashboard/super-admin') || str_contains($path, '/admin') || str_contains($path, '/settings/admin')) {
+                if (!in_array('ROLE_SUPER_ADMIN', $roles, true)) {
+                    $isAuthorized = false;
+                }
+            } elseif (str_contains($path, '/dashboard/sub-admin')) {
+                if (!in_array('ROLE_SUB_ADMIN', $roles, true)) {
+                    $isAuthorized = false;
+                }
+            } elseif (str_contains($path, '/dashboard/manager')) {
+                if (!in_array('ROLE_MANAGER', $roles, true)) {
+                    $isAuthorized = false;
+                }
+            } elseif (str_contains($path, '/dashboard/staff')) {
+                if (!in_array('ROLE_STAFF', $roles, true)) {
+                    $isAuthorized = false;
+                }
+            }
+
+            if ($isAuthorized) {
+                return new RedirectResponse($targetPath);
+            }
+            
+            $this->removeTargetPath($request->getSession(), $firewallName);
         }
 
         $roles = $user->getRoles();

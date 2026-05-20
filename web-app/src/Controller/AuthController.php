@@ -29,7 +29,19 @@ class AuthController extends AbstractController
     public function index(): Response
     {
         if ($this->getUser()) {
-            return $this->redirectToRoute('app_dashboard');
+            $roles = $this->getUser()->getRoles();
+            if (in_array('ROLE_SUPER_ADMIN', $roles, true)) {
+                return $this->redirectToRoute('app_dashboard_super_admin');
+            }
+            if (in_array('ROLE_SUB_ADMIN', $roles, true)) {
+                return $this->redirectToRoute('app_dashboard_sub_admin');
+            }
+            if (in_array('ROLE_MANAGER', $roles, true)) {
+                return $this->redirectToRoute('app_dashboard_manager');
+            }
+            if (in_array('ROLE_STAFF', $roles, true)) {
+                return $this->redirectToRoute('app_store_dashboard');
+            }
         }
         return $this->redirectToRoute('app_role_select');
     }
@@ -52,7 +64,19 @@ class AuthController extends AbstractController
         Request $request
     ): Response {
         if ($this->getUser()) {
-            return $this->redirectToRoute('app_dashboard');
+            $roles = $this->getUser()->getRoles();
+            if (in_array('ROLE_SUPER_ADMIN', $roles, true)) {
+                return $this->redirectToRoute('app_dashboard_super_admin');
+            }
+            if (in_array('ROLE_SUB_ADMIN', $roles, true)) {
+                return $this->redirectToRoute('app_dashboard_sub_admin');
+            }
+            if (in_array('ROLE_MANAGER', $roles, true)) {
+                return $this->redirectToRoute('app_dashboard_manager');
+            }
+            if (in_array('ROLE_STAFF', $roles, true)) {
+                return $this->redirectToRoute('app_store_dashboard');
+            }
         }
 
         $error = $authenticationUtils->getLastAuthenticationError();

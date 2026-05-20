@@ -20,48 +20,25 @@ class DashboardController extends AbstractController
     public function __construct(private EntityManagerInterface $em) {}
 
     #[Route('', name: 'app_dashboard')]
-    #[IsGranted('ROLE_SUPER_ADMIN')]
-    #[IsGranted('ROLE_SUB_ADMIN')]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER')")]
     public function dashboard(): Response
     {
         $user = $this->getUser();
-        
-        // Get today's sales
-        $today = new \DateTime();
-        $today->setTime(0, 0);
-        
-        $sales = $this->em->getRepository(Sale::class)
-            ->createQueryBuilder('s')
-            ->where('s.createdAt >= :today')
-            ->andWhere('s.status = :status')
-            ->setParameter('today', $today)
-            ->setParameter('status', 'completed')
-            ->getQuery()
-            ->getResult();
+        $roles = $user->getRoles();
 
-        $totalSalesAmount = array_sum(array_map(fn($s) => $s->getTotalAmount(), $sales));
-        $totalTransactions = count($sales);
+        if (in_array('ROLE_SUPER_ADMIN', $roles, true)) {
+            return $this->redirectToRoute('app_dashboard_super_admin');
+        }
 
-        // Low stock products
-        $lowStockProducts = $this->em->getRepository(Product::class)
-            ->createQueryBuilder('p')
-            ->where('p.stockQuantity <= p.reorderLevel')
-            ->setMaxResults(5)
-            ->getQuery()
-            ->getResult();
+        if (in_array('ROLE_SUB_ADMIN', $roles, true)) {
+            return $this->redirectToRoute('app_dashboard_sub_admin');
+        }
 
-        // Unread notifications
-        $unreadNotifications = $this->em->getRepository(Notification::class)
-            ->findBy(['user' => $user, 'isRead' => false]);
+        if (in_array('ROLE_MANAGER', $roles, true)) {
+            return $this->redirectToRoute('app_dashboard_manager');
+        }
 
-        return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'dashboard',
-            'total_sales_amount' => $totalSalesAmount,
-            'total_transactions' => $totalTransactions,
-            'low_stock_products' => $lowStockProducts,
-            'unread_notifications_count' => count($unreadNotifications),
-        ]);
+        return $this->redirectToRoute('app_store_dashboard');
     }
 
     #[Route('/super-admin', name: 'app_dashboard_super_admin')]
