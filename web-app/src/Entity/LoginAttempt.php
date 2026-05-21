@@ -20,13 +20,13 @@ class LoginAttempt
     #[ORM\Column(type: 'string', length: 255)]
     private string $username;
 
-    #[ORM\Column(type: 'string', length: 50)]
+    #[ORM\Column(name: 'ip_address', type: 'string', length: 50)]
     private string $ipAddress;
 
     #[ORM\Column(type: 'boolean')]
     private bool $successful;
 
-    #[ORM\Column(type: 'datetime')]
+    #[ORM\Column(name: 'attempted_at', type: 'datetime')]
     private \DateTime $attemptedAt;
 
     public function __construct()
