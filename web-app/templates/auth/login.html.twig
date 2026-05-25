@@ -48,9 +48,9 @@
                                id="username" 
                                name="username" 
                                class="form-control" 
-                               value="{{ last_username }}" 
                                required 
                                autofocus
+                               autocomplete="off"
                                placeholder="Enter your username">
                     </div>
                 </div>
@@ -64,6 +64,7 @@
                                name="password" 
                                class="form-control" 
                                required
+                               autocomplete="new-password"
                                placeholder="Enter your password">
                         <button class="btn btn-outline-secondary" type="button" id="togglePassword" aria-pressed="false">
                             <i class="bi bi-eye" id="togglePasswordIcon"></i>
@@ -194,9 +195,19 @@
     document.addEventListener('DOMContentLoaded', function () {
         // Alerts are handled by the base layout's toast system
 
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+
+        // Clear username and password fields on load/refresh to ensure no autofill or cached text
+        if (usernameInput) {
+            usernameInput.value = '';
+        }
+        if (passwordInput) {
+            passwordInput.value = '';
+        }
+
         // Password toggle functionality
         const togglePasswordBtn = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('password');
         const togglePasswordIcon = document.getElementById('togglePasswordIcon');
 
         function togglePasswordVisibility(e) {
