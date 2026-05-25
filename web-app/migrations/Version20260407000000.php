@@ -207,7 +207,7 @@ final class Version20260407000000 extends AbstractMigration
             user_agent VARCHAR(500),
             timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         )');
-        $this->addSql('CREATE INDEX idx_user_id_audit ON audit_logs (user_id)');
+        $this->addSql('CREATE INDEX idx_audit_log_user_id ON audit_logs (user_id)');
         $this->addSql('CREATE INDEX idx_module ON audit_logs (module)');
         $this->addSql('CREATE INDEX idx_timestamp ON audit_logs (timestamp)');
 
@@ -219,14 +219,29 @@ final class Version20260407000000 extends AbstractMigration
             successful BOOLEAN NOT NULL,
             attempted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         )');
-        $this->addSql('CREATE INDEX idx_username_login ON login_attempts (username)');
+        $this->addSql('CREATE INDEX idx_login_attempt_username ON login_attempts (username)');
         $this->addSql('CREATE INDEX idx_ip_address ON login_attempts (ip_address)');
         $this->addSql('CREATE INDEX idx_attempted_at ON login_attempts (attempted_at)');
+
+        // Create password_resets table
+        $this->addSql('CREATE TABLE "password_resets" (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES "users"(id) ON DELETE CASCADE,
+            token VARCHAR(255) NOT NULL UNIQUE,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP NOT NULL,
+            used BOOLEAN NOT NULL DEFAULT false,
+            used_at TIMESTAMP DEFAULT NULL
+        )');
+        $this->addSql('CREATE INDEX idx_password_reset_user_id ON "password_resets" (user_id)');
+        $this->addSql('CREATE INDEX idx_token ON "password_resets" (token)');
+        $this->addSql('CREATE INDEX idx_expires_at ON "password_resets" (expires_at)');
     }
 
     public function down(Schema $schema): void
     {
         // Drop tables in reverse order of creation
+        $this->addSql('DROP TABLE IF EXISTS "password_resets"');
         $this->addSql('DROP TABLE IF EXISTS login_attempts');
         $this->addSql('DROP TABLE IF EXISTS audit_logs');
         $this->addSql('DROP TABLE IF EXISTS fuel_quota_reports');
