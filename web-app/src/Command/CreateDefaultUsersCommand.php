@@ -30,51 +30,41 @@ class CreateDefaultUsersCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
 
-        // Only create default users when explicitly enabled via environment variable
-        $createFlag = $_ENV['CREATE_DEFAULT_USERS'] ?? getenv('CREATE_DEFAULT_USERS');
-        if (!$createFlag || $createFlag !== '1') {
-            $io->warning('Creation of default users is disabled. Set CREATE_DEFAULT_USERS=1 to enable.');
-            return Command::SUCCESS;
-        }
+        $io->info('Updating/Creating default users...');
 
-        $io->info('Creating default users...');
+        $superPass = $_ENV['DEFAULT_SUPERADMIN_PASSWORD'] ?? getenv('DEFAULT_SUPERADMIN_PASSWORD') ?: 'password';
+        $managerPass = $_ENV['DEFAULT_MANAGER_PASSWORD'] ?? getenv('DEFAULT_MANAGER_PASSWORD') ?: 'password';
+        $staffPass = $_ENV['DEFAULT_STAFF_PASSWORD'] ?? getenv('DEFAULT_STAFF_PASSWORD') ?: 'password';
 
-        // Use environment-provided passwords when available, otherwise generate secure random passwords
-        $superPass = $_ENV['DEFAULT_SUPERADMIN_PASSWORD'] ?? getenv('DEFAULT_SUPERADMIN_PASSWORD') ?: bin2hex(random_bytes(12));
-        $managerPass = $_ENV['DEFAULT_MANAGER_PASSWORD'] ?? getenv('DEFAULT_MANAGER_PASSWORD') ?: bin2hex(random_bytes(12));
-        $staffPass = $_ENV['DEFAULT_STAFF_PASSWORD'] ?? getenv('DEFAULT_STAFF_PASSWORD') ?: bin2hex(random_bytes(12));
+        $userRepo = $this->em->getRepository(User::class);
 
         // Super Admin
-        $superAdmin = new User();
+        $superAdmin = $userRepo->findOneBy(['username' => 'superadmin']) ?? new User();
         $superAdmin->setUsername('superadmin');
         $superAdmin->setEmail('superadmin@taci.com');
         $superAdmin->setRole(UserRole::ROLE_SUPER_ADMIN);
-        $hashedPassword = $this->passwordHasher->hashPassword($superAdmin, $superPass);
-        $superAdmin->setPassword($hashedPassword);
-        $this->em->persist($superAdmin);
+        $superAdmin->setPassword($this->passwordHasher->hashPassword($superAdmin, $superPass));
+        if (!$superAdmin->getId()) { $this->em->persist($superAdmin); }
 
-        // Manager (Elevated)
-        $manager = new User();
+        // Manager
+        $manager = $userRepo->findOneBy(['username' => 'manager']) ?? new User();
         $manager->setUsername('manager');
         $manager->setEmail('manager@taci.com');
         $manager->setRole(UserRole::ROLE_MANAGER);
-        $hashedPassword = $this->passwordHasher->hashPassword($manager, $managerPass);
-        $manager->setPassword($hashedPassword);
-        $this->em->persist($manager);
+        $manager->setPassword($this->passwordHasher->hashPassword($manager, $managerPass));
+        if (!$manager->getId()) { $this->em->persist($manager); }
 
         // Staff
-        $staff = new User();
+        $staff = $userRepo->findOneBy(['username' => 'staff']) ?? new User();
         $staff->setUsername('staff');
         $staff->setEmail('staff@taci.com');
         $staff->setRole(UserRole::ROLE_STAFF);
-        $hashedPassword = $this->passwordHasher->hashPassword($staff, $staffPass);
-        $staff->setPassword($hashedPassword);
-        $this->em->persist($staff);
+        $staff->setPassword($this->passwordHasher->hashPassword($staff, $staffPass));
+        if (!$staff->getId()) { $this->em->persist($staff); }
 
         $this->em->flush();
 
-        $io->success('Default users created. For security reasons passwords are not displayed in logs.');
-        $io->note('If you provided DEFAULT_*_PASSWORD environment variables those were used. Otherwise random passwords were generated.');
+        $io->success('Default users created or updated. Passwords set to "password" if not specified in environment.');
 
         return Command::SUCCESS;
     }
