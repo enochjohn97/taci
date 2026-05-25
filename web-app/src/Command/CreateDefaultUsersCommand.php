@@ -36,33 +36,40 @@ class CreateDefaultUsersCommand extends Command
         $managerPass = $_ENV['DEFAULT_MANAGER_PASSWORD'] ?? getenv('DEFAULT_MANAGER_PASSWORD') ?: 'manager@123';
         $staffPass = $_ENV['DEFAULT_STAFF_PASSWORD'] ?? getenv('DEFAULT_STAFF_PASSWORD') ?: 'staff@123';
 
-        $userRepo = $this->em->getRepository(User::class);
+        $conn = $this->em->getConnection();
+        $dummy = new User();
 
-        // Super Admin
-        $superAdmin = $userRepo->findOneBy(['username' => 'superadmin']) ?? new User();
-        $superAdmin->setUsername('superadmin');
-        $superAdmin->setEmail('superadmin@taci.com');
-        $superAdmin->setRole(UserRole::ROLE_SUPER_ADMIN);
-        $superAdmin->setPassword($this->passwordHasher->hashPassword($superAdmin, $superPass));
-        if (!$superAdmin->getId()) { $this->em->persist($superAdmin); }
+        $usersToProcess = [
+            ['username' => 'superadmin', 'email' => 'superadmin@taci.com', 'role' => UserRole::ROLE_SUPER_ADMIN->value, 'pass' => $superPass],
+            ['username' => 'manager', 'email' => 'manager@taci.com', 'role' => UserRole::ROLE_MANAGER->value, 'pass' => $managerPass],
+            ['username' => 'staff', 'email' => 'staff@taci.com', 'role' => UserRole::ROLE_STAFF->value, 'pass' => $staffPass],
+        ];
 
-        // Manager
-        $manager = $userRepo->findOneBy(['username' => 'manager']) ?? new User();
-        $manager->setUsername('manager');
-        $manager->setEmail('manager@taci.com');
-        $manager->setRole(UserRole::ROLE_MANAGER);
-        $manager->setPassword($this->passwordHasher->hashPassword($manager, $managerPass));
-        if (!$manager->getId()) { $this->em->persist($manager); }
-
-        // Staff
-        $staff = $userRepo->findOneBy(['username' => 'staff']) ?? new User();
-        $staff->setUsername('staff');
-        $staff->setEmail('staff@taci.com');
-        $staff->setRole(UserRole::ROLE_STAFF);
-        $staff->setPassword($this->passwordHasher->hashPassword($staff, $staffPass));
-        if (!$staff->getId()) { $this->em->persist($staff); }
-
-        $this->em->flush();
+        foreach ($usersToProcess as $u) {
+            $hashed = $this->passwordHasher->hashPassword($dummy, $u['pass']);
+            
+            $existingId = $conn->fetchOne('SELECT id FROM "users" WHERE username = ?', [$u['username']]);
+            
+            if ($existingId) {
+                $conn->executeStatement('UPDATE "users" SET password = ?, email = ?, role = ? WHERE id = ?', [
+                    $hashed, $u['email'], $u['role'], $existingId
+                ]);
+            } else {
+                $conn->executeStatement(
+                    'INSERT INTO "users" (username, email, role, password, status, dark_mode_enabled, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                    [
+                        $u['username'], 
+                        $u['email'], 
+                        $u['role'], 
+                        $hashed, 
+                        'active', 
+                        '0', 
+                        (new \DateTime())->format('Y-m-d H:i:s'), 
+                        (new \DateTime())->format('Y-m-d H:i:s')
+                    ]
+                );
+            }
+        }
 
         $io->success('Default users created or updated. Passwords set to "password" if not specified in environment.');
 
