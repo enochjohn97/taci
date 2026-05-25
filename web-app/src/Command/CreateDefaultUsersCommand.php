@@ -32,9 +32,9 @@ class CreateDefaultUsersCommand extends Command
 
         $io->info('Updating/Creating default users...');
 
-        $superPass = $_ENV['DEFAULT_SUPERADMIN_PASSWORD'] ?? getenv('DEFAULT_SUPERADMIN_PASSWORD') ?: 'password';
-        $managerPass = $_ENV['DEFAULT_MANAGER_PASSWORD'] ?? getenv('DEFAULT_MANAGER_PASSWORD') ?: 'password';
-        $staffPass = $_ENV['DEFAULT_STAFF_PASSWORD'] ?? getenv('DEFAULT_STAFF_PASSWORD') ?: 'password';
+        $superPass = $_ENV['DEFAULT_SUPERADMIN_PASSWORD'] ?? getenv('DEFAULT_SUPERADMIN_PASSWORD') ?: 'superadmin@123';
+        $managerPass = $_ENV['DEFAULT_MANAGER_PASSWORD'] ?? getenv('DEFAULT_MANAGER_PASSWORD') ?: 'manager@123';
+        $staffPass = $_ENV['DEFAULT_STAFF_PASSWORD'] ?? getenv('DEFAULT_STAFF_PASSWORD') ?: 'staff@123';
 
         $userRepo = $this->em->getRepository(User::class);
 
