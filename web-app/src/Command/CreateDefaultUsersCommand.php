@@ -70,7 +70,7 @@ class CreateDefaultUsersCommand extends Command
             ]);
         }
 
-        $io->success('Default users created or updated. Passwords set to "password" if not specified in environment.');
+        $io->success('Default users created or updated with the custom requested passwords.');
 
         return Command::SUCCESS;
     }
