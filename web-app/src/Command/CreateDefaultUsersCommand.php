@@ -48,27 +48,26 @@ class CreateDefaultUsersCommand extends Command
         foreach ($usersToProcess as $u) {
             $hashed = $this->passwordHasher->hashPassword($dummy, $u['pass']);
             
-            $existingId = $conn->fetchOne('SELECT id FROM "users" WHERE username = ?', [$u['username']]);
+            $sql = '
+                INSERT INTO "users" (username, email, role, password, status, dark_mode_enabled, created_at, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT (username) DO UPDATE 
+                SET password = EXCLUDED.password, 
+                    email = EXCLUDED.email, 
+                    role = EXCLUDED.role,
+                    status = EXCLUDED.status
+            ';
             
-            if ($existingId) {
-                $conn->executeStatement('UPDATE "users" SET password = ?, email = ?, role = ? WHERE id = ?', [
-                    $hashed, $u['email'], $u['role'], $existingId
-                ]);
-            } else {
-                $conn->executeStatement(
-                    'INSERT INTO "users" (username, email, role, password, status, dark_mode_enabled, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                    [
-                        $u['username'], 
-                        $u['email'], 
-                        $u['role'], 
-                        $hashed, 
-                        'active', 
-                        '0', 
-                        (new \DateTime())->format('Y-m-d H:i:s'), 
-                        (new \DateTime())->format('Y-m-d H:i:s')
-                    ]
-                );
-            }
+            $conn->executeStatement($sql, [
+                $u['username'], 
+                $u['email'], 
+                $u['role'], 
+                $hashed, 
+                'active', 
+                '0', 
+                (new \DateTime())->format('Y-m-d H:i:s'), 
+                (new \DateTime())->format('Y-m-d H:i:s')
+            ]);
         }
 
         $io->success('Default users created or updated. Passwords set to "password" if not specified in environment.');
