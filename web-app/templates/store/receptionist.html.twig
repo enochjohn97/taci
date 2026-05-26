@@ -1,0 +1,85 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Receptionist Desk{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h2 class="fw-bold text-dark"><i class="bi bi-front me-2 text-primary"></i>Receptionist Desk</h2>
+            <p class="text-muted mb-0">Customer assistance and basic store inquiries</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">Product Directory</h5>
+                    <div class="input-group w-50">
+                        <span class="input-group-text bg-light border-0"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control bg-light border-0" id="productSearch" placeholder="Search products...">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="border-0 rounded-start">Product</th>
+                                    <th class="border-0">Category</th>
+                                    <th class="border-0">Price</th>
+                                    <th class="border-0 rounded-end text-end">Availability</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in products %}
+                                    <tr class="product-row">
+                                        <td class="fw-bold product-name">{{ product.name }}</td>
+                                        <td class="text-muted">{{ product.category }}</td>
+                                        <td class="text-success fw-bold">${{ product.unitPrice|number_format(2) }}</td>
+                                        <td class="text-end">
+                                            {% if product.stockQuantity > 0 %}
+                                                <span class="badge bg-success rounded-pill px-3">In Stock</span>
+                                            {% else %}
+                                                <span class="badge bg-danger rounded-pill px-3">Out of Stock</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 rounded-4 bg-primary text-white h-100" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);">
+                <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
+                    <i class="bi bi-headset display-1 mb-4 opacity-50"></i>
+                    <h3 class="fw-bold mb-3">Need Assistance?</h3>
+                    <p class="mb-4 opacity-75">Contact a manager for escalated customer issues or special requests.</p>
+                    <button class="btn btn-light btn-lg rounded-pill fw-bold text-primary w-100 shadow-sm">
+                        <i class="bi bi-telephone-fill me-2"></i>Call Manager
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('productSearch').addEventListener('keyup', function(e) {
+    const term = e.target.value.toLowerCase();
+    document.querySelectorAll('.product-row').forEach(row => {
+        const name = row.querySelector('.product-name').textContent.toLowerCase();
+        if (name.includes(term)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

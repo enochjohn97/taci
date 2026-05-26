@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Audit Logs{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h2 class="fw-bold text-dark"><i class="bi bi-journal-text me-2 text-primary"></i>Audit Log</h2>
+            <p class="text-muted mb-0">System activity and security events</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4 py-3 text-muted small fw-bold text-uppercase">Time</th>
+                            <th class="px-4 py-3 text-muted small fw-bold text-uppercase">User</th>
+                            <th class="px-4 py-3 text-muted small fw-bold text-uppercase">Action</th>
+                            <th class="px-4 py-3 text-muted small fw-bold text-uppercase">Module</th>
+                            <th class="px-4 py-3 text-muted small fw-bold text-uppercase">IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                            <tr>
+                                <td class="px-4 py-3 text-muted small">{{ log.timestamp|date('Y-m-d H:i:s') }}</td>
+                                <td class="px-4 py-3 fw-bold">{{ log.user ? log.user.username : 'System' }}</td>
+                                <td class="px-4 py-3"><span class="badge bg-primary rounded-pill px-3">{{ log.action }}</span></td>
+                                <td class="px-4 py-3">{{ log.module }}</td>
+                                <td class="px-4 py-3 text-muted font-monospace small">{{ log.ipAddress }}</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="px-4 py-4 text-center text-muted">No audit logs found.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if total_pages > 1 %}
+            <div class="card-footer bg-white border-0 py-3">
+                <ul class="pagination justify-content-center mb-0">
+                    {% for i in 1..total_pages %}
+                        <li class="page-item {% if current_page == i %}active{% endif %}">
+                            <a class="page-link rounded-circle mx-1 border-0 shadow-sm" href="{{ path('app_settings_audit_log', {'page': i}) }}">{{ i }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

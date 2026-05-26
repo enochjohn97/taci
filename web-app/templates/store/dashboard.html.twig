@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Store Dashboard{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h2 class="fw-bold text-dark"><i class="bi bi-shop me-2 text-primary"></i>Store Dashboard</h2>
+            <p class="text-muted mb-0">Overview of store operations and products</p>
+        </div>
+        <div class="col-auto">
+            <a href="{{ path('app_pos_register') }}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                <i class="bi bi-cart-plus me-2"></i>Open Register
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white border-0 pt-4 pb-0">
+                    <h5 class="fw-bold mb-0">Available Products</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for product in products %}
+                            <div class="col-md-4 col-lg-3">
+                                <div class="card h-100 border rounded-3 hover-shadow transition-all">
+                                    <div class="card-body text-center p-4">
+                                        <div class="display-4 text-primary mb-3">
+                                            <i class="bi bi-box-seam"></i>
+                                        </div>
+                                        <h5 class="card-title fw-bold text-dark mb-1">{{ product.name }}</h5>
+                                        <p class="text-muted small mb-2">{{ product.category }}</p>
+                                        <h4 class="text-success fw-bold mb-3">${{ product.unitPrice|number_format(2) }}</h4>
+                                        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                            <span class="text-muted small">Stock:</span>
+                                            <span class="badge {% if product.stockQuantity <= product.reorderLevel %}bg-danger{% else %}bg-primary{% endif %} rounded-pill">
+                                                {{ product.stockQuantity }} units
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="col-12 text-center py-5">
+                                <div class="text-muted">
+                                    <i class="bi bi-inbox display-1 d-block mb-3"></i>
+                                    <h4>No products available in the store.</h4>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-shadow:hover {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    transform: translateY(-2px);
+}
+.transition-all {
+    transition: all .3s ease-in-out;
+}
+</style>
+{% endblock %}

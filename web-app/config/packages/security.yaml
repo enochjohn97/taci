@@ -48,7 +48,7 @@ security:
     - { path: ^/admin, roles: ROLE_SUPER_ADMIN }
     - { path: ^/settings/admin, roles: ROLE_SUPER_ADMIN }
     - { path: ^/settings/profile, roles: IS_AUTHENTICATED_FULLY }
-    - { path: ^/api/, roles: ROLE_SUPER_ADMIN|ROLE_SUB_ADMIN }
+    - { path: ^/api/, roles: [ROLE_SUPER_ADMIN, ROLE_SUB_ADMIN] }
     - { path: ^/dashboard/super-admin, roles: ROLE_SUPER_ADMIN }
     - { path: ^/dashboard/sub-admin, roles: ROLE_SUB_ADMIN }
     - { path: ^/dashboard/manager, roles: ROLE_MANAGER }

@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="fw-bold text-dark"><i class="bi bi-person-circle me-2 text-primary"></i>My Profile</h2>
+            <p class="text-muted">Manage your personal information and security settings</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-4 pb-0">
+                    <h5 class="fw-bold mb-0">Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <form id="profileForm">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Username</label>
+                            <input type="text" class="form-control form-control-lg bg-light" value="{{ user.username }}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Role</label>
+                            <input type="text" class="form-control form-control-lg bg-light" value="{{ user.role.value }}" readonly>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Email Address</label>
+                            <input type="email" class="form-control form-control-lg" id="emailInput" value="{{ user.email }}">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-3">Update Profile</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-header bg-white border-0 pt-4 pb-0">
+                    <h5 class="fw-bold mb-0">Change Password</h5>
+                </div>
+                <div class="card-body">
+                    <form id="passwordForm">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Current Password</label>
+                            <input type="password" class="form-control form-control-lg" id="currentPassword" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold text-uppercase">New Password</label>
+                            <input type="password" class="form-control form-control-lg" id="newPassword" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-bold text-uppercase">Confirm New Password</label>
+                            <input type="password" class="form-control form-control-lg" id="confirmPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-warning btn-lg w-100 rounded-3 text-dark fw-bold">Change Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

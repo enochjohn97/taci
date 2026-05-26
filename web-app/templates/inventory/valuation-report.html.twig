@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Valuation Report{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h2 class="fw-bold text-dark"><i class="bi bi-graph-up me-2 text-primary"></i>Valuation Report</h2>
+            <p class="text-muted mb-0">Current total value of all stock on hand</p>
+        </div>
+        <div class="col-auto">
+            <div class="bg-success text-white px-4 py-2 rounded-pill shadow-sm">
+                <span class="small text-uppercase fw-bold opacity-75">Total Value:</span>
+                <span class="fs-4 fw-bold ms-2">${{ total_value|number_format(2) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="px-4 py-3 text-muted small fw-bold text-uppercase">Product</th>
+                            <th class="px-4 py-3 text-muted small fw-bold text-uppercase">Category</th>
+                            <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">Quantity on Hand</th>
+                            <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">Unit Cost</th>
+                            <th class="px-4 py-3 text-muted small fw-bold text-uppercase text-end">Total Item Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in valuation %}
+                            <tr>
+                                <td class="px-4 py-3 fw-bold">{{ item.product.name }}</td>
+                                <td class="px-4 py-3 text-muted">{{ item.product.category }}</td>
+                                <td class="px-4 py-3 text-end fw-bold">{{ item.quantity }}</td>
+                                <td class="px-4 py-3 text-end text-muted">${{ item.unitCost|default(item.product.unitPrice)|number_format(2) }}</td>
+                                <td class="px-4 py-3 text-end text-success fw-bold fs-6">${{ item.itemValue|number_format(2) }}</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="px-4 py-5 text-center text-muted">No products found for valuation.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
