@@ -15,8 +15,8 @@
             </a>
         </li>
 
-        {# Fuel Management (Super/Sub Admin) #}
-        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER') %}
+        {# Fuel Management (Super/Sub Admin/Manager) #}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') %}
             <li class="nav-item">
                 <a class="nav-link {% if app.request.get('_route') starts with 'app_fuel' %}active{% endif %}" 
                    data-bs-toggle="collapse" href="#fuelMenu">
@@ -33,8 +33,8 @@
             </li>
         {% endif %}
 
-        {# Inventory (Sub/Super Admin) #}
-        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER') %}
+        {# Inventory (Super/Sub Admin/Manager) #}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') %}
             <li class="nav-item">
                 <a class="nav-link {% if app.request.get('_route') starts with 'app_inventory' %}active{% endif %}" 
                    data-bs-toggle="collapse" href="#inventoryMenu">
@@ -52,25 +52,23 @@
             </li>
         {% endif %}
 
-        {# POS/Store #}
-        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF') %}
-            <li class="nav-item">
-                <a class="nav-link {% if app.request.get('_route') starts with 'app_pos' %}active{% endif %}" 
-                   data-bs-toggle="collapse" href="#posMenu">
-                    <i class="bi bi-cash-register"></i> POS
-                    <i class="bi bi-chevron-down float-end"></i>
-                </a>
-                <div class="collapse {% if app.request.get('_route') starts with 'app_pos' %}show{% endif %}" id="posMenu">
-                    <ul class="nav flex-column ms-3">
-                        <li><a class="nav-link" href="{{ path('app_pos_dashboard') }}">Dashboard</a></li>
-                        <li><a class="nav-link" href="{{ path('app_pos_register') }}">Register</a></li>
-                        <li><a class="nav-link" href="{{ path('app_pos_daily_summary') }}">Daily Summary</a></li>
-                    </ul>
-                </div>
-            </li>
-        {% endif %}
+        {# POS/Store (All roles) #}
+        <li class="nav-item">
+            <a class="nav-link {% if app.request.get('_route') starts with 'app_pos' %}active{% endif %}" 
+               data-bs-toggle="collapse" href="#posMenu">
+                <i class="bi bi-cash-register"></i> POS
+                <i class="bi bi-chevron-down float-end"></i>
+            </a>
+            <div class="collapse {% if app.request.get('_route') starts with 'app_pos' %}show{% endif %}" id="posMenu">
+                <ul class="nav flex-column ms-3">
+                    <li><a class="nav-link" href="{{ path('app_pos_dashboard') }}">Dashboard</a></li>
+                    <li><a class="nav-link" href="{{ path('app_pos_register') }}">Register</a></li>
+                    <li><a class="nav-link" href="{{ path('app_pos_daily_summary') }}">Daily Summary</a></li>
+                </ul>
+            </div>
+        </li>
 
-        {# Memos #}
+        {# Memos (All roles) #}
         <li class="nav-item">
             <a class="nav-link {% if app.request.get('_route') starts with 'app_memo' %}active{% endif %}" 
                data-bs-toggle="collapse" href="#memoMenu">
@@ -85,8 +83,8 @@
             </div>
         </li>
 
-        {# Loyalty Program (Super/Sub Admin) #}
-        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER') %}
+        {# Loyalty Program (Super/Sub Admin/Manager) #}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') %}
             <li class="nav-item">
                 <a class="nav-link {% if app.request.get('_route') starts with 'app_loyalty' %}active{% endif %}" 
                    data-bs-toggle="collapse" href="#loyaltyMenu">
@@ -104,8 +102,8 @@
             </li>
         {% endif %}
 
-        {# Reports (Super/Sub Admin) #}
-        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER') %}
+        {# Reports (Super/Sub Admin/Manager) #}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') %}
             <li class="nav-item">
                 <a class="nav-link {% if app.request.get('_route') starts with 'app_reports' %}active{% endif %}" 
                    data-bs-toggle="collapse" href="#reportsMenu">
@@ -123,31 +121,15 @@
             </li>
         {% endif %}
 
-        {# Notifications #}
-        <li class="nav-item">
-            <a class="nav-link {% if app.request.get('_route') starts with 'app_notifications' %}active{% endif %}" 
-               href="{{ path('app_notifications') }}">
-                <i class="bi bi-bell-fill"></i> Notifications
-            </a>
-        </li>
-
-        {# Settings (All) #}
-        <li class="nav-item">
-            <a class="nav-link {% if app.request.get('_route') starts with 'app_settings' %}active{% endif %}" 
-               data-bs-toggle="collapse" href="#settingsMenu">
-                <i class="bi bi-gear-fill"></i> Settings
-                <i class="bi bi-chevron-down float-end"></i>
-            </a>
-            <div class="collapse {% if app.request.get('_route') starts with 'app_settings' %}show{% endif %}" id="settingsMenu">
-                <ul class="nav flex-column ms-3">
-                    <li><a class="nav-link" href="{{ path('app_settings_profile') }}">Profile</a></li>
-                    {% if is_granted('ROLE_SUPER_ADMIN') %}
-                        <li><a class="nav-link" href="{{ path('app_settings_admin') }}">Admin Panel</a></li>
-                        <li><a class="nav-link" href="{{ path('app_settings_audit_log') }}">Audit Log</a></li>
-                    {% endif %}
-                </ul>
-            </div>
-        </li>
+        {# Tracking (Super/Sub Admin/Manager) #}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') %}
+            <li class="nav-item">
+                <a class="nav-link {% if app.request.get('_route') starts with 'app_tracking' %}active{% endif %}" 
+                   href="{{ path('app_tracking') }}">
+                    <i class="bi bi-geo-alt-fill"></i> Tracking
+                </a>
+            </li>
+        {% endif %}
     </ul>
 
     <hr class="bg-secondary mt-4">
@@ -155,8 +137,7 @@
     {# User Info & Logout #}
     <div class="text-white-50 small mt-4">
         <div class="mb-3">
-            <div class="text-white">{{ app.user.username }}</div>
-            <div>{{ app.user.role.value }}</div>
+            <div class="text-white fw-semibold">{{ app.user.username }}</div>
         </div>
         <a href="{{ path('app_logout') }}" class="btn btn-sm btn-outline-danger w-100">
             <i class="bi bi-box-arrow-right"></i> Logout

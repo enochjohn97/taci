@@ -1,0 +1,323 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Cashier Terminal – {{ app_name }}{% endblock %}
+
+{% block styles %}
+<style>
+    .product-card {
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+    }
+    .product-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(0, 102, 204, 0.15);
+        border-color: var(--primary);
+    }
+    .cart-container {
+        position: sticky;
+        top: 20px;
+        max-height: calc(100vh - 120px);
+        display: flex;
+        flex-direction: column;
+    }
+    .cart-items-list {
+        overflow-y: auto;
+        flex-grow: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+    <div class="row g-4">
+        <!-- Products Lookup Panel -->
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h2 class="mb-1 text-white">POS Terminal</h2>
+                    <p class="text-muted mb-0">Select products or search by barcode to ring up items.</p>
+                </div>
+                <div style="width: 300px;">
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" id="productSearch" class="form-control bg-dark text-white border-secondary" placeholder="Search product or barcode...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories bar -->
+            <div class="d-flex gap-2 mb-4 overflow-auto pb-2">
+                <button class="btn btn-primary btn-sm category-filter" data-category="all">All Items</button>
+                <button class="btn btn-outline-secondary btn-sm category-filter" data-category="Fuel">Fuel</button>
+                <button class="btn btn-outline-secondary btn-sm category-filter" data-category="Lubricants">Lubricants</button>
+                <button class="btn btn-outline-secondary btn-sm category-filter" data-category="Services">Services</button>
+                <button class="btn btn-outline-secondary btn-sm category-filter" data-category="Other">Other</button>
+            </div>
+
+            <!-- Product Grid -->
+            <div class="row row-cols-1 row-cols-md-3 g-3" id="productsGrid">
+                {% for product in products %}
+                    <div class="col product-item" data-id="{{ product.id }}" data-name="{{ product.name }}" data-price="{{ product.unitPrice }}" data-barcode="{{ product.barcode }}" data-category="{{ product.category }}" data-stock="{{ product.stockQuantity }}">
+                        <div class="card h-100 product-card bg-dark border-secondary p-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="badge bg-secondary text-uppercase">{{ product.category }}</span>
+                                <span class="badge bg-{{ product.stockQuantity > 10 ? 'success' : 'danger' }}">Stock: {{ product.stockQuantity }}</span>
+                            </div>
+                            <h5 class="text-white mb-1">{{ product.name }}</h5>
+                            <small class="text-muted d-block mb-3">Barcode: <code>{{ product.barcode }}</code></small>
+                            <div class="d-flex align-items-center justify-content-between mt-auto">
+                                <span class="text-primary fw-bold fs-5">₦{{ product.unitPrice|number_format(2) }}</span>
+                                <button class="btn btn-primary btn-sm add-to-cart-btn" {{ product.stockQuantity <= 0 ? 'disabled' : '' }}>
+                                    <i class="bi bi-plus-lg"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-12 text-center text-muted py-5">
+                        No products available in the system catalog.
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Checkout / Shopping Cart Column -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 cart-container bg-dark text-white p-3">
+                <div class="border-bottom border-secondary pb-3 mb-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white"><i class="bi bi-cart3 text-primary"></i> Current Cart</h5>
+                    <button class="btn btn-outline-danger btn-sm py-1 px-2" id="clearCartBtn"><i class="bi bi-trash"></i></button>
+                </div>
+
+                <!-- Cart Items -->
+                <div class="cart-items-list mb-3" id="cartItemsList">
+                    <div class="text-center text-muted py-5" id="emptyCartMessage">
+                        <i class="bi bi-basket fs-2 mb-2 d-block"></i>
+                        Cart is empty.
+                    </div>
+                </div>
+
+                <!-- Order Calculation -->
+                <div class="border-top border-secondary pt-3 mt-auto">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Subtotal</span>
+                        <span class="fw-bold" id="cartSubtotal">₦0.00</span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Discount (₦)</label>
+                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" id="discountInput" value="0" min="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Payment Method</label>
+                        <select class="form-select form-select-sm bg-dark text-white border-secondary" id="paymentMethodSelect">
+                            <option value="cash">Cash</option>
+                            <option value="pos">POS Terminal</option>
+                            <option value="transfer">Bank Transfer</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex justify-content-between border-top border-secondary pt-3 mb-4">
+                        <span class="h5 mb-0 text-white">Total</span>
+                        <span class="h5 mb-0 text-success fw-bold" id="cartTotal">₦0.00</span>
+                    </div>
+
+                    <button class="btn btn-success w-100 py-2 d-flex align-items-center justify-content-center gap-2" id="checkoutBtn" disabled>
+                        <i class="bi bi-credit-card"></i> Process Checkout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    let cart = [];
+
+    const productsGrid = document.getElementById('productsGrid');
+    const productSearch = document.getElementById('productSearch');
+    const categoryFilters = document.querySelectorAll('.category-filter');
+    const cartItemsList = document.getElementById('cartItemsList');
+    const emptyCartMessage = document.getElementById('emptyCartMessage');
+    const cartSubtotal = document.getElementById('cartSubtotal');
+    const cartTotal = document.getElementById('cartTotal');
+    const discountInput = document.getElementById('discountInput');
+    const paymentMethodSelect = document.getElementById('paymentMethodSelect');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const clearCartBtn = document.getElementById('clearCartBtn');
+
+    // Search and Category Filters
+    function filterProducts() {
+        const query = productSearch.value.toLowerCase();
+        const activeCategoryBtn = document.querySelector('.category-filter.btn-primary');
+        const category = activeCategoryBtn ? activeCategoryBtn.getAttribute('data-category') : 'all';
+
+        const items = document.querySelectorAll('.product-item');
+        items.forEach(item => {
+            const name = item.getAttribute('data-name').toLowerCase();
+            const barcode = item.getAttribute('data-barcode').toLowerCase();
+            const itemCategory = item.getAttribute('data-category');
+
+            const matchesSearch = name.includes(query) || barcode.includes(query);
+            const matchesCategory = category === 'all' || itemCategory === category;
+
+            if (matchesSearch && matchesCategory) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    productSearch.addEventListener('input', filterProducts);
+
+    categoryFilters.forEach(btn => {
+        btn.addEventListener('click', () => {
+            categoryFilters.forEach(b => b.classList.replace('btn-primary', 'btn-outline-secondary'));
+            btn.classList.replace('btn-outline-secondary', 'btn-primary');
+            filterProducts();
+        });
+    });
+
+    // Add to Cart
+    document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const col = e.target.closest('.product-item');
+            const id = parseInt(col.getAttribute('data-id'));
+            const name = col.getAttribute('data-name');
+            const price = parseFloat(col.getAttribute('data-price'));
+            const stock = parseInt(col.getAttribute('data-stock'));
+
+            addToCart(id, name, price, stock);
+        });
+    });
+
+    function addToCart(id, name, price, stock) {
+        const existing = cart.find(i => i.productId === id);
+        if (existing) {
+            if (existing.quantity >= stock) {
+                toast.warning(`Cannot exceed available stock of ${stock} items`);
+                return;
+            }
+            existing.quantity++;
+        } else {
+            cart.push({ productId: id, name, price, quantity: 1, stock });
+        }
+        updateCart();
+    }
+
+    function updateCart() {
+        cartItemsList.innerHTML = '';
+        if (cart.length === 0) {
+            cartItemsList.appendChild(emptyCartMessage);
+            checkoutBtn.disabled = true;
+            cartSubtotal.textContent = '₦0.00';
+            cartTotal.textContent = '₦0.00';
+            return;
+        }
+
+        checkoutBtn.disabled = false;
+        let subtotal = 0;
+
+        cart.forEach((item, idx) => {
+            subtotal += item.price * item.quantity;
+            const div = document.createElement('div');
+            div.className = 'd-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary border-opacity-50';
+            div.innerHTML = `
+                <div>
+                    <h6 class="mb-0 text-white">${item.name}</h6>
+                    <small class="text-muted">₦${item.price.toFixed(2)} x ${item.quantity}</small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-outline-secondary btn-sm py-0 px-2 q-dec" data-idx="${idx}">-</button>
+                    <span class="fw-bold">${item.quantity}</span>
+                    <button class="btn btn-outline-secondary btn-sm py-0 px-2 q-inc" data-idx="${idx}">+</button>
+                    <button class="btn btn-outline-danger btn-sm py-0 px-2 q-rem" data-idx="${idx}"><i class="bi bi-x"></i></button>
+                </div>
+            `;
+            cartItemsList.appendChild(div);
+        });
+
+        const discount = parseFloat(discountInput.value) || 0;
+        const total = Math.max(0, subtotal - discount);
+
+        cartSubtotal.textContent = `₦${subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        cartTotal.textContent = `₦${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+        // Attach action handlers
+        document.querySelectorAll('.q-dec').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.target.getAttribute('data-idx'));
+                if (cart[idx].quantity > 1) {
+                    cart[idx].quantity--;
+                } else {
+                    cart.splice(idx, 1);
+                }
+                updateCart();
+            });
+        });
+
+        document.querySelectorAll('.q-inc').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.target.getAttribute('data-idx'));
+                if (cart[idx].quantity >= cart[idx].stock) {
+                    toast.warning(`Cannot exceed available stock of ${cart[idx].stock}`);
+                    return;
+                }
+                cart[idx].quantity++;
+                updateCart();
+            });
+        });
+
+        document.querySelectorAll('.q-rem').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.target.closest('.q-rem').getAttribute('data-idx'));
+                cart.splice(idx, 1);
+                updateCart();
+            });
+        });
+    }
+
+    discountInput.addEventListener('input', updateCart);
+    clearCartBtn.addEventListener('click', () => {
+        cart = [];
+        updateCart();
+    });
+
+    // Checkout Post
+    checkoutBtn.addEventListener('click', async () => {
+        checkoutBtn.disabled = true;
+        const payload = {
+            items: cart.map(i => ({ productId: i.productId, quantity: i.quantity })),
+            paymentMethod: paymentMethodSelect.value,
+            discountAmount: parseFloat(discountInput.value) || 0,
+            loyaltyPointsUsed: 0
+        };
+
+        try {
+            const res = await fetch('{{ path("app_store_checkout") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast.success(`Checkout successfully finalized! Sale ID: #${data.saleId}`);
+                cart = [];
+                updateCart();
+                // Reload page after a short delay to refresh stock counts
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                toast.error(data.error || 'Failed to process checkout');
+                checkoutBtn.disabled = false;
+            }
+        } catch (err) {
+            toast.error('Connection error occurred during checkout');
+            checkoutBtn.disabled = false;
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inventory Audit Trail – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="mb-1 text-white">Inventory Audit Trail</h2>
+            <p class="text-muted mb-0">Chronological history log of all stock adjustments, purchases, POS sales, and transfers.</p>
+        </div>
+        <div class="d-flex gap-2">
+            {% if product_id %}
+                <a href="{{ path('app_inventory_audit') }}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-x-circle me-1"></i> Clear Filter
+                </a>
+            {% endif %}
+            <a href="{{ path('app_inventory_alerts') }}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-exclamation-triangle me-1"></i> Low Stock Alerts
+            </a>
+        </div>
+    </div>
+
+    <!-- Audit Logs List -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-transparent border-bottom border-secondary py-3 d-flex align-items-center justify-content-between">
+            <h5 class="mb-0 text-white">
+                {% if product_id %}
+                    Stock Movements for Product ID: #{{ product_id }}
+                {% else %}
+                    System-wide Stock Movements
+                {% endif %}
+            </h5>
+            <span class="badge bg-primary">{{ logs|length }} Logs Listed</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover table-dark align-middle mb-0">
+                <thead class="table-light text-dark">
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Product Details</th>
+                        <th>Action</th>
+                        <th class="text-center">Qty Delta</th>
+                        <th class="text-center">Before</th>
+                        <th class="text-center">After</th>
+                        <th>Authorized By</th>
+                        <th>Reference / Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                        <tr>
+                            <td class="text-muted small">
+                                {{ log.timestamp|date('Y-m-d H:i:s') }}
+                            </td>
+                            <td>
+                                {% if log.product %}
+                                    <a href="{{ path('app_inventory_product_view', {id: log.product.id}) }}" class="fw-bold text-white text-decoration-none hover-primary">
+                                        {{ log.product.name }}
+                                    </a>
+                                    <small class="text-muted d-block">SKU: <code>{{ log.product.barcode }}</code></small>
+                                {% else %}
+                                    <span class="text-muted">[Product Deleted]</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% set action_upper = log.actionType|upper %}
+                                <span class="badge bg-{{ log.actionType == 'in' ? 'success' : (log.actionType == 'out' ? 'danger' : 'info') }}">
+                                    {{ action_upper }}
+                                </span>
+                            </td>
+                            <td class="text-center fw-bold {{ log.actionType == 'in' ? 'text-success' : 'text-danger' }}">
+                                {{ log.actionType == 'in' ? '+' : '-' }}{{ log.quantityChanged }}
+                            </td>
+                            <td class="text-center text-muted">{{ log.stockBefore }}</td>
+                            <td class="text-center fw-bold text-white">{{ log.stockAfter }}</td>
+                            <td>
+                                <span class="text-white">{{ log.performedBy ? log.performedBy.username : 'System' }}</span>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ log.notes ?: log.reference ?: 'N/A' }}</small>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-5">
+                                <i class="bi bi-journal-x fs-3 mb-2 d-block"></i>
+                                No stock movement records found.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

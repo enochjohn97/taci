@@ -33,7 +33,7 @@ class InventoryLog
     private int $stockAfter;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'performed_by', nullable: false, onDelete: 'CASCADE')]
     private User $performedBy;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]

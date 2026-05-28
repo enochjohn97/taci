@@ -20,9 +20,7 @@ class DashboardController extends AbstractController
     public function __construct(private EntityManagerInterface $em) {}
 
     #[Route('', name: 'app_dashboard')]
-    #[IsGranted('ROLE_SUPER_ADMIN')]
-    #[IsGranted('ROLE_SUB_ADMIN')]
-    #[IsGranted('ROLE_MANAGER')]
+    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF')")]
     public function dashboard(): Response
     {
         $user = $this->getUser();

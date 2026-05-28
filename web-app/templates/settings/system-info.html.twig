@@ -1,0 +1,105 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}System Info – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+    <div class="mb-4">
+        <h2 class="mb-1"><i class="bi bi-cpu me-2"></i>System Information</h2>
+        <p class="text-muted mb-0">Runtime environment details and system statistics.</p>
+    </div>
+
+    <div class="row g-4">
+        {# Runtime Info #}
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Runtime Environment</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">PHP Version</span>
+                        <span class="badge bg-primary">{{ php_version }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Symfony Version</span>
+                        <span class="badge bg-secondary">{{ symfony_version }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">App Environment</span>
+                        <span class="badge bg-{{ app.environment == 'prod' ? 'success' : 'warning text-dark' }}">
+                            {{ app.environment|upper }}
+                        </span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Debug Mode</span>
+                        <span class="badge bg-{{ app.debug ? 'danger' : 'success' }}">
+                            {{ app.debug ? 'ON' : 'OFF' }}
+                        </span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Server Time</span>
+                        <span class="fw-semibold" id="serverTime">{{ "now"|date('Y-m-d H:i:s') }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">PHP Memory Limit</span>
+                        <span class="badge bg-light text-dark border">{{ php_uname() is defined ? php_uname() : ini_get('memory_limit') }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Data Statistics #}
+        <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart me-2"></i>Database Statistics</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Total Users</span>
+                        <span class="badge bg-primary rounded-pill">{{ user_count }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Total Sales Recorded</span>
+                        <span class="badge bg-success rounded-pill">{{ sale_count }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Total Products</span>
+                        <span class="badge bg-info rounded-pill">{{ product_count }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">System Status</span>
+                        <span class="badge bg-success">
+                            <i class="bi bi-circle-fill me-1" style="font-size:.5rem;"></i> Operational
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Quick Actions #}
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body d-flex flex-wrap gap-3">
+                    <form method="POST" action="{{ path('app_settings_database_backup') }}" class="d-inline">
+                        <button type="submit" class="btn btn-outline-secondary" onclick="return confirm('Initiate database backup?')">
+                            <i class="bi bi-cloud-arrow-down me-1"></i> Backup Database
+                        </button>
+                    </form>
+                    <a href="{{ path('app_settings_audit_log') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-journal-text me-1"></i> View Audit Log
+                    </a>
+                    <a href="{{ path('app_settings_admin_users') }}" class="btn btn-outline-info">
+                        <i class="bi bi-people me-1"></i> Manage Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

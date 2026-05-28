@@ -1,0 +1,273 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Shipment Tracking – {{ app_name }}{% endblock %}
+
+{% block styles %}
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 3rem;
+        margin-top: 1.5rem;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 0.95rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: rgba(255, 255, 255, 0.1);
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+    .timeline-marker {
+        position: absolute;
+        left: -2.55rem;
+        width: 1.3rem;
+        height: 1.3rem;
+        border-radius: 50%;
+        background: var(--card-bg);
+        border: 2px solid var(--text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .timeline-item.active .timeline-marker {
+        border-color: var(--primary);
+        background: var(--primary);
+        box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.2);
+    }
+    .timeline-item.completed .timeline-marker {
+        border-color: #10b981;
+        background: #10b981;
+    }
+    .timeline-item.pending .timeline-marker {
+        border-color: var(--text-muted);
+        background: var(--card-bg);
+    }
+    .progress-bar-custom {
+        height: 8px;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+    }
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary), var(--accent));
+        transition: width 0.5s ease-in-out;
+    }
+    .map-placeholder {
+        background: radial-gradient(circle, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 1) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        height: 250px;
+        position: relative;
+        overflow: hidden;
+    }
+    .map-grid {
+        position: absolute;
+        inset: 0;
+        background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 20px 20px;
+    }
+    .pulse-dot {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 0 0 rgba(245, 166, 35, 0.7);
+        animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+        0% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(245, 166, 35, 0.7);
+        }
+        70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 10px rgba(245, 166, 35, 0);
+        }
+        100% {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 0 rgba(245, 166, 35, 0);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="mb-1 text-white">Live Cargo & Dispatch Tracking</h2>
+            <p class="text-muted mb-0">Monitor active fuel supply tankers and retail inventory logistics in real-time.</p>
+        </div>
+        <button onclick="location.reload();" class="btn btn-outline-light btn-sm d-flex align-items-center gap-2">
+            <i class="bi bi-arrow-clockwise"></i> Refresh Status
+        </button>
+    </div>
+
+    <!-- Active Deliveries Overview -->
+    <div class="row g-4 mb-4">
+        <!-- Fuel Trucks -->
+        <div class="col-lg-7">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-transparent border-bottom border-secondary py-3 d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 text-white d-flex align-items-center gap-2">
+                        <i class="bi bi-truck text-primary"></i> Fuel Tanker Dispatches
+                    </h5>
+                    <span class="badge bg-primary">{{ fuel_trucks|length }} Active</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for truck in fuel_trucks %}
+                            <div class="list-group-item bg-transparent border-bottom border-secondary p-4">
+                                <div class="d-flex align-items-start justify-content-between mb-3">
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="h5 mb-0 text-white">{{ truck.plate }}</span>
+                                            <span class="badge bg-{{ truck.status == 'arrived' ? 'success' : (truck.status == 'in_transit' ? 'primary' : 'warning') }} text-uppercase">
+                                                {{ truck.status|replace({'_': ' '}) }}
+                                            </span>
+                                        </div>
+                                        <small class="text-muted d-block mt-1">
+                                            Driver: <strong>{{ truck.driver }}</strong> &bull; Capacity: {{ truck.capacity }}
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        {% if truck.status == 'in_transit' %}
+                                            <small class="text-muted d-block">ETA</small>
+                                            <span class="text-accent fw-bold">{{ truck.eta|date('H:i') }} ({{ truck.eta.diff(date()).h }}h {{ truck.eta.diff(date()).i }}m left)</span>
+                                        {% elseif truck.status == 'arrived' %}
+                                            <span class="text-success fw-bold d-flex align-items-center gap-1">
+                                                <i class="bi bi-check-circle-fill"></i> Arrived
+                                            </span>
+                                            <small class="text-muted d-block mt-1">at {{ truck.eta|date('H:i') }}</small>
+                                        {% else %}
+                                            <span class="text-warning fw-bold">Loading Depot</span>
+                                            <small class="text-muted d-block mt-1">Est. Dispatch in 1h</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Progress Tracker -->
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between text-muted small mb-1">
+                                        <span>{{ truck.origin }}</span>
+                                        <span>{{ truck.progress }}%</span>
+                                        <span>{{ truck.destination }}</span>
+                                    </div>
+                                    <div class="progress-bar-custom">
+                                        <div class="progress-bar-fill" style="width: {{ truck.progress }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Map Visualization -->
+        <div class="col-lg-5">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-transparent border-bottom border-secondary py-3">
+                    <h5 class="mb-0 text-white d-flex align-items-center gap-2">
+                        <i class="bi bi-map text-accent"></i> Dispatch Transit Radar
+                    </h5>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div class="map-placeholder">
+                        <div class="map-grid"></div>
+                        <!-- Warri Depot -->
+                        <div class="pulse-dot" style="left: 30%; top: 60%;" title="Warri Depot"></div>
+                        <span class="text-muted small position-absolute" style="left: 28%; top: 68%;">Warri Depot</span>
+                        
+                        <!-- Main Station -->
+                        <div class="pulse-dot" style="left: 75%; top: 35%; background: var(--primary); box-shadow: 0 0 0 0 rgba(0,102,204,0.7);" title="Main Station"></div>
+                        <span class="text-primary small position-absolute fw-semibold" style="left: 70%; top: 22%;">Main Station</span>
+
+                        <!-- Truck 1 Dot -->
+                        <div class="pulse-dot" style="left: 55%; top: 48%; background: #10b981; box-shadow: 0 0 0 0 rgba(16,185,129,0.7);" title="AGL-701-A"></div>
+                        <span class="text-white small position-absolute" style="left: 50%; top: 56%;">AGL-701-A (60%)</span>
+                    </div>
+
+                    <div class="mt-3 p-3 bg-dark bg-opacity-50 rounded border border-secondary">
+                        <div class="d-flex align-items-center gap-2 text-white mb-2">
+                            <span class="spinner-grow spinner-grow-sm text-success" role="status"></span>
+                            <span class="fw-semibold">Telematic Feed Active</span>
+                        </div>
+                        <p class="text-muted small mb-0">GPS tracking signals are updating every 30 seconds. Automatic arrival gates will detect tankers on boundary entry.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock / Cargo Shipments -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-transparent border-bottom border-secondary py-3">
+            <h5 class="mb-0 text-white d-flex align-items-center gap-2">
+                <i class="bi bi-box-seam text-success"></i> Retail & Lube Shipments
+            </h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover table-dark align-middle mb-0">
+                <thead class="table-light text-dark">
+                    <tr>
+                        <th>Item Name / Description</th>
+                        <th>Supplier</th>
+                        <th>Carrier Truck</th>
+                        <th>Status</th>
+                        <th>Expected Delivery</th>
+                        <th style="width: 200px;">Progress</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for shipment in stock_shipments %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold text-white">{{ shipment.item }}</div>
+                                <small class="text-muted">Quantity: {{ shipment.quantity }}</small>
+                            </td>
+                            <td>{{ shipment.supplier }}</td>
+                            <td>
+                                <code class="text-accent">{{ shipment.truck }}</code>
+                            </td>
+                            <td>
+                                {% if shipment.status == 'delivered' %}
+                                    <span class="badge bg-success">Delivered</span>
+                                {% elseif shipment.status == 'in_transit' %}
+                                    <span class="badge bg-primary">In Transit</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Pending Dispatch</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="text-muted">{{ shipment.expected|date('M d, H:i') }}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 6px;">
+                                        <div class="progress-bar bg-{{ shipment.status == 'delivered' ? 'success' : 'primary' }}" role="progressbar" style="width: {{ shipment.progress }}%"></div>
+                                    </div>
+                                    <small class="text-muted">{{ shipment.progress }}%</small>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No active bulk stock shipments.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

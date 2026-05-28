@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: '`password_resets`')]
-#[ORM\Index(columns: ['user_id'], name: 'idx_user_id')]
+#[ORM\Index(columns: ['user_id'], name: 'idx_password_reset_user_id')]
 #[ORM\Index(columns: ['token'], name: 'idx_token')]
 #[ORM\Index(columns: ['expires_at'], name: 'idx_expires_at')]
 class PasswordReset

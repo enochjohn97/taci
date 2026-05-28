@@ -1,0 +1,171 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Receptionist Dashboard – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="mb-1 text-white">Front Desk Terminal</h2>
+            <p class="text-muted mb-0">Manage guest registration, internal notices, and system status.</p>
+        </div>
+        <button onclick="location.reload();" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-arrow-clockwise"></i> Refresh Dashboard
+        </button>
+    </div>
+
+    <div class="row g-4">
+        <!-- Guest Registration Form -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 h-100 bg-dark text-white p-3">
+                <div class="card-header bg-transparent border-bottom border-secondary pb-3 mb-3">
+                    <h5 class="mb-0 text-white"><i class="bi bi-person-plus text-primary"></i> Guest Check-In</h5>
+                </div>
+                <form id="visitorForm" onsubmit="event.preventDefault(); registerVisitor();">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Guest Full Name</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" id="guestName" required placeholder="e.g. John Doe">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Company / Affiliation</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" id="guestCompany" placeholder="e.g. NNPC Ltd">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Purpose of Visit</label>
+                        <select class="form-select bg-dark text-white border-secondary" id="guestPurpose">
+                            <option value="Dispatch Query">Dispatch Query</option>
+                            <option value="Manager Meeting">Manager Meeting</option>
+                            <option value="Supplier/Delivery Check">Supplier/Delivery Check</option>
+                            <option value="Audit/Compliance">Audit/Compliance</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Host Employee</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" id="guestHost" required placeholder="e.g. Station Manager">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2">
+                        <i class="bi bi-check2-circle"></i> Log Visitor Entry
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Live Visitor Feed -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 h-100 bg-dark text-white p-3">
+                <div class="card-header bg-transparent border-bottom border-secondary pb-3 mb-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white"><i class="bi bi-people text-accent"></i> Active Visitors (Today)</h5>
+                    <span class="badge bg-primary" id="visitorCount">2 Registered</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-dark align-middle mb-0">
+                        <thead class="table-light text-dark">
+                            <tr>
+                                <th>Visitor</th>
+                                <th>Host / Purpose</th>
+                                <th>Check-in Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="visitorTableBody">
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-white">Musa Yusuf</div>
+                                    <small class="text-muted">Dantata Logistics</small>
+                                </td>
+                                <td>
+                                    <div>Operations Manager</div>
+                                    <small class="text-accent">Depot Dispatch Check</small>
+                                </td>
+                                <td>09:14 AM</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-white">Patricia Henshaw</div>
+                                    <small class="text-muted">Federal Fire Service</small>
+                                </td>
+                                <td>
+                                    <div>Station Safety Inspector</div>
+                                    <small class="text-accent">Routine Inspection</small>
+                                </td>
+                                <td>11:30 AM</td>
+                                <td><span class="badge bg-success">Active</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Price Bulletin board -->
+    <div class="card shadow-sm border-0 mt-4 bg-dark text-white p-3">
+        <div class="card-header bg-transparent border-bottom border-secondary pb-3 mb-3">
+            <h5 class="mb-0 text-white"><i class="bi bi-tag text-success"></i> Retail Price Bulletin</h5>
+        </div>
+        <div class="row row-cols-1 row-cols-md-4 g-3">
+            {% for product in products %}
+                <div class="col">
+                    <div class="p-3 bg-dark bg-opacity-50 border border-secondary rounded d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold text-white">{{ product.name }}</div>
+                            <small class="text-muted">{{ product.category }}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-primary fw-bold fs-5">₦{{ product.unitPrice|number_format(2) }}</span>
+                            <small class="text-muted d-block font-monospace">SKU: {{ product.barcode }}</small>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="col-12 text-center text-muted">No products available.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function registerVisitor() {
+        const name = document.getElementById('guestName').value;
+        const company = document.getElementById('guestCompany').value || 'Independent';
+        const purpose = document.getElementById('guestPurpose').value;
+        const host = document.getElementById('guestHost').value;
+        
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+        const tbody = document.getElementById('visitorTableBody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <div class="fw-bold text-white">${name}</div>
+                <small class="text-muted">${company}</small>
+            </td>
+            <td>
+                <div>${host}</div>
+                <small class="text-accent">${purpose}</small>
+            </td>
+            <td>${timeStr}</td>
+            <td><span class="badge bg-success">Active</span></td>
+        `;
+        tbody.prepend(tr);
+        
+        // Reset Form
+        document.getElementById('guestName').value = '';
+        document.getElementById('guestCompany').value = '';
+        document.getElementById('guestHost').value = '';
+        
+        // Update Count
+        const countBadge = document.getElementById('visitorCount');
+        const currentCount = parseInt(countBadge.textContent) || 0;
+        countBadge.textContent = `${currentCount + 1} Registered`;
+        
+        toast.success(`Visitor check-in log created for ${name}`);
+    }
+</script>
+{% endblock %}

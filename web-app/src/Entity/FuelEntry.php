@@ -21,7 +21,7 @@ class FuelEntry
     private ?float $unitPrice = null;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'entered_by', nullable: false, onDelete: 'CASCADE')]
     private User $enteredBy;
 
     #[ORM\Column(type: 'datetime')]
@@ -77,6 +77,12 @@ class FuelEntry
     public function getCreatedAt(): \DateTime
     {
         return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTime $createdAt): self
+    {
+        $this->createdAt = $createdAt;
+        return $this;
     }
 
     public function getUpdatedAt(): \DateTime

@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Low Stock Alerts – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="mb-1 text-white">Stock Warnings & Alerts</h2>
+            <p class="text-muted mb-0">Products that have fallen below or are approaching their designated safety reorder thresholds.</p>
+        </div>
+        <a href="{{ path('app_inventory_valuation') }}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-file-earmark-bar-graph me-1"></i> Valuation Report
+        </a>
+    </div>
+
+    <!-- Alert Panel if clean -->
+    {% if products is empty %}
+        <div class="card border-0 shadow-sm text-center py-5">
+            <div class="card-body">
+                <div class="text-success mb-3">
+                    <i class="bi bi-check-circle" style="font-size: 3rem;"></i>
+                </div>
+                <h4 class="text-white">All Stock Levels Normal</h4>
+                <p class="text-muted mx-auto" style="max-width: 500px;">
+                    Great news! No products are currently below their reorder threshold. All inventory safety margins are fully satisfied.
+                </p>
+                <a href="{{ path('app_dashboard') }}?view_mode=inventory_products" class="btn btn-primary btn-sm mt-2">
+                    <i class="bi bi-box-seam me-1"></i> Browse Products
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-danger bg-danger bg-opacity-10 border border-danger border-opacity-20 text-danger d-flex align-items-center gap-3 p-3 mb-4 rounded-3" style="display: flex !important;">
+            <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+            <div>
+                <strong class="text-white">Attention Required:</strong> There are {{ products|length }} items currently operating below critical reserve quantities. Please review reorders immediately.
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-transparent border-bottom border-secondary py-3 d-flex align-items-center justify-content-between">
+                <h5 class="mb-0 text-white">Critical Low Stock Items</h5>
+                <span class="badge bg-danger">{{ products|length }} Items</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover table-dark align-middle mb-0">
+                    <thead class="table-light text-dark">
+                        <tr>
+                            <th>Product Details</th>
+                            <th>Barcode</th>
+                            <th>Category</th>
+                            <th class="text-center">Current Qty</th>
+                            <th class="text-center">Reorder Threshold</th>
+                            <th>Deficit / Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="p-2 bg-danger bg-opacity-10 rounded border border-danger border-opacity-20 text-danger">
+                                            <i class="bi bi-box-seam fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <a href="{{ path('app_inventory_product_view', {id: product.id}) }}" class="fw-bold text-white text-decoration-none hover-primary">
+                                                {{ product.name }}
+                                            </a>
+                                            <small class="text-muted d-block">Selling Price: ₦{{ product.unitPrice|number_format(2) }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><code>{{ product.barcode }}</code></td>
+                                <td><span class="badge bg-secondary text-uppercase">{{ product.category }}</span></td>
+                                <td class="text-center">
+                                    <span class="fw-bold text-danger">{{ product.stockQuantity }}</span>
+                                </td>
+                                <td class="text-center text-muted">
+                                    {{ product.reorderLevel }}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-20">
+                                            -{{ product.reorderLevel - product.stockQuantity }} deficit
+                                        </span>
+                                        <a href="{{ path('app_inventory_product_edit', {id: product.id}) }}" class="btn btn-outline-primary btn-sm py-1 px-2 fs-7">
+                                            <i class="bi bi-plus-lg"></i> Reorder
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

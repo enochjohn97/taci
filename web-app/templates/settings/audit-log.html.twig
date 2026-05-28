@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Audit Log – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-journal-text me-2"></i>Audit Log</h2>
+            <p class="text-muted mb-0">
+                Showing page {{ current_page }} of {{ total_pages }} &mdash; {{ total }} total entries
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <input type="search" id="logSearch" class="form-control" placeholder="Filter by user or action…" style="width:220px;">
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="auditTable">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:160px;">Timestamp</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Module</th>
+                        <th>Description</th>
+                        <th>IP Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                        <tr>
+                            <td class="text-muted small text-nowrap">{{ log.timestamp|date('Y-m-d H:i:s') }}</td>
+                            <td class="fw-semibold">{{ log.user ? log.user.username : '—' }}</td>
+                            <td>
+                                <span class="badge bg-{{ 
+                                    log.action starts with 'Delete' ? 'danger' : 
+                                    (log.action starts with 'Create' ? 'success' : 
+                                    (log.action starts with 'Update' or log.action starts with 'Change' ? 'primary' : 'secondary'))
+                                }}">{{ log.action }}</span>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ log.module }}</span></td>
+                            <td class="text-muted small">{{ log.description ?: '—' }}</td>
+                            <td class="text-muted small">{{ log.ipAddress ?: '—' }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-5">
+                                <i class="bi bi-journal-x fs-2 d-block mb-2"></i>
+                                No audit log entries found.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if total_pages > 1 %}
+        <div class="card-footer">
+            <nav>
+                <ul class="pagination pagination-sm mb-0 justify-content-center">
+                    {% if current_page > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ current_page - 1 }}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for p in range([1, current_page - 2]|max, [total_pages, current_page + 2]|min) %}
+                        <li class="page-item {{ p == current_page ? 'active' : '' }}">
+                            <a class="page-link" href="?page={{ p }}">{{ p }}</a>
+                        </li>
+                    {% endfor %}
+
+                    {% if current_page < total_pages %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ current_page + 1 }}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.getElementById('logSearch').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('#auditTable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

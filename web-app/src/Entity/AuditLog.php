@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: '`audit_logs`')]
-#[ORM\Index(columns: ['user_id'], name: 'idx_user_id')]
+#[ORM\Index(columns: ['user_id'], name: 'idx_audit_log_user_id')]
 #[ORM\Index(columns: ['module'], name: 'idx_module')]
 #[ORM\Index(columns: ['timestamp'], name: 'idx_timestamp')]
 class AuditLog

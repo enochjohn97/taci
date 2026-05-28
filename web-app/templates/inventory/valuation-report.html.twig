@@ -1,0 +1,87 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inventory Valuation Report – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="mb-1 text-white">Inventory Valuation</h2>
+            <p class="text-muted mb-0">Total cost and potential revenue assessment of all current stock assets.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button onclick="window.print();" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-printer me-1"></i> Print Report
+            </button>
+            <a href="{{ path('app_inventory_audit') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-journal-text me-1"></i> Audit Trail
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 bg-primary bg-opacity-10 border-start border-4 border-primary">
+                <div class="card-body py-3">
+                    <small class="text-muted uppercase fw-semibold">Total Stock Valuation (Cost)</small>
+                    <h3 class="text-white mt-1 mb-0">₦{{ total_value|number_format(2) }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 bg-success bg-opacity-10 border-start border-4 border-success">
+                <div class="card-body py-3">
+                    <small class="text-muted uppercase fw-semibold">Total Listed Items</small>
+                    <h3 class="text-white mt-1 mb-0">{{ valuation|length }} Products</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Valuation Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-transparent border-bottom border-secondary py-3">
+            <h5 class="mb-0 text-white">Asset Breakdown by Product</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover table-dark align-middle mb-0">
+                <thead class="table-light text-dark">
+                    <tr>
+                        <th>Product Details</th>
+                        <th>Barcode</th>
+                        <th class="text-end">Cost Price</th>
+                        <th class="text-end">Selling Price</th>
+                        <th class="text-center">Available Stock</th>
+                        <th class="text-end">Inventory Value (Cost)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in valuation %}
+                        <tr>
+                            <td>
+                                <a href="{{ path('app_inventory_product_view', {id: item.product.id}) }}" class="fw-bold text-white text-decoration-none hover-primary">
+                                    {{ item.product.name }}
+                                </a>
+                                <small class="text-muted d-block">{{ item.product.category }}</small>
+                            </td>
+                            <td><code>{{ item.product.barcode }}</code></td>
+                            <td class="text-end">₦{{ (item.unitCost ?? 0)|number_format(2) }}</td>
+                            <td class="text-end text-primary">₦{{ item.product.unitPrice|number_format(2) }}</td>
+                            <td class="text-center fw-bold">{{ item.quantity }}</td>
+                            <td class="text-end fw-bold text-success">₦{{ item.itemValue|number_format(2) }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-5">
+                                No inventory items found for valuation.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

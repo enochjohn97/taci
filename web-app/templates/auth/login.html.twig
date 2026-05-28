@@ -48,7 +48,8 @@
                                id="username" 
                                name="username" 
                                class="form-control" 
-                               value="{{ last_username }}" 
+                               value=""
+                               autocomplete="off"
                                required 
                                autofocus
                                placeholder="Enter your username">
@@ -63,6 +64,7 @@
                                id="password" 
                                name="password" 
                                class="form-control" 
+                               autocomplete="new-password"
                                required
                                placeholder="Enter your password">
                         <button class="btn btn-outline-secondary" type="button" id="togglePassword" aria-pressed="false">
@@ -192,6 +194,12 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Force-clear fields on every page load — prevents browser autofill override
+        const usernameField = document.getElementById('username');
+        const passwordField = document.getElementById('password');
+        if (usernameField) usernameField.value = '';
+        if (passwordField) passwordField.value = '';
+
         // Alerts are handled by the base layout's toast system
 
         // Password toggle functionality

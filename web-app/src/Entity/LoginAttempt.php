@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
 #[ORM\Table(name: '`login_attempts`')]
-#[ORM\Index(columns: ['username'], name: 'idx_username')]
+#[ORM\Index(columns: ['username'], name: 'idx_login_attempt_username')]
 #[ORM\Index(columns: ['ip_address'], name: 'idx_ip_address')]
 #[ORM\Index(columns: ['attempted_at'], name: 'idx_attempted_at')]
 class LoginAttempt

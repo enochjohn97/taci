@@ -1,0 +1,92 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ product.name }} – Inventory – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{{ path('app_inventory_products') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <h2 class="mb-0">{{ product.name }}</h2>
+            <small class="text-muted">{{ product.category }} &bull; <code>{{ product.barcode }}</code></small>
+        </div>
+        <div class="ms-auto d-flex gap-2">
+            <a href="{{ path('app_inventory_product_edit', {id: product.id}) }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-pencil me-1"></i> Edit
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header"><h5 class="mb-0">Product Details</h5></div>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Current Stock</span>
+                        <span class="badge bg-{{ product.stockQuantity <= product.reorderLevel ? 'danger' : 'success' }} rounded-pill fs-6">
+                            {{ product.stockQuantity }} units
+                        </span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Reorder Level</span>
+                        <span class="fw-semibold">{{ product.reorderLevel }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Selling Price</span>
+                        <span class="fw-semibold text-primary">₦{{ product.unitPrice|number_format(2) }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Cost Price</span>
+                        <span class="fw-semibold">₦{{ product.costPrice|default(0)|number_format(2) }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Margin</span>
+                        <span class="badge bg-success">{{ product.marginPercentage|default(0)|number_format(1) }}%</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span class="text-muted">Stock Value</span>
+                        <span class="fw-semibold text-success">₦{{ (product.stockQuantity * product.unitPrice)|number_format(2) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header"><h5 class="mb-0">Stock Movement History</h5></div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr><th>Date</th><th>Action</th><th>Qty Changed</th><th>Before</th><th>After</th><th>By</th><th>Notes</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                                <tr>
+                                    <td class="text-muted small">{{ log.timestamp|date('M d, Y H:i') }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ log.actionType == 'in' ? 'success' : (log.actionType == 'out' ? 'danger' : 'secondary') }}">
+                                            {{ log.actionType|upper }}
+                                        </span>
+                                    </td>
+                                    <td class="fw-semibold {{ log.actionType == 'in' ? 'text-success' : 'text-danger' }}">
+                                        {{ log.actionType == 'in' ? '+' : '-' }}{{ log.quantityChanged }}
+                                    </td>
+                                    <td class="text-muted">{{ log.stockBefore }}</td>
+                                    <td class="fw-semibold">{{ log.stockAfter }}</td>
+                                    <td>{{ log.performedBy ? log.performedBy.username : '—' }}</td>
+                                    <td class="text-muted small">{{ log.notes ?: log.reference ?: '—' }}</td>
+                                </tr>
+                            {% else %}
+                                <tr><td colspan="7" class="text-center text-muted py-4">No movement history for this product.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Manage Users – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-people me-2"></i>User Management</h2>
+            <p class="text-muted mb-0">View and manage all system users.</p>
+        </div>
+        <a href="{{ path('app_settings_sub_admin_create') }}" class="btn btn-primary">
+            <i class="bi bi-person-plus me-1"></i> New Sub-Admin
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header d-flex align-items-center gap-2">
+            <i class="bi bi-funnel text-muted"></i>
+            <input type="search" id="userSearch" class="form-control form-control-sm w-auto" placeholder="Search users…">
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="usersTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                        <tr>
+                            <td class="text-muted small">{{ loop.index }}</td>
+                            <td class="fw-semibold">{{ u.username }}</td>
+                            <td class="text-muted">{{ u.email }}</td>
+                            <td>
+                                <span class="badge bg-{{ u.role.value == 'ROLE_SUPER_ADMIN' ? 'danger' : (u.role.value == 'ROLE_SUB_ADMIN' ? 'warning text-dark' : (u.role.value == 'ROLE_MANAGER' ? 'primary' : 'secondary')) }}">
+                                    {{ u.role.value|replace({'ROLE_': ''})|replace({'_': ' '}) }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill bg-{{ u.status == 'active' ? 'success' : (u.status == 'suspended' ? 'danger' : 'secondary') }}">
+                                    {{ u.status|capitalize }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                {% if u.role.value != 'ROLE_SUPER_ADMIN' %}
+                                    <button class="btn btn-sm btn-outline-{{ u.status == 'active' ? 'warning' : 'success' }}"
+                                            onclick="toggleStatus({{ u.id }}, '{{ u.status }}')">
+                                        <i class="bi bi-{{ u.status == 'active' ? 'pause-circle' : 'play-circle' }}"></i>
+                                        {{ u.status == 'active' ? 'Suspend' : 'Activate' }}
+                                    </button>
+                                {% else %}
+                                    <span class="text-muted small">Protected</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No users found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('userSearch').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('#usersTable tbody tr').forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+});
+
+async function toggleStatus(userId, currentStatus) {
+    const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
+    if (!confirm(`Change user status to "${newStatus}"?`)) return;
+    try {
+        const res = await fetch(`/settings/admin/user/${userId}/status`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({status: newStatus})
+        });
+        const data = await res.json();
+        if (data.success) window.location.reload();
+        else alert('Error: ' + (data.error || 'Unknown'));
+    } catch(e) {
+        alert('Network error.');
+    }
+}
+</script>
+{% endblock %}
