@@ -33,6 +33,7 @@ class StoreController extends AbstractController
     }
 
     #[Route('/receptionist', name: 'app_receptionist')]
+    #[IsGranted('ROLE_STAFF')]
     public function receptionist(): Response
     {
         $products = $this->em->getRepository(Product::class)->findAll();

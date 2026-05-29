@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractLoginFormAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\CsrfTokenBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\RememberMeBadge;
@@ -19,6 +20,7 @@ use Symfony\Component\Security\Http\SecurityRequestAttributes;
 use Symfony\Component\Security\Http\Util\TargetPathTrait;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\LoginAttempt;
+use App\Entity\User;
 
 class AppAuthenticator extends AbstractLoginFormAuthenticator
 {
@@ -46,8 +48,24 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
             $request->getSession()->set('LAST_LOGIN_ROLE', $normalizedRole);
         }
 
+        $normalizedRole = $role ? str_replace('_', '-', strtolower($role)) : null;
+
         return new Passport(
-            new UserBadge($username),
+            new UserBadge($username, function (string $userIdentifier) use ($normalizedRole) {
+                $user = $this->em->getRepository(User::class)->findOneBy(['username' => $userIdentifier]);
+                if (!$user) {
+                    throw new CustomUserMessageAuthenticationException('Invalid credentials.');
+                }
+
+                if ($normalizedRole) {
+                    $expectedRole = strtoupper(str_replace('-', '_', $normalizedRole));
+                    if ($user->getRole()->value !== 'ROLE_' . $expectedRole) {
+                        throw new CustomUserMessageAuthenticationException('Selected role does not match this account.');
+                    }
+                }
+
+                return $user;
+            }),
             new PasswordCredentials($password),
             [
                 new CsrfTokenBadge('authenticate', $csrfToken),

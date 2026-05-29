@@ -39,6 +39,9 @@ class Product
     #[ORM\Column(type: 'float', nullable: true)]
     private ?float $costPrice = null;
 
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $imagePath = null;
+
     #[ORM\Column(type: 'datetime')]
     private \DateTime $createdAt;
 
@@ -141,6 +144,17 @@ class Product
     public function setCostPrice(?float $costPrice): self
     {
         $this->costPrice = $costPrice;
+        return $this;
+    }
+
+    public function getImagePath(): ?string
+    {
+        return $this->imagePath;
+    }
+
+    public function setImagePath(?string $imagePath): self
+    {
+        $this->imagePath = $imagePath;
         return $this;
     }
 

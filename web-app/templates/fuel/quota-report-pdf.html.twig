@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; margin: 24px; }
+        .letterhead { border-bottom: 4px solid #0d9488; padding-bottom: 12px; margin-bottom: 20px; }
+        .brand { font-size: 22px; font-weight: bold; color: #0d9488; letter-spacing: 1px; }
+        .tagline { font-size: 11px; color: #64748b; margin-top: 4px; }
+        .subtitle { font-size: 12px; color: #64748b; margin-top: 8px; }
+        .kpi-row { width: 100%; margin: 16px 0; }
+        .kpi { display: inline-block; width: 23%; padding: 10px; background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 6px; margin-right: 1%; vertical-align: top; }
+        .kpi-label { font-size: 10px; color: #64748b; text-transform: uppercase; }
+        .kpi-value { font-size: 14px; font-weight: bold; margin-top: 4px; }
+        .grid { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
+        .grid th, .grid td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+        .grid th { background: #0d9488; color: #fff; }
+        .section-title { font-size: 14px; font-weight: bold; color: #0f766e; margin: 18px 0 8px; }
+        .footer { margin-top: 24px; font-size: 10px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="letterhead">
+        <div class="brand">{{ app_name|default('TACI PETROLEUM') }}</div>
+        <div class="tagline">Fuel Accounting &amp; Quota Intelligence Report</div>
+        <div class="subtitle">Generated {{ "now"|date("l, F j, Y \\a\\t H:i") }} &bull; Entry logged {{ fuelEntry.createdAt|date('Y-m-d H:i') }} by {{ enteredBy }}</div>
+    </div>
+
+    <div class="kpi-row">
+        <div class="kpi">
+            <div class="kpi-label">Total Liters</div>
+            <div class="kpi-value">{{ fuelEntry.literQuantity|number_format(0) }} L</div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-label">Unit Price</div>
+            <div class="kpi-value">₦{{ fuelEntry.unitPrice|number_format(2) }}</div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-label">Period</div>
+            <div class="kpi-value">{{ daysInPeriod }} days</div>
+        </div>
+        <div class="kpi">
+            <div class="kpi-label">Base Daily Quota</div>
+            <div class="kpi-value">{{ baseDailyQuota|number_format(0) }} L/day</div>
+        </div>
+    </div>
+
+    <div class="section-title">Day-Type Quota Breakdown</div>
+    <table class="grid">
+        <thead>
+            <tr><th>Scenario</th><th>Days</th><th>Daily Quota (L)</th><th>Share of Period</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Good Days (60%)</td>
+                <td>{{ goodDays }}</td>
+                <td>{{ goodDayQuota|number_format(2) }}</td>
+                <td>{{ ((goodDays / daysInPeriod) * 100)|number_format(0) }}%</td>
+            </tr>
+            <tr>
+                <td>Bad Days (40%)</td>
+                <td>{{ badDays }}</td>
+                <td>{{ badDayQuota|number_format(2) }}</td>
+                <td>{{ ((badDays / daysInPeriod) * 100)|number_format(0) }}%</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="section-title">Financial Projection</div>
+    <table class="grid">
+        <thead><tr><th>Metric</th><th>Amount (NGN)</th><th>Notes</th></tr></thead>
+        <tbody>
+            <tr><td>Projected Revenue</td><td>{{ totalRevenue|number_format(2) }}</td><td>Blended good/bad day sales</td></tr>
+            <tr><td>Cost of Goods Sold</td><td>{{ totalCogs|number_format(2) }}</td><td>Fuel acquisition cost</td></tr>
+            <tr><td>Projected Profit / Loss</td><td><strong>{{ totalProfit|number_format(2) }}</strong></td><td>Revenue minus COGS</td></tr>
+            <tr><td>Profit Margin</td><td><strong>{{ profitMargin|number_format(2) }}%</strong></td><td>Net margin on projected sales</td></tr>
+            <tr><td>Inventory Value at Entry</td><td>{{ (fuelEntry.literQuantity * fuelEntry.unitPrice)|number_format(2) }}</td><td>Liters &times; unit price</td></tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        Confidential — For internal management use only. {{ app_name|default('TACI PETROLEUM') }} Company Limited.
+    </div>
+</body>
+</html>

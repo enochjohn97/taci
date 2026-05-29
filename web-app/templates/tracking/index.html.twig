@@ -182,20 +182,19 @@
                     </h5>
                 </div>
                 <div class="card-body d-flex flex-column justify-content-between">
-                    <div class="map-placeholder">
-                        <div class="map-grid"></div>
-                        <!-- Warri Depot -->
-                        <div class="pulse-dot" style="left: 30%; top: 60%;" title="Warri Depot"></div>
-                        <span class="text-muted small position-absolute" style="left: 28%; top: 68%;">Warri Depot</span>
-                        
-                        <!-- Main Station -->
-                        <div class="pulse-dot" style="left: 75%; top: 35%; background: var(--primary); box-shadow: 0 0 0 0 rgba(0,102,204,0.7);" title="Main Station"></div>
-                        <span class="text-primary small position-absolute fw-semibold" style="left: 70%; top: 22%;">Main Station</span>
-
-                        <!-- Truck 1 Dot -->
-                        <div class="pulse-dot" style="left: 55%; top: 48%; background: #10b981; box-shadow: 0 0 0 0 rgba(16,185,129,0.7);" title="AGL-701-A"></div>
-                        <span class="text-white small position-absolute" style="left: 50%; top: 56%;">AGL-701-A (60%)</span>
-                    </div>
+                    {% if google_maps_api_key %}
+                        <div id="trackingMap" class="map-placeholder"></div>
+                    {% else %}
+                        <div class="map-placeholder">
+                            <div class="map-grid"></div>
+                            <div class="pulse-dot" style="left: 30%; top: 60%;" title="Warri Depot"></div>
+                            <span class="text-muted small position-absolute" style="left: 28%; top: 68%;">Warri Depot</span>
+                            <div class="pulse-dot" style="left: 75%; top: 35%; background: var(--primary); box-shadow: 0 0 0 0 rgba(0,102,204,0.7);" title="Main Station"></div>
+                            <span class="text-primary small position-absolute fw-semibold" style="left: 70%; top: 22%;">Main Station</span>
+                            <div class="pulse-dot" style="left: 55%; top: 48%; background: #10b981; box-shadow: 0 0 0 0 rgba(16,185,129,0.7);" title="AGL-701-A"></div>
+                            <span class="text-white small position-absolute" style="left: 50%; top: 56%;">AGL-701-A (60%)</span>
+                        </div>
+                    {% endif %}
 
                     <div class="mt-3 p-3 bg-dark bg-opacity-50 rounded border border-secondary">
                         <div class="d-flex align-items-center gap-2 text-white mb-2">
@@ -270,4 +269,17 @@
         </div>
     </div>
 </div>
+{% if google_maps_api_key %}
+<script>
+    function initTaciTrackingMap() {
+        const center = { lat: 9.0765, lng: 7.3986 };
+        const map = new google.maps.Map(document.getElementById('trackingMap'), {
+            zoom: 6,
+            center
+        });
+        new google.maps.Marker({ position: center, map, title: 'Main Station' });
+    }
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initTaciTrackingMap"></script>
+{% endif %}
 {% endblock %}

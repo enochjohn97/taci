@@ -1,7 +1,7 @@
 {# templates/dashboard/index.html.twig #}
 {% extends "base.html.twig" %}
 
-{% set view_mode = view_mode|default('dashboard') %}
+{% set view_mode = view_mode|default('dashboard_overview') %}
 
 {% block title %}
     {% if view_mode starts with 'inventory' %}Inventory
@@ -9,8 +9,9 @@
     {% elseif view_mode starts with 'memo' %}Memos
     {% elseif view_mode starts with 'pos' %}POS
     {% elseif view_mode starts with 'reports' %}Reports
-    {% elseif view_mode starts with 'loyalty' %}Loyalty
+    {% elseif view_mode starts with 'loyalty' or view_mode starts with 'engagement' %}Customer Rewards
     {% elseif view_mode starts with 'notifications' %}Notifications
+    {% elseif view_mode starts with 'dashboard' %}Overview Dashboard
     {% else %}Dashboard
     {% endif %} – {{ app_name }}
 {% endblock %}
@@ -21,13 +22,13 @@
         <div class="row align-items-center">
             <div class="col">
                 <h2 class="page-title mt-4">
-                    {% if view_mode == 'dashboard' %}<i class="bi bi-speedometer2 me-2"></i>Dashboard
+                    {% if view_mode starts with 'dashboard' %}<i class="bi bi-speedometer2 me-2"></i>Overview Dashboard
                     {% elseif view_mode starts with 'inventory' %}<i class="bi bi-box-seam me-2"></i>Inventory Management
                     {% elseif view_mode starts with 'fuel' %}<i class="bi bi-droplet-fill me-2"></i>Fuel Management
                     {% elseif view_mode starts with 'memo' %}<i class="bi bi-envelope-paper me-2"></i>Internal Memos
                     {% elseif view_mode starts with 'pos' %}<i class="bi bi-cart4 me-2"></i>Point of Sale
                     {% elseif view_mode starts with 'reports' %}<i class="bi bi-graph-up me-2"></i>Business Intelligence
-                    {% elseif view_mode starts with 'loyalty' %}<i class="bi bi-star me-2"></i>Loyalty Program
+                    {% elseif view_mode starts with 'loyalty' or view_mode starts with 'engagement' %}<i class="bi bi-gem me-2"></i>Customer Rewards Hub
                     {% elseif view_mode starts with 'notifications' %}<i class="bi bi-bell me-2"></i>Notifications
                     {% else %}<i class="bi bi-grid me-2"></i>System Module
                     {% endif %}
@@ -43,7 +44,7 @@
         {# ============================= #}
         {# --- MAIN DASHBOARD VIEW --- #}
         {# ============================= #}
-        {% if view_mode == 'dashboard' %}
+        {% if view_mode starts with 'dashboard' %}
             <div class="row g-3 mb-4">
                 <div class="col-sm-6 col-lg-3">
                     <div class="card p-3 border-0 shadow-sm">
@@ -139,9 +140,15 @@
                             <div class="card-header"><h5 class="mb-0">Quick Actions</h5></div>
                             <div class="card-body d-flex flex-wrap gap-2">
                                 <a href="{{ path('app_pos_register') }}" class="btn btn-primary"><i class="bi bi-cash-register me-1"></i> Open POS</a>
-                                {% if is_granted('ROLE_MANAGER') %}
+                                {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') %}
                                     <a href="{{ path('app_fuel_entry_new') }}" class="btn btn-outline-warning"><i class="bi bi-droplet me-1"></i> Log Fuel</a>
+                                {% endif %}
+                                {% if is_granted('ROLE_MANAGER') or is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') %}
                                     <a href="{{ path('app_inventory_products') }}" class="btn btn-outline-info"><i class="bi bi-box-seam me-1"></i> Inventory</a>
+                                    <a href="{{ path('app_engagement_dashboard') }}" class="btn btn-outline-warning"><i class="bi bi-gem me-1"></i> Rewards</a>
+                                {% endif %}
+                                {% if is_granted('ROLE_STAFF') %}
+                                    <a href="{{ path('app_engagement_wallet') }}" class="btn btn-outline-warning"><i class="bi bi-gem me-1"></i> My Wallet</a>
                                 {% endif %}
                                 <a href="{{ path('app_memo_new') }}" class="btn btn-outline-secondary"><i class="bi bi-envelope me-1"></i> New Memo</a>
                             </div>
@@ -230,7 +237,23 @@
                             <label class="form-label small text-muted">Category</label>
                             <input type="text" name="category" class="form-control" value="{{ category|default('') }}" placeholder="Filter by category…">
                         </div>
-                        <div class="col-md-3 d-flex gap-2">
+                        <div class="col-md-2">
+                            <label class="form-label small text-muted">Sort</label>
+                            <select name="sortBy" class="form-select">
+                                <option value="name" {{ sort_by|default('name') == 'name' ? 'selected' : '' }}>Name</option>
+                                <option value="category" {{ sort_by|default('name') == 'category' ? 'selected' : '' }}>Category</option>
+                                <option value="unitPrice" {{ sort_by|default('name') == 'unitPrice' ? 'selected' : '' }}>Price</option>
+                                <option value="stockQuantity" {{ sort_by|default('name') == 'stockQuantity' ? 'selected' : '' }}>Stock</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label small text-muted">Dir</label>
+                            <select name="sortDir" class="form-select">
+                                <option value="ASC" {{ sort_dir|default('ASC') == 'ASC' ? 'selected' : '' }}>Asc</option>
+                                <option value="DESC" {{ sort_dir|default('ASC') == 'DESC' ? 'selected' : '' }}>Desc</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12 d-flex gap-2">
                             <button type="submit" class="btn btn-primary flex-fill"><i class="bi bi-search me-1"></i> Filter</button>
                             <a href="{{ path('app_inventory_products') }}" class="btn btn-outline-secondary">Reset</a>
                         </div>
@@ -240,14 +263,20 @@
             <div class="card shadow-sm">
                 <div class="card-header d-flex align-items-center justify-content-between">
                     <h5 class="mb-0">Products <span class="badge bg-secondary ms-1">{{ products|length }}</span></h5>
-                    <a href="{{ path('app_inventory_product_new') }}" class="btn btn-primary btn-sm">
-                        <i class="bi bi-plus-lg me-1"></i> Add Product
-                    </a>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="exportSelectedProductsCsv()">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export Selected CSV
+                        </button>
+                        <a href="{{ path('app_inventory_product_new') }}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg me-1"></i> Add Product
+                        </a>
+                    </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-hover align-middle mb-0" id="productsTable">
                         <thead class="table-light">
                             <tr>
+                                <th><input type="checkbox" id="selectAllProducts"></th>
                                 <th>Product</th>
                                 <th>Barcode</th>
                                 <th>Category</th>
@@ -260,8 +289,16 @@
                         <tbody>
                             {% for product in products %}
                                 <tr>
+                                    <td><input type="checkbox" class="product-checkbox" data-name="{{ product.name }}" data-category="{{ product.category }}" data-stock="{{ product.stockQuantity }}" data-price="{{ product.unitPrice }}"></td>
                                     <td>
-                                        <div class="fw-semibold">{{ product.name }}</div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            {% if product.imagePath %}
+                                                <img src="{{ asset(product.imagePath) }}" alt="{{ product.name }}" class="rounded border" style="width:38px;height:38px;object-fit:cover;">
+                                            {% else %}
+                                                <span class="rounded border d-inline-flex align-items-center justify-content-center text-muted" style="width:38px;height:38px;"><i class="bi bi-image"></i></span>
+                                            {% endif %}
+                                            <div class="fw-semibold">{{ product.name }}</div>
+                                        </div>
                                         {% if product.description %}<div class="small text-muted">{{ product.description|slice(0,50) }}</div>{% endif %}
                                     </td>
                                     <td><code>{{ product.barcode }}</code></td>
@@ -285,7 +322,7 @@
                                     </td>
                                 </tr>
                             {% else %}
-                                <tr><td colspan="7" class="text-center text-muted py-5">No products found.</td></tr>
+                                <tr><td colspan="8" class="text-center text-muted py-5">No products found.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -320,6 +357,43 @@
             </div>
             <script>
             let ajProductId = null;
+            const selectAllProducts = document.getElementById('selectAllProducts');
+            if (selectAllProducts) {
+                selectAllProducts.addEventListener('change', function () {
+                    document.querySelectorAll('.product-checkbox').forEach((el) => {
+                        el.checked = this.checked;
+                    });
+                });
+            }
+
+            function escapeCsvField(val) {
+                const s = String(val ?? '');
+                return `"${s.replace(/"/g, '""')}"`;
+            }
+
+            function exportSelectedProductsCsv() {
+                const selected = Array.from(document.querySelectorAll('.product-checkbox:checked'));
+                if (!selected.length) {
+                    toast.warning('No data selected.');
+                    return;
+                }
+                const header = ['Name', 'Category', 'Stock', 'UnitPrice'].map(escapeCsvField);
+                const rows = selected.map(el => [
+                    el.dataset.name,
+                    el.dataset.category,
+                    el.dataset.stock,
+                    el.dataset.price
+                ].map(escapeCsvField));
+                const csv = [header.join(','), ...rows.map(row => row.join(','))].join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.setAttribute('download', 'inventory-products.csv');
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            }
+
             function openAdjust(id, name, stock) {
                 ajProductId = id;
                 document.getElementById('ajCurrentStock').textContent = stock;
@@ -357,7 +431,7 @@
                                     <div class="alert alert-{{ label == 'error' ? 'danger' : label }}">{{ message }}</div>
                                 {% endfor %}
                             {% endfor %}
-                            <form method="POST" action="{{ edit ? path('app_inventory_product_edit', {id: product.id}) : path('app_inventory_product_new') }}">
+                            <form method="POST" enctype="multipart/form-data" action="{{ edit ? path('app_inventory_product_edit', {id: product.id}) : path('app_inventory_product_new') }}">
                                 <div class="row g-3">
                                     <div class="col-md-8">
                                         <label class="form-label">Product Name <span class="text-danger">*</span></label>
@@ -393,6 +467,16 @@
                                         <label class="form-label">Reorder Level</label>
                                         <input type="number" name="reorderLevel" class="form-control" value="{{ edit ? product.reorderLevel : 10 }}" min="0">
                                     </div>
+                                    <div class="col-md-8">
+                                        <label class="form-label">Product Image</label>
+                                        <input type="file" name="image" class="form-control" accept="image/*">
+                                        <div class="form-text">PNG/JPG recommended.</div>
+                                    </div>
+                                    {% if edit and product.imagePath %}
+                                    <div class="col-md-4">
+                                        <img src="{{ asset(product.imagePath) }}" class="img-fluid rounded border" alt="{{ product.name }}" style="max-height: 120px;">
+                                    </div>
+                                    {% endif %}
                                 </div>
                                 <div class="d-flex justify-content-between mt-4">
                                     <a href="{{ path('app_inventory_products') }}" class="btn btn-outline-secondary">Cancel</a>
@@ -411,51 +495,186 @@
         {# ============================= #}
         {% elseif view_mode == 'fuel_dashboard' %}
             <div class="row g-3 mb-4">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card p-4 border-0 shadow-sm text-center">
                         <div class="h2 text-primary mb-1">{{ total_fuel_received|default(0)|number_format(0) }} L</div>
                         <div class="text-muted">Total Fuel Received</div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card p-4 border-0 shadow-sm text-center">
-                        <div class="h2 text-warning mb-1">{{ entries|length }}</div>
+                        <div class="h2 text-warning mb-1">{{ total_entries_count|default(entries|length) }}</div>
                         <div class="text-muted">Total Entries</div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card p-4 border-0 shadow-sm text-center">
-                        <a href="{{ path('app_fuel_entry_new') }}" class="btn btn-primary btn-lg">
-                            <i class="bi bi-plus-circle me-2"></i> Log New Entry
+                        <div class="h2 text-info mb-1">₦{{ avg_unit_price|default(0)|number_format(2) }}</div>
+                        <div class="text-muted">Avg Unit Price</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card p-4 border-0 shadow-sm text-center d-flex align-items-center justify-content-center">
+                        <a href="{{ path('app_fuel_entry_new') }}" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-plus-circle me-2"></i> Log Entry
                         </a>
                     </div>
                 </div>
             </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Fuel Accounting Analytics</h5>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-primary active" data-fuel-chart="daily">Daily</button>
+                        <button type="button" class="btn btn-outline-primary" data-fuel-chart="weekly">Weekly</button>
+                        <button type="button" class="btn btn-outline-primary" data-fuel-chart="monthly">Monthly</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-lg-8"><canvas id="fuelVolumeChart" height="120"></canvas></div>
+                        <div class="col-lg-4"><canvas id="fuelValueChart" height="120"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
             {% if entries|length > 0 %}
             <div class="card shadow-sm">
-                <div class="card-header d-flex align-items-center justify-content-between">
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <h5 class="mb-0">Recent Fuel Entries</h5>
-                    <a href="{{ path('app_fuel_price_history') }}" class="btn btn-sm btn-outline-secondary">Full History</a>
+                    <div class="d-flex gap-2">
+                        <button type="button" id="exportCsv_fuelEntriesTable" class="btn btn-sm btn-outline-success"><i class="bi bi-download me-1"></i> Export CSV</button>
+                        <a href="{{ path('app_fuel_price_history') }}" class="btn btn-sm btn-outline-secondary">Full History</a>
+                    </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover mb-0" id="fuelEntriesTable">
                         <thead class="table-light">
-                            <tr><th>Date</th><th>Liters</th><th>Unit Price (₦)</th><th>Total Value (₦)</th><th>Entered By</th></tr>
+                            <tr>
+                                <th><input type="checkbox" id="selectAll_fuelEntriesTable"></th>
+                                <th>Date</th><th>Liters</th><th>Unit Price (₦)</th><th>Total Value (₦)</th><th>Entered By</th><th>Analytics</th>
+                            </tr>
                         </thead>
                         <tbody>
                             {% for entry in entries %}
-                                <tr>
+                                <tr data-date="{{ entry.createdAt|date('Y-m-d H:i') }}" data-liters="{{ entry.literQuantity }}" data-price="{{ entry.unitPrice }}" data-value="{{ entry.literQuantity * entry.unitPrice }}" data-by="{{ entry.enteredBy ? entry.enteredBy.username : '' }}">
+                                    <td><input type="checkbox" class="row-checkbox-fuelEntriesTable"></td>
                                     <td class="text-muted small">{{ entry.createdAt|date('M d, Y H:i') }}</td>
                                     <td class="fw-semibold">{{ entry.literQuantity|number_format(0) }} L</td>
                                     <td>₦{{ entry.unitPrice|number_format(2) }}</td>
                                     <td class="text-success fw-semibold">₦{{ (entry.literQuantity * entry.unitPrice)|number_format(2) }}</td>
                                     <td>{{ entry.enteredBy ? entry.enteredBy.username : '—' }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="computeFuelAnalytics({{ entry.id }})">
+                                            <i class="bi bi-graph-up me-1"></i> Analyze
+                                        </button>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
+            <div class="modal fade" id="fuelAnalyticsModal" tabindex="-1">
+                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title"><i class="bi bi-fuel-pump me-2"></i>Fuel Profit/Loss Analytics</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body" id="fuelAnalyticsBody">
+                            <div class="text-center py-4"><div class="spinner-border text-primary"></div><p class="text-muted mt-2 mb-0">Computing quota projections…</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <script>
+                const fuelChartData = {{ fuel_chart_data|default('{"daily":{"labels":[],"liters":[],"value":[],"price":[]}}')|raw }};
+                let fuelVolumeChart, fuelValueChart;
+
+                function renderFuelCharts(granularity) {
+                    const series = fuelChartData[granularity] || fuelChartData.daily;
+                    if (fuelVolumeChart) fuelVolumeChart.destroy();
+                    if (fuelValueChart) fuelValueChart.destroy();
+                    fuelVolumeChart = new Chart(document.getElementById('fuelVolumeChart'), {
+                        type: 'bar',
+                        data: { labels: series.labels, datasets: [{ label: 'Liters Received', data: series.liters, backgroundColor: 'rgba(13,148,136,0.7)' }] },
+                        options: { responsive: true, plugins: { title: { display: true, text: 'Volume (' + granularity + ')' } } }
+                    });
+                    fuelValueChart = new Chart(document.getElementById('fuelValueChart'), {
+                        type: 'line',
+                        data: { labels: series.labels, datasets: [
+                            { label: 'Inventory Value ₦', data: series.value, borderColor: '#F5A623', tension: 0.3 },
+                            { label: 'Avg Price ₦', data: series.price, borderColor: '#1e3a8a', tension: 0.3 }
+                        ]},
+                        options: { responsive: true, plugins: { title: { display: true, text: 'Value & Price' } } }
+                    });
+                }
+
+                document.querySelectorAll('[data-fuel-chart]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('[data-fuel-chart]').forEach(b => { b.classList.remove('active','btn-primary'); b.classList.add('btn-outline-primary'); });
+                        btn.classList.add('active','btn-primary'); btn.classList.remove('btn-outline-primary');
+                        renderFuelCharts(btn.dataset.fuelChart);
+                    });
+                });
+
+                if (document.getElementById('fuelVolumeChart')) {
+                    renderFuelCharts('daily');
+                    TaciTableExport.init('fuelEntriesTable', {
+                        selectAllId: 'selectAll_fuelEntriesTable',
+                        checkboxClass: 'row-checkbox-fuelEntriesTable',
+                        exportBtnId: 'exportCsv_fuelEntriesTable',
+                        filename: 'fuel-entries.csv',
+                        columns: [
+                            { key: 'date', label: 'Date' },
+                            { key: 'liters', label: 'Liters' },
+                            { key: 'price', label: 'UnitPrice' },
+                            { key: 'value', label: 'TotalValue' },
+                            { key: 'by', label: 'EnteredBy' }
+                        ]
+                    });
+                }
+
+                async function computeFuelAnalytics(entryId) {
+                    const modal = new bootstrap.Modal(document.getElementById('fuelAnalyticsModal'));
+                    const body = document.getElementById('fuelAnalyticsBody');
+                    body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+                    modal.show();
+                    const response = await fetch('{{ path('app_fuel_quota_compute') }}', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({entryId, daysInPeriod: 30, goodDayMultiplier: 1.15, badDayMultiplier: 0.85, costPerLiter: 500, sellingPrice: 650})
+                    });
+                    const data = await response.json();
+                    if (!data.success) {
+                        body.innerHTML = '<div class="alert alert-danger">Unable to compute analytics.</div>';
+                        return;
+                    }
+                    const m = data.metrics;
+                    body.innerHTML = `
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-3"><div class="card bg-light p-3 text-center"><div class="small text-muted">Total Liters</div><div class="h4">${Number(m.totalLiters).toLocaleString()} L</div></div></div>
+                            <div class="col-md-3"><div class="card bg-light p-3 text-center"><div class="small text-muted">Daily Quota</div><div class="h4 text-primary">${Number(m.dailyQuota).toFixed(0)} L</div></div></div>
+                            <div class="col-md-3"><div class="card bg-light p-3 text-center"><div class="small text-muted">Projected Revenue</div><div class="h5 text-success">₦${Number(m.projectedRevenue).toLocaleString()}</div></div></div>
+                            <div class="col-md-3"><div class="card bg-light p-3 text-center"><div class="small text-muted">Profit Margin</div><div class="h4 text-warning">${Number(m.profitMargin).toFixed(1)}%</div></div></div>
+                        </div>
+                        <table class="table table-bordered">
+                            <tr><th>Projected COGS</th><td>₦${Number(m.projectedCogs).toLocaleString()}</td></tr>
+                            <tr><th>Projected Profit</th><td class="text-success fw-bold">₦${Number(m.projectedProfit).toLocaleString()}</td></tr>
+                            <tr><th>Period</th><td>${m.daysInPeriod} days (60% good / 40% bad)</td></tr>
+                            <tr><th>Unit Price at Entry</th><td>₦${Number(m.unitPrice).toLocaleString()}</td></tr>
+                        </table>
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            <a class="btn btn-primary" href="${data.urls.view}"><i class="bi bi-box-arrow-up-right me-1"></i> Full Report</a>
+                            <a class="btn btn-outline-danger" href="${data.urls.pdf}"><i class="bi bi-file-pdf me-1"></i> PDF</a>
+                            ${data.urls.excel ? `<a class="btn btn-outline-success" href="${data.urls.excel}"><i class="bi bi-file-excel me-1"></i> Excel</a>` : ''}
+                        </div>`;
+                }
+            </script>
+            {% else %}
+                <div class="alert alert-info">No fuel entries yet. <a href="{{ path('app_fuel_entry_new') }}">Log your first entry</a>.</div>
             {% endif %}
 
         {% elseif view_mode == 'fuel_entry' %}
@@ -543,18 +762,25 @@
 
         {% elseif view_mode == 'fuel_price_history' %}
             <div class="card shadow-sm">
-                <div class="card-header d-flex align-items-center justify-content-between">
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <h5 class="mb-0">Fuel Price History</h5>
-                    <a href="{{ path('app_fuel_entry_new') }}" class="btn btn-sm btn-primary"><i class="bi bi-plus me-1"></i> Log Entry</a>
+                    <div class="d-flex gap-2">
+                        <button type="button" id="exportCsv_fuelHistoryTable" class="btn btn-sm btn-outline-success"><i class="bi bi-download me-1"></i> Export CSV</button>
+                        <a href="{{ path('app_fuel_entry_new') }}" class="btn btn-sm btn-primary"><i class="bi bi-plus me-1"></i> Log Entry</a>
+                    </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover mb-0" id="fuelHistoryTable">
                         <thead class="table-light">
-                            <tr><th>Date</th><th>Liters</th><th>Unit Price (₦/L)</th><th>Total Value (₦)</th><th>Entered By</th></tr>
+                            <tr>
+                                <th><input type="checkbox" id="selectAll_fuelHistoryTable"></th>
+                                <th>Date</th><th>Liters</th><th>Unit Price (₦/L)</th><th>Total Value (₦)</th><th>Entered By</th>
+                            </tr>
                         </thead>
                         <tbody>
                             {% for entry in entries %}
-                                <tr>
+                                <tr data-date="{{ entry.createdAt|date('Y-m-d H:i') }}" data-liters="{{ entry.literQuantity }}" data-price="{{ entry.unitPrice }}" data-value="{{ entry.literQuantity * entry.unitPrice }}" data-by="{{ entry.enteredBy ? entry.enteredBy.username : '' }}">
+                                    <td><input type="checkbox" class="row-checkbox-fuelHistoryTable"></td>
                                     <td class="text-muted small">{{ entry.createdAt|date('Y-m-d H:i') }}</td>
                                     <td class="fw-semibold">{{ entry.literQuantity|number_format(0) }}</td>
                                     <td class="text-warning fw-semibold">₦{{ entry.unitPrice|number_format(2) }}</td>
@@ -562,57 +788,54 @@
                                     <td>{{ entry.enteredBy ? entry.enteredBy.username : '—' }}</td>
                                 </tr>
                             {% else %}
-                                <tr><td colspan="5" class="text-center text-muted py-5">No fuel entries recorded yet.</td></tr>
+                                <tr><td colspan="6" class="text-center text-muted py-5">No fuel entries recorded yet.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
+            <script>
+                TaciTableExport.init('fuelHistoryTable', {
+                    selectAllId: 'selectAll_fuelHistoryTable',
+                    checkboxClass: 'row-checkbox-fuelHistoryTable',
+                    exportBtnId: 'exportCsv_fuelHistoryTable',
+                    filename: 'fuel-price-history.csv',
+                    columns: [
+                        { key: 'date', label: 'Date' }, { key: 'liters', label: 'Liters' },
+                        { key: 'price', label: 'UnitPrice' }, { key: 'value', label: 'TotalValue' }, { key: 'by', label: 'EnteredBy' }
+                    ]
+                });
+            </script>
 
         {% elseif view_mode == 'fuel_quota_view' %}
+            {% set entry = report.fuelEntry %}
             <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="card shadow-sm">
-                        <div class="card-header d-flex align-items-center justify-content-between">
-                            <h5 class="mb-0">Fuel Quota Report #{{ report.id }}</h5>
+                <div class="col-lg-10">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header text-white d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #0d9488, #0f766e);">
+                            <h5 class="mb-0"><i class="bi bi-fuel-pump me-2"></i>Fuel Quota Report #{{ report.id }}</h5>
                             <div class="d-flex gap-2">
-                                <a href="{{ path('app_fuel_quota_download_pdf', {id: report.id}) }}" class="btn btn-sm btn-outline-danger">
-                                    <i class="bi bi-file-pdf me-1"></i> PDF
-                                </a>
+                                <a href="{{ path('app_fuel_quota_download_pdf', {id: report.id}) }}" class="btn btn-sm btn-light"><i class="bi bi-file-pdf me-1"></i> PDF</a>
                                 {% if report.excelPath %}
-                                <a href="{{ path('app_fuel_quota_download_excel', {id: report.id}) }}" class="btn btn-sm btn-outline-success">
-                                    <i class="bi bi-file-excel me-1"></i> Excel
-                                </a>
+                                <a href="{{ path('app_fuel_quota_download_excel', {id: report.id}) }}" class="btn btn-sm btn-outline-light"><i class="bi bi-file-excel me-1"></i> Excel</a>
                                 {% endif %}
+                                <a href="{{ path('app_fuel_dashboard') }}" class="btn btn-sm btn-outline-light">Back</a>
                             </div>
                         </div>
                         <div class="card-body">
+                            <p class="text-muted small mb-3">Entry {{ entry.createdAt|date('M d, Y') }} &bull; {{ entry.literQuantity|number_format(0) }} L @ ₦{{ entry.unitPrice|number_format(2) }}/L</p>
                             <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="card bg-light p-3">
-                                        <div class="text-muted small">Total Liters</div>
-                                        <div class="h4">{{ report.totalLiters|default(0)|number_format(0) }} L</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="card bg-light p-3">
-                                        <div class="text-muted small">Forecasted Revenue</div>
-                                        <div class="h4 text-success">₦{{ report.forecastedRevenue|default(0)|number_format(2) }}</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="card bg-light p-3">
-                                        <div class="text-muted small">Daily Quota</div>
-                                        <div class="h4 text-primary">{{ report.dailyQuota|default(0)|number_format(0) }} L/day</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="card bg-light p-3">
-                                        <div class="text-muted small">Profit Margin</div>
-                                        <div class="h4 text-warning">{{ report.profitMargin|default(0)|number_format(1) }}%</div>
-                                    </div>
-                                </div>
+                                <div class="col-md-3"><div class="card bg-light p-3 text-center"><div class="text-muted small">Total Liters</div><div class="h4">{{ entry.literQuantity|number_format(0) }} L</div></div></div>
+                                <div class="col-md-3"><div class="card bg-light p-3 text-center"><div class="text-muted small">Daily Quota</div><div class="h4 text-primary">{{ report.dailyQuota|number_format(0) }} L</div></div></div>
+                                <div class="col-md-3"><div class="card bg-light p-3 text-center"><div class="text-muted small">Revenue</div><div class="h5 text-success">₦{{ report.projectedRevenue|number_format(2) }}</div></div></div>
+                                <div class="col-md-3"><div class="card bg-light p-3 text-center"><div class="text-muted small">Margin</div><div class="h4 text-warning">{{ report.profitMarginPercentage|number_format(1) }}%</div></div></div>
                             </div>
+                            <table class="table table-bordered mt-4">
+                                <tr><th>COGS</th><td>₦{{ report.projectedCogs|number_format(2) }}</td></tr>
+                                <tr><th>Profit</th><td class="text-success fw-bold">₦{{ report.projectedProfit|number_format(2) }}</td></tr>
+                                <tr><th>Period</th><td>{{ report.daysInPeriod }} days</td></tr>
+                                <tr><th>Inventory Value</th><td>₦{{ (entry.literQuantity * entry.unitPrice)|number_format(2) }}</td></tr>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -622,79 +845,158 @@
         {# --- MEMO VIEWS --- #}
         {# ============================= #}
         {% elseif view_mode == 'memo_dashboard' %}
+            <style>
+                .memo-branded { background: linear-gradient(160deg, #f0fdfa 0%, #fff 40%); border: 1px solid #99f6e4; }
+                .memo-letterhead { border-bottom: 3px solid var(--primary); padding-bottom: 12px; margin-bottom: 16px; }
+                .memo-watermark { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 24 24'%3E%3Cpath fill='%230d948820' d='M12 2L2 7v10l10 5 10-5V7z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 24px top 24px; }
+            </style>
             <div class="row">
                 <div class="col-md-3">
-                    <div class="list-group mb-4">
-                        <a href="{{ path('app_memo_dashboard') }}" class="list-group-item list-group-item-action active">
-                            <i class="bi bi-inbox me-2"></i> Inbox ({{ unread_count|default(0) }})
+                    <div class="list-group mb-4 shadow-sm">
+                        <a href="{{ path('app_memo_dashboard') }}?tab=inbox" class="list-group-item list-group-item-action {{ app.request.query.get('tab','inbox') == 'inbox' ? 'active' : '' }}">
+                            <i class="bi bi-inbox me-2"></i> Inbox {% if unread_count|default(0) > 0 %}<span class="badge bg-danger float-end">{{ unread_count }}</span>{% endif %}
+                        </a>
+                        <a href="{{ path('app_memo_dashboard') }}?tab=sent" class="list-group-item list-group-item-action {{ app.request.query.get('tab') == 'sent' ? 'active' : '' }}">
+                            <i class="bi bi-send me-2"></i> Sent
+                        </a>
+                        <a href="{{ path('app_memo_dashboard') }}?tab=drafts" class="list-group-item list-group-item-action {{ app.request.query.get('tab') == 'drafts' ? 'active' : '' }}">
+                            <i class="bi bi-file-earmark me-2"></i> Drafts
                         </a>
                         <a href="{{ path('app_memo_new') }}" class="list-group-item list-group-item-action">
-                            <i class="bi bi-pencil-square me-2"></i> New Memo
+                            <i class="bi bi-pencil-square me-2"></i> Compose
                         </a>
                     </div>
                 </div>
                 <div class="col-md-9">
-                    <div class="card shadow-sm">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">Recent Memos</h5>
-                            <a href="{{ path('app_memo_new') }}" class="btn btn-sm btn-primary">Create New</a>
+                    <div class="card shadow-sm memo-branded memo-watermark">
+                        <div class="card-header memo-letterhead bg-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold text-primary fs-5">{{ app_name }}</div>
+                                    <div class="small text-muted">Internal Correspondence</div>
+                                </div>
+                                <a href="{{ path('app_memo_new') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i> New Memo</a>
+                            </div>
+                        </div>
+                        {% set tab = app.request.query.get('tab', 'inbox') %}
+                        <div class="card-header bg-transparent border-0 pt-0">
+                            <h5 class="mb-0">{% if tab == 'sent' %}Sent Memos{% elseif tab == 'drafts' %}Drafts{% else %}Inbox{% endif %}</h5>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-hover mb-0">
+                            <table class="table table-hover mb-0" id="memoListTable">
                                 <thead class="table-light">
-                                    <tr><th>Sender</th><th>Subject</th><th>Date</th><th>Status</th><th>Action</th></tr>
+                                    <tr>
+                                        <th><input type="checkbox" id="selectAll_memoListTable"></th>
+                                        <th>Sender</th><th>Subject</th><th>Date</th><th>Status</th><th></th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                    {% for item in inbox %}
-                                        <tr class="{{ not item.isRead ? 'fw-bold' : '' }}">
-                                            <td>{{ item.memo.sender.username }}</td>
-                                            <td>{{ item.memo.subject }}</td>
-                                            <td class="text-muted small">{{ item.memo.createdAt|date('M d, H:i') }}</td>
-                                            <td>
-                                                <span class="badge bg-{{ item.memo.status == 'approved' ? 'success' : (item.memo.status == 'declined' ? 'danger' : 'info') }}">
-                                                    {{ item.memo.status|capitalize }}
-                                                </span>
-                                            </td>
-                                            <td><a href="{{ path('app_memo_view', {id: item.memo.id}) }}" class="btn btn-sm btn-outline-primary">View</a></td>
-                                        </tr>
+                                    {% if tab == 'sent' %}
+                                        {% for memo in sent|default([]) %}
+                                            <tr data-sender="{{ memo.sender.username }}" data-subject="{{ memo.subject }}" data-date="{{ memo.createdAt|date('Y-m-d H:i') }}" data-status="{{ memo.status }}">
+                                                <td><input type="checkbox" class="row-checkbox-memoListTable"></td>
+                                                <td>{{ memo.sender.username }}</td>
+                                                <td>{{ memo.subject }}</td>
+                                                <td class="text-muted small">{{ memo.createdAt|date('M d, H:i') }}</td>
+                                                <td><span class="badge bg-secondary">{{ memo.status|capitalize }}</span></td>
+                                                <td><a href="{{ path('app_memo_view', {id: memo.id}) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+                                            </tr>
+                                        {% else %}
+                                            <tr><td colspan="6" class="text-center text-muted py-4">No sent memos.</td></tr>
+                                        {% endfor %}
+                                    {% elseif tab == 'drafts' %}
+                                        {% for memo in drafts|default([]) %}
+                                            <tr data-sender="{{ memo.sender.username }}" data-subject="{{ memo.subject }}" data-date="{{ memo.createdAt|date('Y-m-d H:i') }}" data-status="draft">
+                                                <td><input type="checkbox" class="row-checkbox-memoListTable"></td>
+                                                <td>{{ memo.sender.username }}</td>
+                                                <td>{{ memo.subject }}</td>
+                                                <td class="text-muted small">{{ memo.createdAt|date('M d, H:i') }}</td>
+                                                <td><span class="badge bg-warning text-dark">Draft</span></td>
+                                                <td><a href="{{ path('app_memo_view', {id: memo.id}) }}" class="btn btn-sm btn-outline-secondary">Edit</a></td>
+                                            </tr>
+                                        {% else %}
+                                            <tr><td colspan="6" class="text-center text-muted py-4">No drafts.</td></tr>
+                                        {% endfor %}
                                     {% else %}
-                                        <tr><td colspan="5" class="text-center text-muted py-4">Your inbox is empty.</td></tr>
-                                    {% endfor %}
+                                        {% for item in inbox %}
+                                            <tr class="{{ not item.isRead ? 'table-primary' : '' }}" data-sender="{{ item.memo.sender.username }}" data-subject="{{ item.memo.subject }}" data-date="{{ item.memo.createdAt|date('Y-m-d H:i') }}" data-status="{{ item.memo.status }}">
+                                                <td><input type="checkbox" class="row-checkbox-memoListTable"></td>
+                                                <td>{{ item.memo.sender.username }}</td>
+                                                <td>{{ item.memo.subject }}{% if not item.isRead %} <span class="badge bg-primary">New</span>{% endif %}</td>
+                                                <td class="text-muted small">{{ item.memo.createdAt|date('M d, H:i') }}</td>
+                                                <td><span class="badge bg-{{ item.memo.status == 'approved' ? 'success' : (item.memo.status == 'declined' ? 'danger' : 'info') }}">{{ item.memo.status|capitalize }}</span></td>
+                                                <td><a href="{{ path('app_memo_view', {id: item.memo.id}) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+                                            </tr>
+                                        {% else %}
+                                            <tr><td colspan="6" class="text-center text-muted py-4">Your inbox is empty.</td></tr>
+                                        {% endfor %}
+                                    {% endif %}
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <button type="button" id="exportCsv_memoListTable" class="btn btn-sm btn-outline-success"><i class="bi bi-download me-1"></i> Export Selected</button>
                         </div>
                     </div>
                 </div>
             </div>
+            <script>
+                TaciTableExport.init('memoListTable', {
+                    selectAllId: 'selectAll_memoListTable',
+                    checkboxClass: 'row-checkbox-memoListTable',
+                    exportBtnId: 'exportCsv_memoListTable',
+                    filename: 'memos.csv',
+                    addSelectColumn: false,
+                    columns: [
+                        { key: 'sender', label: 'Sender' }, { key: 'subject', label: 'Subject' },
+                        { key: 'date', label: 'Date' }, { key: 'status', label: 'Status' }
+                    ]
+                });
+            </script>
 
         {% elseif view_mode == 'memo_view' %}
             <div class="row">
-                <div class="col-md-8 mx-auto">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                            <div>
-                                <a href="{{ path('app_memo_dashboard') }}" class="btn btn-sm btn-outline-secondary me-2"><i class="bi bi-arrow-left"></i></a>
-                                <h5 class="d-inline mb-0">View Memo</h5>
+                <div class="col-lg-9 mx-auto">
+                    <div class="card shadow-lg border-0 memo-branded memo-watermark mb-4" style="background: linear-gradient(180deg, #f8fffe 0%, #ffffff 100%);">
+                        <div class="card-header border-0 pt-4 px-4" style="background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%); color: #fff;">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="opacity-75 small text-uppercase letter-spacing-1">{{ app_name }} — Official Memo</div>
+                                    <h3 class="mb-0 mt-1 text-white">{{ memo.subject }}</h3>
+                                </div>
+                                <span class="badge bg-white text-dark">{{ memo.status|upper }}</span>
                             </div>
-                            <div class="badge bg-{{ memo.status == 'approved' ? 'success' : (memo.status == 'declined' ? 'danger' : 'info') }} p-2">{{ memo.status|upper }}</div>
                         </div>
-                        <div class="card-body">
-                            <h3 class="mb-1">{{ memo.subject }}</h3>
-                            <div class="text-muted small mb-3">From: <strong>{{ memo.sender.username }}</strong> &bull; {{ memo.createdAt|date('F d, Y H:i') }}</div>
-                            <div class="py-3" style="white-space: pre-wrap;">{{ memo.body }}</div>
+                        <div class="card-body px-4 py-4">
+                            <div class="d-flex flex-wrap gap-3 text-muted small border-bottom pb-3 mb-3">
+                                <span><i class="bi bi-person me-1"></i> <strong>{{ memo.sender.username }}</strong></span>
+                                <span><i class="bi bi-calendar3 me-1"></i> {{ memo.createdAt|date('l, F j, Y \\a\\t H:i') }}</span>
+                                <span><i class="bi bi-hash me-1"></i> REF-M{{ memo.id }}</span>
+                            </div>
+                            <div class="memo-body py-2 fs-6" style="white-space: pre-wrap; line-height: 1.7; min-height: 120px;">{{ memo.body }}</div>
+                            {% if attachments|default([])|length > 0 %}
+                                <div class="mt-4 pt-3 border-top">
+                                    <h6 class="text-muted"><i class="bi bi-paperclip me-1"></i> Attachments</h6>
+                                    <ul class="list-unstyled mb-0">
+                                        {% for att in attachments %}
+                                            <li><a href="{{ asset(att.filePath) }}" target="_blank" class="text-decoration-none"><i class="bi bi-file-earmark-arrow-down me-1"></i>{{ att.fileName }}</a> <span class="text-muted small">({{ (att.fileSize / 1024)|round(1) }} KB)</span></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
                         </div>
-                        <div class="card-footer bg-light d-flex justify-content-between">
-                            <div>
-                                {% if is_granted('ROLE_SUPER_ADMIN') and memo.status == 'sent' %}
-                                    <form action="{{ path('app_memo_approve', {id: memo.id}) }}" method="POST" class="d-inline">
-                                        <button type="submit" class="btn btn-success me-2"><i class="bi bi-check-circle"></i> Approve</button>
-                                    </form>
-                                    <form action="{{ path('app_memo_decline', {id: memo.id}) }}" method="POST" class="d-inline">
-                                        <button type="submit" class="btn btn-danger"><i class="bi bi-x-circle"></i> Decline</button>
-                                    </form>
+                        <div class="card-footer bg-white d-flex flex-wrap justify-content-between gap-2 px-4">
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="{{ path('app_memo_dashboard') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back</a>
+                                {% if (is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN')) and memo.status == 'sent' %}
+                                    <form action="{{ path('app_memo_approve', {id: memo.id}) }}" method="POST" class="d-inline"><button type="submit" class="btn btn-success btn-sm"><i class="bi bi-check-circle"></i> Approve</button></form>
+                                    <form action="{{ path('app_memo_decline', {id: memo.id}) }}" method="POST" class="d-inline"><button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-x-circle"></i> Decline</button></form>
+                                {% endif %}
+                                {% if can_forward|default(false) %}
+                                    <a href="{{ path('app_memo_forward', {id: memo.id}) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-forward"></i> Forward</a>
                                 {% endif %}
                             </div>
-                            <button class="btn btn-primary" data-bs-toggle="collapse" href="#replyForm"><i class="bi bi-reply"></i> Reply</button>
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="collapse" href="#replyForm"><i class="bi bi-reply"></i> Reply</button>
                         </div>
                     </div>
                     <div class="collapse mb-4" id="replyForm">
@@ -727,12 +1029,54 @@
                 </div>
             </div>
 
+        {% elseif view_mode == 'memo_forward' %}
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card shadow-sm memo-branded">
+                        <div class="card-header text-white" style="background: var(--primary);">
+                            <h5 class="mb-0"><i class="bi bi-forward me-2"></i>Forward Memo: {{ memo.subject }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-light border small mb-3">{{ memo.body|slice(0, 200) }}{% if memo.body|length > 200 %}…{% endif %}</div>
+                            <form action="{{ path('app_memo_forward', {id: memo.id}) }}" method="POST">
+                                <div class="mb-3">
+                                    <label class="form-label">Recipients</label>
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <select name="recipientIds[]" class="form-select" multiple size="5">
+                                                {% for user in users %}<option value="{{ user.id }}">{{ user.username }} ({{ user.role.value }})</option>{% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <select name="recipientRoles[]" class="form-select" multiple size="5">
+                                                {% for role in roles %}<option value="{{ role }}">{{ role|replace({'ROLE_': ''}) }}</option>{% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Your message (prepended to forwarded content)</label>
+                                    <textarea name="body" class="form-control" rows="5" required placeholder="Add context for recipients…"></textarea>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ path('app_memo_view', {id: memo.id}) }}" class="btn btn-outline-secondary">Cancel</a>
+                                    <button type="submit" class="btn btn-primary"><i class="bi bi-send me-1"></i> Forward Memo</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         {% elseif view_mode == 'memo_form' %}
             <div class="row">
-                <div class="col-md-8 mx-auto">
-                    <div class="card shadow-sm">
-                        <div class="card-header"><h5 class="mb-0">Create Internal Memo</h5></div>
-                        <div class="card-body">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card shadow-lg border-0 memo-branded memo-watermark">
+                        <div class="card-header border-0 text-white py-3" style="background: linear-gradient(90deg, var(--primary), var(--primary-dark));">
+                            <div class="fw-bold fs-5">{{ app_name }}</div>
+                            <div class="small opacity-75">Compose Internal Memo</div>
+                        </div>
+                        <div class="card-body px-4">
                             <form action="{{ path('app_memo_new') }}" method="POST" enctype="multipart/form-data">
                                 <div class="mb-3">
                                     <label class="form-label">Recipients</label>
@@ -1114,29 +1458,61 @@
                     </div>
                 </div>
             </div>
+            <div class="card shadow-sm mb-4">
+                <div class="card-header"><h5 class="mb-0">Sales Trend</h5></div>
+                <div class="card-body"><canvas id="salesTrendChart" height="80"></canvas></div>
+            </div>
             <div class="card shadow-sm">
-                <div class="card-header d-flex align-items-center justify-content-between">
+                <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
                     <h5 class="mb-0">Sales by {{ period|default('day')|capitalize }}</h5>
-                    <a href="{{ path('app_reports_export_sales_excel') }}" class="btn btn-sm btn-outline-success"><i class="bi bi-download me-1"></i> Export Excel</a>
+                    <div class="d-flex gap-2">
+                        <button type="button" id="exportCsv_salesTable" class="btn btn-sm btn-outline-success"><i class="bi bi-download me-1"></i> Export CSV</button>
+                        <a href="{{ path('app_reports_export_sales_excel') }}" class="btn btn-sm btn-outline-success"><i class="bi bi-file-excel me-1"></i> Excel</a>
+                    </div>
                 </div>
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead class="table-light"><tr><th>Period</th><th>Transactions</th><th>Revenue</th><th>Discounts</th></tr></thead>
+                    <table class="table table-hover mb-0" id="salesTable">
+                        <thead class="table-light"><tr>
+                            <th><input type="checkbox" id="selectAll_salesTable"></th>
+                            <th>Period</th><th>Transactions</th><th>Revenue</th><th>Discounts</th>
+                        </tr></thead>
                         <tbody>
                             {% for period_key, group in grouped_sales|default({}) %}
-                                <tr>
+                                <tr data-period="{{ period_key }}" data-count="{{ group.count }}" data-revenue="{{ group.amount }}" data-discount="{{ group.discount }}">
+                                    <td><input type="checkbox" class="row-checkbox-salesTable"></td>
                                     <td class="fw-semibold">{{ period_key }}</td>
                                     <td>{{ group.count }}</td>
                                     <td class="text-success">₦{{ group.amount|number_format(2) }}</td>
                                     <td class="text-danger">₦{{ group.discount|number_format(2) }}</td>
                                 </tr>
                             {% else %}
-                                <tr><td colspan="4" class="text-center text-muted py-4">No sales data for the selected period.</td></tr>
+                                <tr><td colspan="5" class="text-center text-muted py-4">No sales data for the selected period.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
+            <script>
+                (function(){
+                    const labels = [], amounts = [];
+                    document.querySelectorAll('#salesTable tbody tr[data-period]').forEach(r => {
+                        labels.push(r.dataset.period);
+                        amounts.push(parseFloat(r.dataset.revenue) || 0);
+                    });
+                    if (labels.length && document.getElementById('salesTrendChart')) {
+                        new Chart(document.getElementById('salesTrendChart'), {
+                            type: 'line',
+                            data: { labels, datasets: [{ label: 'Revenue ₦', data: amounts, borderColor: '#0d9488', fill: true, backgroundColor: 'rgba(13,148,136,0.15)' }] },
+                            options: { responsive: true }
+                        });
+                    }
+                    TaciTableExport.init('salesTable', {
+                        selectAllId: 'selectAll_salesTable', checkboxClass: 'row-checkbox-salesTable',
+                        exportBtnId: 'exportCsv_salesTable', filename: 'sales-report.csv', addSelectColumn: false,
+                        columns: [{key:'period',label:'Period'},{key:'count',label:'Transactions'},{key:'revenue',label:'Revenue'},{key:'discount',label:'Discounts'}]
+                    });
+                })();
+            </script>
 
         {% elseif view_mode == 'reports_inventory' %}
             <div class="row g-3 mb-4">
@@ -1255,79 +1631,141 @@
         {# ============================= #}
         {# --- LOYALTY VIEWS --- #}
         {# ============================= #}
-        {% elseif view_mode starts with 'loyalty' %}
-            <div class="card shadow-sm mb-4">
-                <div class="card-header d-flex gap-2 flex-wrap">
-                    <a href="{{ path('app_loyalty_dashboard') }}" class="btn btn-sm btn-{{ view_mode == 'loyalty_dashboard' ? 'primary' : 'outline-secondary' }}">Dashboard</a>
-                    <a href="{{ path('app_loyalty_my_points') }}" class="btn btn-sm btn-{{ view_mode == 'loyalty_my_points' ? 'primary' : 'outline-secondary' }}">My Points</a>
-                    <a href="{{ path('app_loyalty_tiers') }}" class="btn btn-sm btn-{{ view_mode == 'loyalty_tiers' ? 'primary' : 'outline-secondary' }}">Tiers</a>
-                    <a href="{{ path('app_loyalty_reports') }}" class="btn btn-sm btn-{{ view_mode == 'loyalty_reports' ? 'primary' : 'outline-secondary' }}">Reports</a>
+        {% elseif view_mode starts with 'engagement' or view_mode starts with 'loyalty' %}
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-header bg-white d-flex gap-2 flex-wrap">
+                    {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER') %}
+                        <a href="{{ path('app_engagement_dashboard') }}" class="btn btn-sm btn-{{ view_mode == 'engagement_dashboard' ? 'primary' : 'outline-secondary' }}">Hub</a>
+                        <a href="{{ path('app_engagement_tiers') }}" class="btn btn-sm btn-{{ view_mode == 'engagement_tiers' ? 'primary' : 'outline-secondary' }}">Tiers</a>
+                    {% endif %}
+                    <a href="{{ path('app_engagement_wallet') }}" class="btn btn-sm btn-{{ view_mode == 'engagement_wallet' ? 'primary' : 'outline-secondary' }}">My Wallet</a>
+                    {% if is_granted('ROLE_SUPER_ADMIN') %}
+                        <a href="{{ path('app_engagement_promotions') }}" class="btn btn-sm btn-{{ view_mode == 'engagement_promotions' ? 'primary' : 'outline-secondary' }}">Promotions</a>
+                        <a href="{{ path('app_engagement_reports') }}" class="btn btn-sm btn-{{ view_mode == 'engagement_reports' ? 'primary' : 'outline-secondary' }}">Reports</a>
+                    {% endif %}
                 </div>
             </div>
-            {% if view_mode == 'loyalty_dashboard' %}
+
+            {% if view_mode == 'engagement_dashboard' %}
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4"><div class="card p-4 text-center border-0 shadow-sm"><div class="h2 text-warning">{{ total_customers|default(0) }}</div><div class="text-muted">Enrolled Customers</div></div></div>
+                    <div class="col-md-4"><div class="card p-4 text-center border-0 shadow-sm"><div class="h2 text-primary">{{ total_points_issued|default(0)|number_format(0) }}</div><div class="text-muted">Points in Circulation</div></div></div>
+                    <div class="col-md-4"><div class="card p-4 text-center border-0 shadow-sm"><div class="h2 text-success">₦{{ total_spend|default(0)|number_format(0) }}</div><div class="text-muted">Total Customer Spend</div></div></div>
+                </div>
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Top Customers</h5>
+                        <button type="button" id="exportCsv_engagementTable" class="btn btn-sm btn-outline-success">Export CSV</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="engagementTable">
+                            <thead class="table-light"><tr>
+                                <th><input type="checkbox" id="selectAll_engagementTable"></th>
+                                <th>Customer</th><th>Tier</th><th>Points</th><th>Total Spend</th><th></th>
+                            </tr></thead>
+                            <tbody>
+                                {% for lp in top_customers|default([]) %}
+                                    <tr data-customer="{{ lp.customer.username }}" data-tier="{{ lp.tier }}" data-points="{{ lp.pointsBalance }}" data-spend="{{ lp.totalSpend }}">
+                                        <td><input type="checkbox" class="row-checkbox-engagementTable"></td>
+                                        <td>{{ lp.customer.username }}</td>
+                                        <td><span class="badge bg-secondary">{{ lp.tier|capitalize }}</span></td>
+                                        <td>{{ lp.pointsBalance|number_format(0) }}</td>
+                                        <td>₦{{ lp.totalSpend|number_format(2) }}</td>
+                                        <td><a href="{{ path('app_engagement_customer', {id: lp.customer.id}) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+                                    </tr>
+                                {% else %}
+                                    <tr><td colspan="6" class="text-center text-muted py-4">No customer rewards data yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <script>TaciTableExport.init('engagementTable',{selectAllId:'selectAll_engagementTable',checkboxClass:'row-checkbox-engagementTable',exportBtnId:'exportCsv_engagementTable',filename:'top-customers.csv',addSelectColumn:false,columns:[{key:'customer',label:'Customer'},{key:'tier',label:'Tier'},{key:'points',label:'Points'},{key:'spend',label:'Spend'}]});</script>
+
+            {% elseif view_mode == 'engagement_wallet' %}
+                <div class="card shadow-sm p-5 text-center border-0" style="background: linear-gradient(135deg, #fffbeb, #fff);">
+                    <div class="display-3 text-warning fw-bold mb-2">{{ my_points|default(0)|number_format(0) }}</div>
+                    <div class="text-muted mb-3">Reward Points Balance</div>
+                    <span class="badge bg-{{ current_tier|default('bronze') == 'platinum' ? 'primary' : (current_tier|default('bronze') == 'gold' ? 'warning text-dark' : 'secondary') }} fs-6 px-3 py-2 mb-3">
+                        <i class="bi bi-gem me-1"></i> {{ current_tier|default('bronze')|capitalize }} Tier
+                    </span>
+                    <p class="text-muted mb-1">Lifetime spend: ₦{{ total_spend|default(0)|number_format(2) }}</p>
+                    <p class="text-muted small">Your tier discount: {{ tier_discount|default(0)|number_format(0) }}% on eligible purchases</p>
+                </div>
+
+            {% elseif view_mode == 'engagement_customer' %}
+                <div class="card shadow-sm p-4">
+                    <h5>{{ customer.username }}</h5>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-4"><div class="card bg-light p-3 text-center"><div class="text-muted small">Points</div><div class="h4">{{ loyalty.pointsBalance|number_format(0) }}</div></div></div>
+                        <div class="col-md-4"><div class="card bg-light p-3 text-center"><div class="text-muted small">Tier</div><div class="h4">{{ loyalty.tier|capitalize }}</div></div></div>
+                        <div class="col-md-4"><div class="card bg-light p-3 text-center"><div class="text-muted small">Spend</div><div class="h5">₦{{ loyalty.totalSpend|number_format(2) }}</div></div></div>
+                    </div>
+                </div>
+
+            {% elseif view_mode == 'engagement_tiers' %}
                 <div class="row g-3">
-                    <div class="col-md-4">
-                        <div class="card p-4 text-center border-0 shadow-sm">
-                            <div class="h2 text-warning mb-1">{{ total_customers|default(0) }}</div>
-                            <div class="text-muted">Enrolled Customers</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card p-4 text-center border-0 shadow-sm">
-                            <div class="h2 text-primary mb-1">{{ total_points_issued|default(0)|number_format(0) }}</div>
-                            <div class="text-muted">Total Points Issued</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card p-4 text-center border-0 shadow-sm">
-                            <div class="h2 text-success mb-1">{{ total_points_redeemed|default(0)|number_format(0) }}</div>
-                            <div class="text-muted">Points Redeemed</div>
-                        </div>
-                    </div>
-                </div>
-            {% elseif view_mode == 'loyalty_my_points' %}
-                <div class="card shadow-sm p-4 text-center">
-                    <div class="display-4 text-warning fw-bold mb-2">{{ my_points|default(0)|number_format(0) }}</div>
-                    <div class="text-muted mb-4">Your Loyalty Points Balance</div>
-                    <div class="badge bg-{{ current_tier|default('bronze') == 'gold' ? 'warning text-dark' : (current_tier|default('bronze') == 'silver' ? 'secondary' : 'warning') }} fs-6 p-2 mb-3">
-                        <i class="bi bi-award me-1"></i> {{ current_tier|default('Bronze')|capitalize }} Tier
-                    </div>
-                    <p class="text-muted small">Earn points on every purchase. Redeem at the counter for discounts.</p>
-                </div>
-            {% elseif view_mode == 'loyalty_tiers' %}
-                <div class="row g-3 justify-content-center">
-                    {% for tier in tiers|default([{name:'Bronze',min:0,max:999,color:'warning',perks:'Basic discounts'},{name:'Silver',min:1000,max:4999,color:'secondary',perks:'5% discount, priority service'},{name:'Gold',min:5000,max:99999,color:'warning',perks:'10% discount, free car wash'}]) %}
-                        <div class="col-md-4">
+                    {% for tier in tiers|default([]) %}
+                        <div class="col-md-6 col-lg-3">
                             <div class="card text-center shadow-sm border-0 h-100">
                                 <div class="card-body p-4">
                                     <div class="bg-{{ tier.color }} bg-opacity-15 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:64px;height:64px;">
-                                        <i class="bi bi-award text-{{ tier.color }} fs-2"></i>
+                                        <i class="bi bi-gem text-{{ tier.color }} fs-2"></i>
                                     </div>
-                                    <h4 class="fw-bold">{{ tier.name }}</h4>
-                                    <div class="text-muted small mb-2">{{ tier.min|number_format(0) }} – {{ tier.max|number_format(0) }} points</div>
-                                    <p class="text-muted small">{{ tier.perks }}</p>
+                                    <h5 class="fw-bold">{{ tier.name }}</h5>
+                                    <div class="text-muted small">₦{{ tier.min|number_format(0) }} – ₦{{ tier.max|number_format(0) }} spend</div>
+                                    <div class="badge bg-success mt-2">{{ tier.discount|default(0) }}% discount</div>
+                                    <p class="text-muted small mt-2 mb-0">{{ tier.perks }}</p>
                                 </div>
                             </div>
                         </div>
                     {% endfor %}
                 </div>
-            {% elseif view_mode == 'loyalty_reports' %}
-                <div class="card shadow-sm p-5 text-center">
-                    <i class="bi bi-bar-chart-line fs-1 text-muted mb-3"></i>
-                    <h5>Loyalty Reports</h5>
-                    <p class="text-muted">Detailed loyalty analytics coming soon. Data is being compiled.</p>
+
+            {% elseif view_mode == 'engagement_promotions' %}
+                <div class="row g-3">
+                    {% for promo in promotions|default([]) %}
+                        <div class="col-md-6">
+                            <div class="card shadow-sm h-100 border-start border-4 border-warning">
+                                <div class="card-body">
+                                    <h5>{{ promo.name }}</h5>
+                                    <p class="mb-1"><span class="badge bg-warning text-dark">{{ promo.multiplier }}× points</span></p>
+                                    <p class="text-muted small mb-0">{{ promo.start_date }} → {{ promo.end_date }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
                 </div>
+
+            {% elseif view_mode == 'engagement_reports' %}
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3"><div class="card p-3 text-center"><div class="h3">{{ total_customers|default(0) }}</div><div class="text-muted small">Customers</div></div></div>
+                    <div class="col-md-3"><div class="card p-3 text-center"><div class="h3 text-primary">{{ total_points|default(0)|number_format(0) }}</div><div class="text-muted small">Points Earned</div></div></div>
+                    <div class="col-md-3"><div class="card p-3 text-center"><div class="h3 text-success">{{ total_redeemed|default(0)|number_format(0) }}</div><div class="text-muted small">Redeemed</div></div></div>
+                </div>
+                <div class="card shadow-sm"><div class="card-header"><h5 class="mb-0">Customers by Tier</h5></div>
+                    <div class="card-body"><canvas id="tierChart" height="100"></canvas></div>
+                </div>
+                <script>
+                    new Chart(document.getElementById('tierChart'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: {{ by_tier|default({})|keys|json_encode|raw }},
+                            datasets: [{ data: {{ by_tier|default({})|values|json_encode|raw }}, backgroundColor: ['#cd7f32','#94a3b8','#F5A623','#0d9488'] }]
+                        }
+                    });
+                </script>
             {% endif %}
 
         {# ============================= #}
         {# --- NOTIFICATIONS VIEW --- #}
         {# ============================= #}
-        {% elseif view_mode == 'notifications' %}
+        {% elseif view_mode == 'notifications' or view_mode == 'notifications_index' %}
             <div class="card shadow-sm">
                 <div class="card-header d-flex align-items-center justify-content-between">
                     <h5 class="mb-0">All Notifications</h5>
                     {% if notifications|default([])|length > 0 %}
-                        <a href="#" class="btn btn-sm btn-outline-secondary">Mark All Read</a>
+                        <button id="markAllReadBtn" class="btn btn-sm btn-outline-secondary">Mark All Read</button>
                     {% endif %}
                 </div>
                 <div class="list-group list-group-flush">
@@ -1350,6 +1788,26 @@
                             No notifications yet.
                         </div>
                     {% endfor %}
+                </div>
+            </div>
+            <script>
+                const markAllReadBtn = document.getElementById('markAllReadBtn');
+                if (markAllReadBtn) {
+                    markAllReadBtn.addEventListener('click', async () => {
+                        const response = await fetch('{{ path('app_notifications_mark_all_read') }}', { method: 'POST' });
+                        const data = await response.json();
+                        if (data.success) {
+                            location.reload();
+                        }
+                    });
+                }
+            </script>
+
+        {% elseif view_mode == 'notifications_settings' %}
+            <div class="card shadow-sm">
+                <div class="card-header"><h5 class="mb-0">Notification Settings</h5></div>
+                <div class="card-body">
+                    <p class="text-muted mb-0">Notification preferences management is enabled at account level and will persist per role profile.</p>
                 </div>
             </div>
 

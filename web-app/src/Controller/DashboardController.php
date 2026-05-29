@@ -54,7 +54,8 @@ class DashboardController extends AbstractController
             ->findBy(['user' => $user, 'isRead' => false]);
 
         return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'dashboard',
+            'view_mode' => 'dashboard_overview',
+            'role_theme' => 'default',
             'total_sales_amount' => $totalSalesAmount,
             'total_transactions' => $totalTransactions,
             'low_stock_products' => $lowStockProducts,
@@ -97,7 +98,8 @@ class DashboardController extends AbstractController
             ->findBy(['user' => $user, 'isRead' => false]);
 
         return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'dashboard_super_admin',
+            'view_mode' => 'dashboard_overview',
+            'role_theme' => 'super_admin',
             'total_sales_amount' => $totalSalesAmount,
             'total_transactions' => $totalTransactions,
             'low_stock_products' => $lowStockProducts,
@@ -140,7 +142,8 @@ class DashboardController extends AbstractController
             ->findBy(['user' => $user, 'isRead' => false]);
 
         return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'dashboard_sub_admin',
+            'view_mode' => 'dashboard_overview',
+            'role_theme' => 'sub_admin',
             'total_sales_amount' => $totalSalesAmount,
             'total_transactions' => $totalTransactions,
             'low_stock_products' => $lowStockProducts,
@@ -183,7 +186,8 @@ class DashboardController extends AbstractController
             ->findBy(['user' => $user, 'isRead' => false]);
 
         return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'dashboard_manager',
+            'view_mode' => 'dashboard_overview',
+            'role_theme' => 'manager',
             'total_sales_amount' => $totalSalesAmount,
             'total_transactions' => $totalTransactions,
             'low_stock_products' => $lowStockProducts,
@@ -224,7 +228,7 @@ class DashboardController extends AbstractController
         }
 
         return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'analytics',
+            'view_mode' => 'reports_dashboard',
             'sales_by_day' => json_encode($salesByDay),
         ]);
     }

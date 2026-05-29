@@ -23,6 +23,16 @@
         <div class="col-md-4">
             <div class="card shadow-sm h-100">
                 <div class="card-header"><h5 class="mb-0">Product Details</h5></div>
+                <div class="p-3 border-bottom">
+                    {% if product.imagePath %}
+                        <img src="{{ asset(product.imagePath) }}" alt="{{ product.name }}" class="img-fluid rounded border" style="width:100%;max-height:220px;object-fit:cover;">
+                    {% else %}
+                        <div class="text-center text-muted border rounded py-5">
+                            <i class="bi bi-image fs-1 d-block"></i>
+                            No image uploaded
+                        </div>
+                    {% endif %}
+                </div>
                 <div class="list-group list-group-flush">
                     <div class="list-group-item d-flex justify-content-between">
                         <span class="text-muted">Current Stock</span>

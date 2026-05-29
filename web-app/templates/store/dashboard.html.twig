@@ -59,6 +59,9 @@
                 {% for product in products %}
                     <div class="col product-item" data-id="{{ product.id }}" data-name="{{ product.name }}" data-price="{{ product.unitPrice }}" data-barcode="{{ product.barcode }}" data-category="{{ product.category }}" data-stock="{{ product.stockQuantity }}">
                         <div class="card h-100 product-card bg-dark border-secondary p-3">
+                            {% if product.imagePath %}
+                                <img src="{{ asset(product.imagePath) }}" alt="{{ product.name }}" class="rounded mb-2 border border-secondary" style="width:100%;height:120px;object-fit:cover;">
+                            {% endif %}
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="badge bg-secondary text-uppercase">{{ product.category }}</span>
                                 <span class="badge bg-{{ product.stockQuantity > 10 ? 'success' : 'danger' }}">Stock: {{ product.stockQuantity }}</span>

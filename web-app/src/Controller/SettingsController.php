@@ -223,6 +223,7 @@ class SettingsController extends AbstractController
         return $this->render('settings/system-info.html.twig', [
             'php_version' => $phpVersion,
             'symfony_version' => $symfonyVersion,
+            'php_memory_limit' => ini_get('memory_limit'),
             'user_count' => $userCount,
             'sale_count' => $saleCount,
             'product_count' => $productCount,

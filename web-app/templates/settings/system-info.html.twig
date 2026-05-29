@@ -44,7 +44,7 @@
                     </div>
                     <div class="list-group-item d-flex justify-content-between align-items-center">
                         <span class="text-muted">PHP Memory Limit</span>
-                        <span class="badge bg-light text-dark border">{{ php_uname() is defined ? php_uname() : ini_get('memory_limit') }}</span>
+                        <span class="badge bg-light text-dark border">{{ php_memory_limit|default('N/A') }}</span>
                     </div>
                 </div>
             </div>

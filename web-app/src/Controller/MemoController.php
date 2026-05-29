@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/memos')]
-#[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF')")]
+#[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF')")]
 class MemoController extends AbstractController
 {
     public function __construct(private EntityManagerInterface $em) {}
@@ -76,13 +76,18 @@ class MemoController extends AbstractController
 
             $this->em->persist($memo);
 
-            // Add recipients
+            // Add recipients with role-aware restrictions
+            $sender = $this->getUser();
+            $allowedRecipientRoles = $this->getAllowedRecipientRoles($sender->getRole()->value);
             $recipientIds = $data['recipientIds'] ?? [];
-            $recipientRoles = $data['recipientRoles'] ?? [];
+            $recipientRoles = array_values(array_filter($data['recipientRoles'] ?? [], fn($r) => in_array($r, $allowedRecipientRoles, true)));
 
             foreach ($recipientIds as $recipientId) {
                 $recipient = $this->em->getRepository(User::class)->find($recipientId);
                 if ($recipient) {
+                    if (!in_array($recipient->getRole()->value, $allowedRecipientRoles, true)) {
+                        continue;
+                    }
                     $memoRecipient = new MemoRecipient();
                     $memoRecipient->setMemo($memo);
                     $memoRecipient->setRecipient($recipient);
@@ -137,16 +142,18 @@ class MemoController extends AbstractController
         }
 
         $users = $this->em->getRepository(User::class)->findActiveUsers();
-        $roles = [
-            UserRole::ROLE_SUPER_ADMIN->value,
-            UserRole::ROLE_MANAGER->value,
-            UserRole::ROLE_STAFF->value,
-        ];
+        $allowedRecipientRoles = $this->getAllowedRecipientRoles($this->getUser()->getRole()->value);
+        $users = array_values(array_filter($users, function (User $user) use ($allowedRecipientRoles) {
+            if ($user === $this->getUser()) {
+                return false;
+            }
+            return in_array($user->getRole()->value, $allowedRecipientRoles, true);
+        }));
 
         return $this->render('dashboard/index.html.twig', [
             'view_mode' => 'memo_form',
             'users' => $users,
-            'roles' => $roles,
+            'roles' => $allowedRecipientRoles,
         ]);
     }
 
@@ -172,6 +179,78 @@ class MemoController extends AbstractController
             'view_mode' => 'memo_view',
             'memo' => $memo,
             'replies' => $replies,
+            'attachments' => $memo->getAttachments(),
+            'can_forward' => $this->isGranted('forward_memo'),
+        ]);
+    }
+
+    #[Route('/{id}/forward', name: 'app_memo_forward', methods: ['GET', 'POST'])]
+    public function forwardMemo(Memo $memo, Request $request): Response
+    {
+        $this->denyAccessUnlessGranted('forward_memo');
+
+        if ($request->isMethod('POST')) {
+            $data = $request->request->all();
+
+            if (empty($data['body'])) {
+                $this->addFlash('error', 'Forward message is required');
+                return $this->redirectToRoute('app_memo_forward', ['id' => $memo->getId()]);
+            }
+
+            $forward = new Memo();
+            $forward->setSender($this->getUser());
+            $forward->setSubject('FWD: ' . $memo->getSubject());
+            $forward->setBody($data['body'] . "\n\n--- Forwarded message ---\n" . $memo->getBody());
+            $forward->setStatus('sent');
+            $forward->setParentMemo($memo);
+
+            $this->em->persist($forward);
+
+            $sender = $this->getUser();
+            $allowedRecipientRoles = $this->getAllowedRecipientRoles($sender->getRole()->value);
+            $recipientIds = $data['recipientIds'] ?? [];
+            $recipientRoles = array_values(array_filter($data['recipientRoles'] ?? [], fn($r) => in_array($r, $allowedRecipientRoles, true)));
+
+            foreach ($recipientIds as $recipientId) {
+                $recipient = $this->em->getRepository(User::class)->find($recipientId);
+                if ($recipient && in_array($recipient->getRole()->value, $allowedRecipientRoles, true)) {
+                    $memoRecipient = new MemoRecipient();
+                    $memoRecipient->setMemo($forward);
+                    $memoRecipient->setRecipient($recipient);
+                    $this->em->persist($memoRecipient);
+
+                    $notif = new Notification();
+                    $notif->setUser($recipient);
+                    $notif->setType('memo_received');
+                    $notif->setMessage('Forwarded memo from ' . $sender->getUsername() . ': ' . $forward->getSubject());
+                    $notif->setLink('/memos/' . $forward->getId());
+                    $this->em->persist($notif);
+                }
+            }
+
+            foreach ($recipientRoles as $role) {
+                $memoRecipient = new MemoRecipient();
+                $memoRecipient->setMemo($forward);
+                $memoRecipient->setRecipientRole($role);
+                $this->em->persist($memoRecipient);
+            }
+
+            $this->em->flush();
+            $this->addFlash('success', 'Memo forwarded successfully');
+            return $this->redirectToRoute('app_memo_view', ['id' => $forward->getId()]);
+        }
+
+        $users = $this->em->getRepository(User::class)->findActiveUsers();
+        $allowedRecipientRoles = $this->getAllowedRecipientRoles($this->getUser()->getRole()->value);
+        $users = array_values(array_filter($users, function (User $user) use ($allowedRecipientRoles) {
+            return $user !== $this->getUser() && in_array($user->getRole()->value, $allowedRecipientRoles, true);
+        }));
+
+        return $this->render('dashboard/index.html.twig', [
+            'view_mode' => 'memo_forward',
+            'memo' => $memo,
+            'users' => $users,
+            'roles' => $allowedRecipientRoles,
         ]);
     }
 
@@ -210,7 +289,7 @@ class MemoController extends AbstractController
     }
 
     #[Route('/{id}/approve', name: 'app_memo_approve', methods: ['POST'])]
-    #[IsGranted('ROLE_SUPER_ADMIN')]
+    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN')")]
     public function approve(Memo $memo, Request $request): JsonResponse
     {
         $memo->setStatus('approved');
@@ -231,7 +310,7 @@ class MemoController extends AbstractController
     }
 
     #[Route('/{id}/decline', name: 'app_memo_decline', methods: ['POST'])]
-    #[IsGranted('ROLE_SUPER_ADMIN')]
+    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN')")]
     public function decline(Memo $memo, Request $request): JsonResponse
     {
         $memo->setStatus('declined');
@@ -263,5 +342,20 @@ class MemoController extends AbstractController
 
         $this->addFlash('success', 'Memo deleted');
         return $this->redirectToRoute('app_memo_dashboard');
+    }
+
+    private function getAllowedRecipientRoles(string $senderRole): array
+    {
+        return match ($senderRole) {
+            UserRole::ROLE_STAFF->value => [UserRole::ROLE_MANAGER->value],
+            UserRole::ROLE_MANAGER->value => [UserRole::ROLE_SUPER_ADMIN->value, UserRole::ROLE_SUB_ADMIN->value],
+            UserRole::ROLE_SUB_ADMIN->value, UserRole::ROLE_SUPER_ADMIN->value => [
+                UserRole::ROLE_SUPER_ADMIN->value,
+                UserRole::ROLE_SUB_ADMIN->value,
+                UserRole::ROLE_MANAGER->value,
+                UserRole::ROLE_STAFF->value,
+            ],
+            default => [UserRole::ROLE_MANAGER->value],
+        };
     }
 }

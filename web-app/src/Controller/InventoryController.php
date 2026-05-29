@@ -10,11 +10,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/inventory')]
-#[IsGranted('ROLE_MANAGER')]
+#[IsGranted(expression: "is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF') or is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN')")]
 class InventoryController extends AbstractController
 {
     public function __construct(private EntityManagerInterface $em) {}
@@ -44,6 +45,8 @@ class InventoryController extends AbstractController
     {
         $search = $request->query->get('search', '');
         $category = $request->query->get('category', '');
+        $sortBy = $request->query->get('sortBy', 'name');
+        $sortDir = strtoupper((string) $request->query->get('sortDir', 'ASC')) === 'DESC' ? 'DESC' : 'ASC';
 
         $qb = $this->em->getRepository(Product::class)->createQueryBuilder('p');
 
@@ -57,13 +60,19 @@ class InventoryController extends AbstractController
                ->setParameter('category', $category);
         }
 
-        $products = $qb->getQuery()->getResult();
+        $allowedSortColumns = ['name', 'category', 'unitPrice', 'stockQuantity', 'barcode'];
+        if (!in_array($sortBy, $allowedSortColumns, true)) {
+            $sortBy = 'name';
+        }
+        $products = $qb->orderBy('p.' . $sortBy, $sortDir)->getQuery()->getResult();
 
         return $this->render('dashboard/index.html.twig', [
             'view_mode' => 'inventory_products',
             'products' => $products,
             'search' => $search,
             'category' => $category,
+            'sort_by' => $sortBy,
+            'sort_dir' => $sortDir,
         ]);
     }
 
@@ -87,6 +96,18 @@ class InventoryController extends AbstractController
             $product->setStockQuantity((int) $data['stockQuantity']);
             $product->setReorderLevel((int) $data['reorderLevel']);
             $product->setCostPrice((float) ($data['costPrice'] ?? 0));
+
+            /** @var UploadedFile|null $image */
+            $image = $request->files->get('image');
+            if ($image) {
+                $filename = bin2hex(random_bytes(12)) . '.' . ($image->guessExtension() ?: 'jpg');
+                $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/products';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                $image->move($uploadDir, $filename);
+                $product->setImagePath('/uploads/products/' . $filename);
+            }
 
             $this->em->persist($product);
             $this->em->flush();
@@ -114,6 +135,18 @@ class InventoryController extends AbstractController
             $product->setUnitPrice((float) $data['unitPrice']);
             $product->setReorderLevel((int) $data['reorderLevel']);
             $product->setCostPrice((float) ($data['costPrice'] ?? 0));
+
+            /** @var UploadedFile|null $image */
+            $image = $request->files->get('image');
+            if ($image) {
+                $filename = bin2hex(random_bytes(12)) . '.' . ($image->guessExtension() ?: 'jpg');
+                $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/products';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0755, true);
+                }
+                $image->move($uploadDir, $filename);
+                $product->setImagePath('/uploads/products/' . $filename);
+            }
 
             $this->em->flush();
 

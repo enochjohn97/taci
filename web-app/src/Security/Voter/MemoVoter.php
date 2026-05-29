@@ -36,7 +36,8 @@ class MemoVoter extends Voter
         $isStaff = in_array('ROLE_STAFF', $userRoles);
         $isManager = in_array('ROLE_MANAGER', $userRoles);
         $isSuperAdmin = in_array('ROLE_SUPER_ADMIN', $userRoles);
-        $isElevated = $isManager || $isSuperAdmin;
+        $isSubAdmin = in_array('ROLE_SUB_ADMIN', $userRoles);
+        $isElevated = $isManager || $isSuperAdmin || $isSubAdmin;
 
         return match ($attribute) {
             self::CREATE_MEMO, self::VIEW_MEMO => $isStaff || $isElevated,

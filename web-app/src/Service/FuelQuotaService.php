@@ -86,16 +86,23 @@ class FuelQuotaService
         float $totalProfit,
         float $profitMargin
     ): string {
+        $daysInPeriod = $goodDays + $badDays;
+        $baseDailyQuota = $fuelEntry->getLiterQuantity() / max($daysInPeriod, 1);
+
         $html = $this->twig->render('fuel/quota-report-pdf.html.twig', [
             'fuelEntry' => $fuelEntry,
             'goodDays' => $goodDays,
             'badDays' => $badDays,
+            'daysInPeriod' => $daysInPeriod,
             'goodDayQuota' => $goodDayQuota,
             'badDayQuota' => $badDayQuota,
+            'baseDailyQuota' => $baseDailyQuota,
             'totalRevenue' => $totalRevenue,
             'totalCogs' => $totalCogs,
             'totalProfit' => $totalProfit,
             'profitMargin' => $profitMargin,
+            'goodDayRevenue' => $goodDayQuota * ($totalRevenue / max($goodDays * $goodDayQuota + $badDays * $badDayQuota, 1)) * $goodDays,
+            'enteredBy' => $fuelEntry->getEnteredBy()?->getUsername() ?? 'System',
         ]);
 
         $dompdf = new Dompdf();

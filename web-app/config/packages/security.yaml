@@ -48,6 +48,15 @@ security:
     - { path: ^/settings/admin, roles: ROLE_SUPER_ADMIN }
     - { path: ^/settings/profile, roles: IS_AUTHENTICATED_FULLY }
     - { path: ^/api/, roles: [ROLE_SUPER_ADMIN, ROLE_SUB_ADMIN] }
+    - { path: ^/loyalty/api/, roles: IS_AUTHENTICATED_FULLY }
+    - { path: ^/engagement/api/, roles: IS_AUTHENTICATED_FULLY }
+    - { path: ^/fuel, roles: [ROLE_SUPER_ADMIN, ROLE_SUB_ADMIN] }
+    - { path: ^/engagement/promotions, roles: ROLE_SUPER_ADMIN }
+    - { path: ^/engagement/reports, roles: ROLE_SUPER_ADMIN }
+    - { path: ^/engagement/wallet, roles: [ROLE_SUPER_ADMIN, ROLE_SUB_ADMIN, ROLE_MANAGER, ROLE_STAFF] }
+    - { path: ^/engagement, roles: [ROLE_SUPER_ADMIN, ROLE_MANAGER] }
+    - { path: ^/tracking, roles: [ROLE_SUPER_ADMIN, ROLE_SUB_ADMIN] }
+    - { path: ^/reports, roles: [ROLE_SUPER_ADMIN, ROLE_SUB_ADMIN] }
     - { path: ^/dashboard/super-admin, roles: ROLE_SUPER_ADMIN }
     - { path: ^/dashboard/sub-admin, roles: ROLE_SUB_ADMIN }
     - { path: ^/dashboard/manager, roles: ROLE_MANAGER }

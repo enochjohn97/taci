@@ -10,7 +10,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Doctrine\ORM\EntityManagerInterface;
 
 #[Route('/tracking')]
-#[IsGranted(expression: "is_granted('ROLE_MANAGER') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_SUPER_ADMIN')")]
+#[IsGranted(expression: "is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_SUPER_ADMIN')")]
 class TrackingController extends AbstractController
 {
     public function __construct(
@@ -91,6 +91,7 @@ class TrackingController extends AbstractController
         return $this->render('tracking/index.html.twig', [
             'fuel_trucks'     => $fuelTrucks,
             'stock_shipments' => $stockShipments,
+            'google_maps_api_key' => $_ENV['GOOGLE_MAPS_API_KEY'] ?? null,
         ]);
     }
 }
