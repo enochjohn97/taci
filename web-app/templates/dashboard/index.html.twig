@@ -1751,7 +1751,7 @@
                         type: 'doughnut',
                         data: {
                             labels: {{ by_tier|default({})|keys|json_encode|raw }},
-                            datasets: [{ data: {{ by_tier|default({})|values|json_encode|raw }}, backgroundColor: ['#cd7f32','#94a3b8','#F5A623','#0d9488'] }]
+                            datasets: [{ data: {{ by_tier|default({})|map(v => v)|json_encode|raw }}, backgroundColor: ['#cd7f32','#94a3b8','#F5A623','#0d9488'] }]
                         }
                     });
                 </script>

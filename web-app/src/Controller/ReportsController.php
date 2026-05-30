@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/reports')]
-#[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN')")]
+#[IsGranted('ROLE_SUB_ADMIN')]
 class ReportsController extends AbstractController
 {
     public function __construct(private EntityManagerInterface $em) {}

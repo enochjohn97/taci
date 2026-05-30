@@ -17,7 +17,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/store')]
-#[IsGranted(expression: "is_granted('ROLE_STAFF') or is_granted('ROLE_MANAGER')")]
+#[IsGranted('ROLE_STAFF')]
 class StoreController extends AbstractController
 {
     public function __construct(private EntityManagerInterface $em) {}

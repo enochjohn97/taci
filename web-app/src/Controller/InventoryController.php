@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/inventory')]
-#[IsGranted(expression: "is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF') or is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN')")]
+#[IsGranted('IS_AUTHENTICATED_FULLY')]
 class InventoryController extends AbstractController
 {
     public function __construct(private EntityManagerInterface $em) {}

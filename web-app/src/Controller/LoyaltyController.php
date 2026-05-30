@@ -22,28 +22,28 @@ class LoyaltyController extends AbstractController
     public function __construct(private LoyaltyService $loyaltyService) {}
 
     #[Route('', name: 'app_loyalty_dashboard')]
-    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER')")]
+    #[IsGranted('ROLE_MANAGER')]
     public function dashboard(): Response
     {
         return $this->redirectToRoute('app_engagement_dashboard', [], Response::HTTP_PERMANENTLY_REDIRECT);
     }
 
     #[Route('/my-points', name: 'app_loyalty_my_points')]
-    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF')")]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function myPoints(): Response
     {
         return $this->redirectToRoute('app_engagement_wallet', [], Response::HTTP_PERMANENTLY_REDIRECT);
     }
 
     #[Route('/customer/{id}', name: 'app_loyalty_customer')]
-    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER')")]
+    #[IsGranted('ROLE_MANAGER')]
     public function customerLoyalty(int $id): Response
     {
         return $this->redirectToRoute('app_engagement_customer', ['id' => $id], Response::HTTP_PERMANENTLY_REDIRECT);
     }
 
     #[Route('/tiers', name: 'app_loyalty_tiers')]
-    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER')")]
+    #[IsGranted('ROLE_MANAGER')]
     public function tiers(): Response
     {
         return $this->redirectToRoute('app_engagement_tiers', [], Response::HTTP_PERMANENTLY_REDIRECT);
@@ -73,7 +73,7 @@ class LoyaltyController extends AbstractController
     }
 
     #[Route('/api/redeem-points/{customerId}', name: 'app_loyalty_redeem_points', methods: ['POST'])]
-    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER')")]
+    #[IsGranted('ROLE_MANAGER')]
     public function redeemPoints(#[MapEntity(id: 'customerId')] User $customer, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -85,7 +85,7 @@ class LoyaltyController extends AbstractController
     }
 
     #[Route('/api/points-balance/{customerId}', name: 'app_loyalty_points_balance', methods: ['GET'])]
-    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF')")]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function getPointsBalance(#[MapEntity(id: 'customerId')] User $customer): JsonResponse
     {
         $viewer = $this->getUser();

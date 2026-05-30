@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/notifications')]
-#[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF')")]
+#[IsGranted('IS_AUTHENTICATED_FULLY')]
 class NotificationController extends AbstractController
 {
     public function __construct(private EntityManagerInterface $em) {}

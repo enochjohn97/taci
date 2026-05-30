@@ -10,7 +10,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Doctrine\ORM\EntityManagerInterface;
 
 #[Route('/tracking')]
-#[IsGranted(expression: "is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_SUPER_ADMIN')")]
+#[IsGranted('ROLE_SUB_ADMIN')]
 class TrackingController extends AbstractController
 {
     public function __construct(

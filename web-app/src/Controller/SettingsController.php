@@ -16,7 +16,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/settings')]
-#[IsGranted(expression: "is_granted('ROLE_STAFF') or is_granted('ROLE_MANAGER') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_SUPER_ADMIN')")]
+#[IsGranted('IS_AUTHENTICATED_FULLY')]
 class SettingsController extends AbstractController
 {
     public function __construct(

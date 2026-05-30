@@ -16,7 +16,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /** Fuel ops: Super Admin full access; Sub Admin operational access (see sidebar). Delegates use ROLE_MANAGER and cannot access. */
 #[Route('/fuel')]
-#[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN')")]
+#[IsGranted('ROLE_SUB_ADMIN')]
 class FuelController extends AbstractController
 {
     public function __construct(

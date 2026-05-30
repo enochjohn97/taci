@@ -26,7 +26,7 @@ class CustomerEngagementController extends AbstractController
     ) {}
 
     #[Route('', name: 'app_engagement_dashboard')]
-    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER')")]
+    #[IsGranted('ROLE_MANAGER')]
     public function dashboard(): Response
     {
         $stats = $this->loyaltyService->getLoyaltyStats();
@@ -42,7 +42,7 @@ class CustomerEngagementController extends AbstractController
     }
 
     #[Route('/wallet', name: 'app_engagement_wallet')]
-    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF')")]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function wallet(): Response
     {
         $loyalty = $this->loyaltyService->getOrCreateLoyaltyAccount($this->getUser());
@@ -57,7 +57,7 @@ class CustomerEngagementController extends AbstractController
     }
 
     #[Route('/customer/{id}', name: 'app_engagement_customer')]
-    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER')")]
+    #[IsGranted('ROLE_MANAGER')]
     public function customer(User $customer): Response
     {
         $loyalty = $this->loyaltyService->getOrCreateLoyaltyAccount($customer);
@@ -70,7 +70,7 @@ class CustomerEngagementController extends AbstractController
     }
 
     #[Route('/tiers', name: 'app_engagement_tiers')]
-    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER')")]
+    #[IsGranted('ROLE_MANAGER')]
     public function tiers(): Response
     {
         $tiers = [
@@ -146,7 +146,7 @@ class CustomerEngagementController extends AbstractController
     }
 
     #[Route('/api/redeem-points/{customerId}', name: 'app_engagement_redeem_points', methods: ['POST'])]
-    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER')")]
+    #[IsGranted('ROLE_MANAGER')]
     public function redeemPoints(#[MapEntity(id: 'customerId')] User $customer, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);

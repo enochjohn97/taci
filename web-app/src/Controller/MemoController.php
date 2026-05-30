@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/memos')]
-#[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF')")]
+#[IsGranted('IS_AUTHENTICATED_FULLY')]
 class MemoController extends AbstractController
 {
     public function __construct(private EntityManagerInterface $em) {}
@@ -289,7 +289,7 @@ class MemoController extends AbstractController
     }
 
     #[Route('/{id}/approve', name: 'app_memo_approve', methods: ['POST'])]
-    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN')")]
+    #[IsGranted('ROLE_SUB_ADMIN')]
     public function approve(Memo $memo, Request $request): JsonResponse
     {
         $memo->setStatus('approved');
@@ -310,7 +310,7 @@ class MemoController extends AbstractController
     }
 
     #[Route('/{id}/decline', name: 'app_memo_decline', methods: ['POST'])]
-    #[IsGranted(expression: "is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN')")]
+    #[IsGranted('ROLE_SUB_ADMIN')]
     public function decline(Memo $memo, Request $request): JsonResponse
     {
         $memo->setStatus('declined');
