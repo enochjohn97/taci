@@ -109,10 +109,15 @@
         {% if invoices is defined and invoices|length > 0 %}
           <ul class="list-unstyled mb-0">
             {% for inv in invoices %}
-              <li>
-                <strong>#{{ inv.id }}</strong> — {{ inv.amount }} NGN &middot; {{ inv.status|capitalize }}
-                {% if inv.reference %} &middot; Ref: {{ inv.reference }}{% endif %}
-                <div class="text-muted small">{{ inv.createdAt.format('Y-m-d H:i') }}</div>
+              <li class="d-flex justify-content-between align-items-center">
+            <div>
+              <strong>#{{ inv.id }}</strong> — {{ inv.amount }} NGN &middot; {{ inv.status|capitalize }}
+              {% if inv.reference %} &middot; Ref: {{ inv.reference }}{% endif %}
+              <div class="text-muted small">{{ inv.createdAt.format('Y-m-d H:i') }}</div>
+            </div>
+            <div>
+              <a href="{{ path('inventory_supplier_invoice_pdf', {'supplierId': supplier.id, 'invoiceId': inv.id}) }}" class="btn btn-sm btn-outline-secondary me-2" target="_blank">PDF</a>
+            </div>
               </li>
             {% endfor %}
           </ul>
