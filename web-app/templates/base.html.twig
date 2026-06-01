@@ -689,6 +689,48 @@
                 // Hide the alert element
                 alert.style.display = 'none';
             });
+
+            // Offline transaction queue sync
+            function getOfflineQueue() {
+                try {
+                    const raw = localStorage.getItem('offline_tx_queue');
+                    return raw ? JSON.parse(raw) : [];
+                } catch (e) { return []; }
+            }
+
+            function setOfflineQueue(q) { localStorage.setItem('offline_tx_queue', JSON.stringify(q)); }
+
+            async function trySyncQueue() {
+                const q = getOfflineQueue();
+                if (!q.length) return;
+                try {
+                    const res = await fetch('/api/sync', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ transactions: q })
+                    });
+                    if (res.ok) {
+                        setOfflineQueue([]);
+                        toast.success('Offline transactions synced (' + q.length + ')');
+                    } else {
+                        console.warn('Sync failed', res.status);
+                    }
+                } catch (err) {
+                    console.warn('Sync error', err);
+                }
+            }
+
+            window.queueOfflineTransaction = function(tx) {
+                const q = getOfflineQueue();
+                q.push(tx);
+                setOfflineQueue(q);
+                toast.info('Transaction queued for sync (offline)');
+            };
+
+            window.addEventListener('online', function() { trySyncQueue(); });
+
+            // Try once on load
+            if (navigator.onLine) trySyncQueue();
         });
     </script>
     
