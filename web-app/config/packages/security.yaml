@@ -11,9 +11,9 @@ security:
         property: username
 
   role_hierarchy:
-    ROLE_SUPER_ADMIN: [ROLE_SUB_ADMIN, ROLE_MANAGER, ROLE_STAFF]
-    ROLE_SUB_ADMIN:   [ROLE_MANAGER, ROLE_STAFF]
-    ROLE_MANAGER:     [ROLE_STAFF]
+    ROLE_SUPER_ADMIN: [ROLE_SUB_ADMIN, ROLE_MANAGER]
+    ROLE_SUB_ADMIN:   [ROLE_MANAGER]
+    # Managers are not granted ROLE_STAFF by default to prevent unintended access; staff is assigned explicitly
 
   firewalls:
     dev:
