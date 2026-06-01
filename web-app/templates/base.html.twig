@@ -691,6 +691,57 @@
             });
 
             // Offline transaction queue sync
+            // IndexedDB helper
+            function idbOpen() {
+                return new Promise((resolve, reject) => {
+                    if (!('indexedDB' in window)) return resolve(null);
+                    const req = indexedDB.open('taci_offline', 1);
+                    req.onupgradeneeded = function(e) {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains('transactions')) {
+                            db.createObjectStore('transactions', { autoIncrement: true });
+                        }
+                    };
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => resolve(null);
+                });
+            }
+
+            async function idbAddTx(tx) {
+                const db = await idbOpen();
+                if (!db) return false;
+                return new Promise((resolve) => {
+                    const txn = db.transaction('transactions', 'readwrite');
+                    const store = txn.objectStore('transactions');
+                    store.add(tx);
+                    txn.oncomplete = () => { db.close(); resolve(true); };
+                    txn.onerror = () => { db.close(); resolve(false); };
+                });
+            }
+
+            async function idbGetAll() {
+                const db = await idbOpen();
+                if (!db) return [];
+                return new Promise((resolve) => {
+                    const txn = db.transaction('transactions', 'readonly');
+                    const store = txn.objectStore('transactions');
+                    const req = store.getAll();
+                    req.onsuccess = () => { db.close(); resolve(req.result || []); };
+                    req.onerror = () => { db.close(); resolve([]); };
+                });
+            }
+
+            async function idbClear() {
+                const db = await idbOpen();
+                if (!db) return false;
+                return new Promise((resolve) => {
+                    const txn = db.transaction('transactions', 'readwrite');
+                    txn.objectStore('transactions').clear();
+                    txn.oncomplete = () => { db.close(); resolve(true); };
+                    txn.onerror = () => { db.close(); resolve(false); };
+                });
+            }
+
             function getOfflineQueue() {
                 try {
                     const raw = localStorage.getItem('offline_tx_queue');
@@ -701,7 +752,9 @@
             function setOfflineQueue(q) { localStorage.setItem('offline_tx_queue', JSON.stringify(q)); }
 
             async function trySyncQueue() {
-                const q = getOfflineQueue();
+                const localQ = getOfflineQueue();
+                const idbQ = await idbGetAll();
+                const q = [].concat(localQ, idbQ);
                 if (!q.length) return;
                 try {
                     const res = await fetch('/api/sync', {
@@ -711,6 +764,7 @@
                     });
                     if (res.ok) {
                         setOfflineQueue([]);
+                        await idbClear();
                         toast.success('Offline transactions synced (' + q.length + ')');
                     } else {
                         console.warn('Sync failed', res.status);
@@ -720,10 +774,13 @@
                 }
             }
 
-            window.queueOfflineTransaction = function(tx) {
-                const q = getOfflineQueue();
-                q.push(tx);
-                setOfflineQueue(q);
+            window.queueOfflineTransaction = async function(tx) {
+                const added = await idbAddTx(tx);
+                if (!added) {
+                    const q = getOfflineQueue();
+                    q.push(tx);
+                    setOfflineQueue(q);
+                }
                 toast.info('Transaction queued for sync (offline)');
             };
 
