@@ -139,7 +139,7 @@
         const fd = new FormData(this);
         const body = Object.fromEntries(fd.entries());
         try{
-          const res = await fetch(`/api/suppliers/${supplierId}/invoices`, {
+          const res = await fetch(`/inventory/supplier/${supplierId}/invoice/new`, {
             method: 'POST',
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify(body)
@@ -160,7 +160,7 @@
         const fd = new FormData(this);
         const body = Object.fromEntries(fd.entries());
         try{
-          const res = await fetch(`/api/suppliers/${supplierId}/deliveries`, {
+          const res = await fetch(`/inventory/supplier/${supplierId}/delivery/new`, {
             method: 'POST',
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify(body)
