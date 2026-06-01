@@ -216,4 +216,24 @@ class SupplierController extends AbstractController
 
         return $response;
     }
+
+    #[\Route('/delivery/{id}/update', name: 'inventory_delivery_update', methods: ['POST'])]
+    #[\IsGranted('ROLE_SUB_ADMIN')]
+    public function updateDeliveryStatus(\App\Entity\Delivery $delivery, Request $request): JsonResponse
+    {
+        $status = $request->request->get('status');
+        $allowed = ['scheduled','approved','dispatched','in_transit','delivered','cancelled'];
+        if (!in_array($status, $allowed, true)) {
+            return $this->json(['error' => 'Invalid status'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $delivery->setStatus($status);
+        if ($driver = $request->request->get('assignedDriver')) {
+            $delivery->setAssignedDriver($driver);
+        }
+        $delivery->setUpdatedAt(new \DateTime());
+        $this->em->flush();
+
+        return $this->json(['success' => true, 'status' => $delivery->getStatus()]);
+    }
 }
