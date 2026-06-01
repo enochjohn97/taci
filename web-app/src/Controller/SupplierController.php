@@ -133,11 +133,14 @@ class SupplierController extends AbstractController
 
         $list = $qb->setFirstResult(($page - 1) * $perPage)->setMaxResults($perPage)->getQuery()->getResult();
 
+        $last = (int) ceil($total / $perPage);
+
         return $this->render('inventory/suppliers.html.twig', [
             'suppliers' => $list,
             'page' => $page,
             'per_page' => $perPage,
             'total' => $total,
+            'last' => $last,
         ]);
     }
 
