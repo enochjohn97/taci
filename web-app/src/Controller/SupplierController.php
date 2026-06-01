@@ -121,14 +121,23 @@ class SupplierController extends AbstractController
 
     #[Route('/suppliers/manage', name: 'inventory_suppliers_manage', methods: ['GET'])]
     #[IsGranted('ROLE_SUB_ADMIN')]
-    public function manageSuppliers(): Response
+    public function manageSuppliers(Request $request): Response
     {
-        $list = $this->em->getRepository(Supplier::class)->createQueryBuilder('s')
-            ->orderBy('s.name', 'ASC')
-            ->getQuery()->getResult();
+        $page = max(1, (int) $request->query->get('page', 1));
+        $perPage = 15;
+
+        $repo = $this->em->getRepository(Supplier::class);
+        $qb = $repo->createQueryBuilder('s')->orderBy('s.name', 'ASC');
+
+        $total = (int) $repo->createQueryBuilder('s')->select('COUNT(s.id)')->getQuery()->getSingleScalarResult();
+
+        $list = $qb->setFirstResult(($page - 1) * $perPage)->setMaxResults($perPage)->getQuery()->getResult();
 
         return $this->render('inventory/suppliers.html.twig', [
             'suppliers' => $list,
+            'page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
         ]);
     }
 
