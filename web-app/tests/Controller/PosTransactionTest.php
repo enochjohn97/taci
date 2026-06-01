@@ -14,6 +14,11 @@ class PosTransactionTest extends WebTestCase
 
     public function testCreateTransactionEndpointExists(): void
     {
+        if (false === getenv('DATABASE_URL_TEST')) {
+            $this->markTestSkipped('DATABASE_URL_TEST not set; skipping integration smoke test.');
+            return;
+        }
+
         $client = static::createClient();
         $client->request('POST', '/pos/api/transaction/create', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode(['items' => []]));
         $this->assertContains($client->getResponse()->getStatusCode(), [400, 401, 302, 200]);
