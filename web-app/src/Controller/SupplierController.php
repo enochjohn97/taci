@@ -72,4 +72,17 @@ class SupplierController extends AbstractController
         $this->em->flush();
         return $this->json(['success' => true]);
     }
+
+    #[Route('/suppliers/manage', name: 'inventory_suppliers_manage', methods: ['GET'])]
+    #[IsGranted('ROLE_SUB_ADMIN')]
+    public function manageSuppliers(): Response
+    {
+        $list = $this->em->getRepository(Supplier::class)->createQueryBuilder('s')
+            ->orderBy('s.name', 'ASC')
+            ->getQuery()->getResult();
+
+        return $this->render('inventory/suppliers.html.twig', [
+            'suppliers' => $list,
+        ]);
+    }
 }
