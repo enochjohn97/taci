@@ -763,11 +763,28 @@
                         body: JSON.stringify({ transactions: q })
                     });
                     if (res.ok) {
+                        const json = await res.json();
                         setOfflineQueue([]);
                         await idbClear();
-                        toast.success('Offline transactions synced (' + q.length + ')');
+
+                        const results = json.results || [];
+                        const applied = results.filter(r => r.status === 'applied').length;
+                        const conflicts = results.filter(r => r.status === 'conflict');
+                        const failed = results.filter(r => r.status === 'failed').length;
+                        const dup = results.filter(r => r.status === 'duplicate').length;
+
+                        toast.success(`Sync complete: ${applied} applied, ${conflicts.length} conflicts, ${failed} failed, ${dup} duplicates`);
+
+                        if (conflicts.length > 0) {
+                            console.warn('Sync conflicts', conflicts);
+                            // shallow UI: show first few conflicts in toast and console; detailed reconcile UI is next step
+                            const preview = conflicts.slice(0,5).map(c => `${c.offlineId || 'n/a'}: ${c.message || 'conflict'}`).join('\n');
+                            alert('Sync conflicts detected:\n' + preview + (conflicts.length > 5 ? '\n(see console for more)' : ''));
+                        }
                     } else {
-                        console.warn('Sync failed', res.status);
+                        const txt = await res.text();
+                        toast.error('Sync failed: ' + res.status);
+                        console.warn('Sync response', res.status, txt);
                     }
                 } catch (err) {
                     console.warn('Sync error', err);
