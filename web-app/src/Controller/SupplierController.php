@@ -135,12 +135,29 @@ class SupplierController extends AbstractController
 
         $last = (int) ceil($total / $perPage);
 
+        // basic supplier metrics
+        $activeDeliveries = (int) $this->em->getRepository(\App\Entity\Delivery::class)
+            ->createQueryBuilder('d')
+            ->select('COUNT(d.id)')
+            ->where('d.status != :del')
+            ->setParameter('del', 'delivered')
+            ->getQuery()->getSingleScalarResult();
+
+        $pendingInvoices = (int) $this->em->getRepository(\App\Entity\Invoice::class)
+            ->createQueryBuilder('i')
+            ->select('COUNT(i.id)')
+            ->where('i.status = :pending')
+            ->setParameter('pending', 'pending')
+            ->getQuery()->getSingleScalarResult();
+
         return $this->render('inventory/suppliers.html.twig', [
             'suppliers' => $list,
             'page' => $page,
             'per_page' => $perPage,
             'total' => $total,
             'last' => $last,
+            'active_deliveries' => $activeDeliveries,
+            'pending_invoices' => $pendingInvoices,
         ]);
     }
 
