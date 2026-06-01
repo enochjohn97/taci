@@ -137,18 +137,17 @@
       invoiceForm.addEventListener('submit', async function(e){
         e.preventDefault();
         const fd = new FormData(this);
-        const body = Object.fromEntries(fd.entries());
         try{
           const res = await fetch(`/inventory/supplier/${supplierId}/invoice/new`, {
             method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify(body)
+            body: fd
           });
-          if(!res.ok) throw new Error('Failed');
+          const json = await res.json();
+          if(!res.ok) throw new Error(json.error || 'Failed');
           // reload to show invoice
           location.reload();
         }catch(err){
-          alert('Error creating invoice');
+          alert('Error creating invoice: ' + err.message);
         }
       });
     }
@@ -158,17 +157,16 @@
       deliveryForm.addEventListener('submit', async function(e){
         e.preventDefault();
         const fd = new FormData(this);
-        const body = Object.fromEntries(fd.entries());
         try{
           const res = await fetch(`/inventory/supplier/${supplierId}/delivery/new`, {
             method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify(body)
+            body: fd
           });
-          if(!res.ok) throw new Error('Failed');
+          const json = await res.json();
+          if(!res.ok) throw new Error(json.error || 'Failed');
           location.reload();
         }catch(err){
-          alert('Error scheduling delivery');
+          alert('Error scheduling delivery: ' + err.message);
         }
       });
     }
