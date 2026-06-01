@@ -337,5 +337,45 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }).catch(()=>{/* ignore – endpoint may not exist yet */});
     }
+
+    // Populate staff selects (shift/leave modals)
+    fetch('/api/staff').then(r => {
+        if (!r.ok) throw new Error('no');
+        return r.json();
+    }).then(list => {
+        // staff selectors inside shift modal
+        document.querySelectorAll('#staffRowsContainer select').forEach(sel => {
+            // remove existing placeholder options but keep first "Select Staff..."
+            const first = sel.querySelector('option');
+            sel.innerHTML = '';
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Select Staff...';
+            sel.appendChild(placeholder);
+
+            list.forEach(u => {
+                const o = document.createElement('option');
+                o.value = u.id;
+                o.textContent = u.username;
+                sel.appendChild(o);
+            });
+        });
+
+        // leave modal staff select
+        const leaveSel = document.querySelector('#leaveModal select');
+        if (leaveSel) {
+            leaveSel.innerHTML = '';
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Select Staff...';
+            leaveSel.appendChild(placeholder);
+            list.forEach(u => {
+                const o = document.createElement('option');
+                o.value = u.id;
+                o.textContent = u.username;
+                leaveSel.appendChild(o);
+            });
+        }
+    }).catch(()=>{/* ignore if unauthenticated */});
 });
 </script>
