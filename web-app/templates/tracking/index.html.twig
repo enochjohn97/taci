@@ -187,12 +187,16 @@
                     {% else %}
                         <div class="map-placeholder">
                             <div class="map-grid"></div>
-                            <div class="pulse-dot" style="left: 30%; top: 60%;" title="Warri Depot"></div>
-                            <span class="text-muted small position-absolute" style="left: 28%; top: 68%;">Warri Depot</span>
-                            <div class="pulse-dot" style="left: 75%; top: 35%; background: var(--primary); box-shadow: 0 0 0 0 rgba(0,102,204,0.7);" title="Main Station"></div>
-                            <span class="text-primary small position-absolute fw-semibold" style="left: 70%; top: 22%;">Main Station</span>
-                            <div class="pulse-dot" style="left: 55%; top: 48%; background: #10b981; box-shadow: 0 0 0 0 rgba(16,185,129,0.7);" title="AGL-701-A"></div>
-                            <span class="text-white small position-absolute" style="left: 50%; top: 56%;">AGL-701-A (60%)</span>
+                            {% if fuel_trucks is defined and fuel_trucks|length > 0 %}
+                                {% for truck in fuel_trucks %}
+                                    {% set left = 10 + ((loop.index0 * 23) % 70) %}
+                                    {% set top = 20 + ((loop.index0 * 17) % 60) %}
+                                    <div class="pulse-dot" style="left: {{ left }}%; top: {{ top }}%;" title="{{ truck.plate }}"></div>
+                                    <span class="text-white small position-absolute" style="left: {{ left + 2 }}%; top: {{ top + 4 }}%;">{{ truck.plate }} ({{ truck.progress }}%)</span>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-muted p-4">No active dispatch telemetry available. Configure Google Maps API key or ensure telematics feed is active.</div>
+                            {% endif %}
                         </div>
                     {% endif %}
 
