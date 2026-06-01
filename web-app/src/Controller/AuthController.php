@@ -37,6 +37,23 @@ class AuthController extends AbstractController
     #[Route('/role-select', name: 'app_role_select')]
     public function roleSelect(): Response
     {
+        // If already authenticated, redirect to correct role-specific dashboard
+        if ($this->getUser()) {
+            $roles = $this->getUser()->getRoles();
+            if (in_array('ROLE_SUPER_ADMIN', $roles, true)) {
+                return $this->redirectToRoute('app_dashboard_super_admin');
+            }
+            if (in_array('ROLE_SUB_ADMIN', $roles, true)) {
+                return $this->redirectToRoute('app_dashboard_sub_admin');
+            }
+            if (in_array('ROLE_MANAGER', $roles, true)) {
+                return $this->redirectToRoute('app_dashboard_manager');
+            }
+            if (in_array('ROLE_STAFF', $roles, true)) {
+                return $this->redirectToRoute('app_dashboard_staff');
+            }
+        }
+
         // Check if sub-admins exist
         $subAdminsExist = (bool) count($this->userRepository->findByRole(UserRole::ROLE_SUB_ADMIN->value));
 

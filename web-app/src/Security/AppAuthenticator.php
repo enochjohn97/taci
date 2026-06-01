@@ -39,6 +39,11 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
         $username = $request->request->getString('username', '');
         $password = $request->request->getString('password', '');
         $csrfToken = $request->request->getString('_csrf_token', '');
+        $roleAttemptId = $request->request->getString('role_attempt_id', '');
+
+        if (!$roleAttemptId) {
+            throw new CustomUserMessageAuthenticationException('Invalid session attempt. Please return to role selection.');
+        }
 
         $request->getSession()->set(SecurityRequestAttributes::LAST_USERNAME, $username);
 
@@ -46,6 +51,7 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
         if ($role) {
             $normalizedRole = str_replace('_', '-', strtolower($role));
             $request->getSession()->set('LAST_LOGIN_ROLE', $normalizedRole);
+            $request->getSession()->set('PENDING_ROLE_ATTEMPT_ID', $roleAttemptId);
         }
 
         $normalizedRole = $role ? str_replace('_', '-', strtolower($role)) : null;
@@ -77,10 +83,20 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): Response
     {
         $user = $token->getUser();
+        $session = $request->getSession();
         
         // Add success flash message
-        $request->getSession()->getFlashBag()->add('success', 'Login successful! Welcome ' . $user->getUsername() . '.');
+        $session->getFlashBag()->add('success', 'Login successful! Welcome ' . $user->getUsername() . '.');
         
+        // Enforce role isolation by binding this session to the specific role chosen
+        $lastRole = $session->get('LAST_LOGIN_ROLE');
+        $attemptId = $session->get('PENDING_ROLE_ATTEMPT_ID');
+        if ($lastRole) {
+            $session->set('ACTIVE_ROLE', $lastRole);
+            $session->set('ROLE_ATTEMPT_ID', $attemptId);
+            $session->remove('PENDING_ROLE_ATTEMPT_ID');
+        }
+
         // Log successful login attempt
         $attempt = new LoginAttempt();
         $attempt->setUsername($user->getUsername());
@@ -97,23 +113,34 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
             return new RedirectResponse($targetPath);
         }
 
+        // Redirect based on the ACTIVE_ROLE the user selected, not the raw role hierarchy.
+        // This prevents a manager (who also satisfies ROLE_STAFF via hierarchy) from landing
+        // on the wrong dashboard.
+        $activeRole = $session->get('ACTIVE_ROLE');
+        $roleRouteMap = [
+            'super-admin' => 'app_dashboard_super_admin',
+            'sub-admin'   => 'app_dashboard_sub_admin',
+            'manager'     => 'app_dashboard_manager',
+            'staff'       => 'app_dashboard_staff',
+        ];
+
+        if ($activeRole && isset($roleRouteMap[$activeRole])) {
+            return new RedirectResponse($this->urlGenerator->generate($roleRouteMap[$activeRole]));
+        }
+
+        // Fallback: derive from DB role (no hierarchy confusion — use the stored enum value)
         $roles = $user->getRoles();
-        
-        // Redirect based on role
         if (in_array('ROLE_SUPER_ADMIN', $roles, true)) {
             return new RedirectResponse($this->urlGenerator->generate('app_dashboard_super_admin'));
         }
-        
         if (in_array('ROLE_SUB_ADMIN', $roles, true)) {
             return new RedirectResponse($this->urlGenerator->generate('app_dashboard_sub_admin'));
         }
-        
         if (in_array('ROLE_MANAGER', $roles, true)) {
             return new RedirectResponse($this->urlGenerator->generate('app_dashboard_manager'));
         }
-        
         if (in_array('ROLE_STAFF', $roles, true)) {
-            return new RedirectResponse($this->urlGenerator->generate('app_store_dashboard'));
+            return new RedirectResponse($this->urlGenerator->generate('app_dashboard_staff'));
         }
 
         return new RedirectResponse($this->urlGenerator->generate('app_role_select'));

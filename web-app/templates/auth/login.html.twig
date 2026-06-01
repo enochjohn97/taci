@@ -1,107 +1,85 @@
 {# templates/auth/login.html.twig #}
 {% extends "base.html.twig" %}
 {% set role_primary = '#0d9488' %}
-{% if role == 'sub-admin' %}
-    {% set role_primary = '#7f1d1d' %}
+{% if role == 'super-admin' %}
+    {% set role_primary = '#0A192F' %}
+{% elseif role == 'sub-admin' %}
+    {% set role_primary = '#3b82f6' %} {# Using blue since D0E8FF is too light for buttons #}
 {% elseif role == 'manager' %}
-    {% set role_primary = '#14532d' %}
+    {% set role_primary = '#0F4C3A' %}
 {% elseif role == 'staff' %}
-    {% set role_primary = '#1e3a8a' %}
+    {% set role_primary = '#6B2E4A' %}
 {% endif %}
 
 {% block title %}{{ role_display }} Login - TACI Petroleum{% endblock %}
 
 {% block content %}
-<div class="container d-flex justify-content-center align-items-center min-vh-100">
-    <div class="card shadow-lg" style="width: 100%; max-width: 450px;">
-        <div class="card-header text-white text-center py-4 login-header">
-            <h3 class="mb-0"><i class="bi bi-door-open"></i> {{ role_display }} Login</h3>
-        </div>
-        <div class="card-body p-5">
+<div class="login-page-wrapper" style="--role-color: {{ role_primary }};">
+    <div class="login-card shadow-lg">
+        <h2 class="login-title">Login</h2>
+        
+        <div class="px-2">
             {% for message in app.flashes('success') %}
             <div class="alert alert-success alert-dismissible fade show" role="alert" data-toast-type="success">
                 <strong>Success!</strong> {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             {% endfor %}
-            
             {% for message in app.flashes('error') %}
             <div class="alert alert-danger alert-dismissible fade show" role="alert" data-toast-type="error">
                 <strong>Error!</strong> {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             {% endfor %}
-            
-            {% for message in app.flashes('warning') %}
-            <div class="alert alert-warning alert-dismissible fade show" role="alert" data-toast-type="warning">
-                <strong>Warning!</strong> {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            {% endfor %}
-            
             {% if error %}
                 <div class="alert alert-danger alert-dismissible fade show" role="alert" data-toast-type="error">
                     <strong>Login Failed!</strong> {{ error.messageKey|trans(error.messageData, 'security') }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endif %}
-
-            <form method="post" id="login-form" action="{{ path('app_login', {'role': role}) }}">
-
-                <div class="mb-3">
-                    <label id="username-label" for="username" class="form-label fw-bold">Username</label>
-                    <div class="input-group input-group-lg">
-                        <span class="input-group-text"><i class="bi bi-envelope-fill"></i></span>
-                        <input type="text" 
-                               id="username" 
-                               name="username" 
-                               class="form-control" 
-                               value=""
-                               autocomplete="off"
-                               required 
-                               autofocus
-                               placeholder="Enter your username">
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label for="password" class="form-label fw-bold">Password</label>
-                    <div class="input-group input-group-lg">
-                        <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
-                        <input type="password" 
-                               id="password" 
-                               name="password" 
-                               class="form-control" 
-                               autocomplete="new-password"
-                               required
-                               placeholder="Enter your password">
-                        <button class="btn btn-outline-secondary" type="button" id="togglePassword" aria-pressed="false">
-                            <i class="bi bi-eye" id="togglePasswordIcon"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <br>
-
-                <button type="submit" class="btn btn-primary btn-lg w-100 mb-3">
-                    <i class="bi bi-box-arrow-in-right"></i> Sign In
-                </button>
-
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-            </form>
-
-            <hr>
-
-            <div class="text-center">
-                <p class="text-muted">
-                    <small>
-                        <a href="{{ path('app_role_select') }}">← Back to Role Selection</a>
-                    </small>
-                </p>
-            </div>
         </div>
-        <div class="card-footer text-center text-muted small py-3">
-            <small>Contact your administrator to obtain access credentials.</small>
+
+        <form method="post" id="login-form" action="{{ path('app_login', {'role': role}) }}" class="px-2 mt-4">
+            
+            <div class="mb-4 position-relative custom-input-group">
+                <input type="text" 
+                       id="username" 
+                       name="username" 
+                       class="form-control custom-input" 
+                       value=""
+                       autocomplete="off"
+                       required 
+                       autofocus
+                       placeholder="Username">
+                <i class="bi bi-person icon-right"></i>
+            </div>
+
+            <div class="mb-3 position-relative custom-input-group">
+                <input type="password" 
+                       id="password" 
+                       name="password" 
+                       class="form-control custom-input" 
+                       autocomplete="new-password"
+                       required
+                       placeholder="Password">
+                <i class="bi bi-key icon-right" style="cursor:pointer;" id="togglePasswordIcon"></i>
+            </div>
+
+            <div class="d-flex justify-content-start mb-5 ms-3">
+                <a href="#" class="forgot-link text-muted small fw-medium">Forgot Password ?</a>
+            </div>
+
+            <div class="text-center mb-3">
+                <button type="submit" class="btn login-btn">
+                    Login
+                </button>
+            </div>
+            <input type="hidden" name="role_attempt_id" id="role_attempt_id" value="">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+        </form>
+        
+        <div class="text-center mt-4">
+            <a href="{{ path('app_role_select') }}" class="back-link small text-muted"><i class="bi bi-arrow-left"></i> Back to roles</a>
         </div>
     </div>
 </div>
@@ -109,97 +87,107 @@
 
 {% block styles %}
 <style>
-    .min-vh-100 {
+    .login-page-wrapper {
         min-height: 100vh;
-    }
-    body {
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-    }
-    .card {
-        border: none;
-        border-radius: 18px;
-        overflow: hidden;
-        background: rgba(255, 255, 255, 0.96);
-        backdrop-filter: blur(10px);
-    }
-    .login-header,
-    .btn-primary {
-        background-color: {{ role_primary }} !important;
-        border-color: {{ role_primary }} !important;
-    }
-    .form-check {
         display: flex;
         align-items: center;
-        gap: 8px;
+        justify-content: center;
+        background-color: #f8fafc;
+        padding: 2rem;
+        font-family: 'Inter', sans-serif;
     }
-    .form-check-input {
-        margin-top: 0;
+
+    .login-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 3.5rem 3.5rem 2.5rem 3.5rem;
+        width: 100%;
+        max-width: 440px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        border-top: 5px solid var(--role-color);
     }
-    .form-check-label {
-        user-select: none;
-        margin-bottom: 0;
+
+    .login-title {
+        color: var(--role-color);
         font-weight: 500;
+        font-size: 2.2rem;
+        margin-bottom: 2rem;
+        margin-left: 0.5rem;
+        letter-spacing: -0.5px;
     }
-    .input-group-text {
-        background-color: #f8f9fa;
-        border-right: 0;
+
+    .custom-input-group {
+        position: relative;
     }
-    .input-group .form-control {
-        border-left: 0;
-    }
-    .input-group .form-control:focus {
-        box-shadow: none;
-        border-color: #86b7fe;
-    }
-    
-    .toast-container {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1050;
-    }
-    
-    .toast {
-        min-width: 300px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-    
-    .toast.success {
-        background-color: #d4edda;
-        border: 1px solid #c3e6cb;
-        color: #155724;
-    }
-    
-    .toast.error {
-        background-color: #f8d7da;
-        border: 1px solid #f5c6cb;
-        color: #721c24;
-    }
-    
-    .toast.warning {
-        background-color: #fff3cd;
-        border: 1px solid #ffeaa7;
-        color: #856404;
-    }
-    
-    .toast.info {
-        background-color: #d1ecf1;
-        border: 1px solid #bee5eb;
-        color: #0c5460;
-    }
-    
-    .toast-close {
-        background: none;
+
+    .custom-input {
+        background-color: #f8fafc;
         border: none;
-        font-size: 1.5rem;
-        cursor: pointer;
-        opacity: 0.7;
-        transition: opacity 0.2s;
+        border-radius: 99px; /* Pill shape */
+        padding: 1.1rem 3rem 1.1rem 1.5rem;
+        font-size: 1.05rem;
+        color: #334155;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+        transition: all 0.2s;
     }
     
-    .toast-close:hover {
-        opacity: 1;
+    .custom-input:focus {
+        background-color: #ffffff;
+        box-shadow: 0 0 0 3px rgba(0,0,0,0.06), inset 0 2px 4px rgba(0,0,0,0.02);
+        outline: none;
+    }
+    
+    .custom-input::placeholder {
+        color: #94a3b8;
+    }
+
+    .icon-right {
+        position: absolute;
+        right: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 1.3rem;
+        z-index: 10;
+        transition: color 0.2s;
+    }
+
+    .custom-input:focus ~ .icon-right {
+        color: var(--role-color);
+    }
+
+    .forgot-link {
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .forgot-link:hover {
+        color: var(--role-color) !important;
+    }
+
+    .login-btn {
+        background-color: var(--role-color);
+        color: white;
+        border-radius: 99px;
+        padding: 0.9rem 4rem;
+        font-size: 1.2rem;
+        font-weight: 500;
+        border: none;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+    }
+    .login-btn:hover {
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 12px 25px rgba(0,0,0,0.25);
+        opacity: 0.95;
+    }
+    
+    .back-link {
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+    .back-link:hover {
+        color: var(--role-color) !important;
     }
 </style>
 {% endblock %}
@@ -207,70 +195,28 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Force-clear fields on every page load — prevents browser autofill override
-        const usernameField = document.getElementById('username');
-        const passwordField = document.getElementById('password');
-        if (usernameField) usernameField.value = '';
-        if (passwordField) passwordField.value = '';
+        // Enforce role_attempt_id
+        const attemptId = sessionStorage.getItem('role_attempt_id');
+        if (!attemptId) {
+            window.location.href = "{{ path('app_role_select') }}";
+            return;
+        }
+        document.getElementById('role_attempt_id').value = attemptId;
 
-        // Alerts are handled by the base layout's toast system
-
-        // Password toggle functionality
-        const togglePasswordBtn = document.getElementById('togglePassword');
+        // Password toggle
+        const toggleIcon = document.getElementById('togglePasswordIcon');
         const passwordInput = document.getElementById('password');
-        const togglePasswordIcon = document.getElementById('togglePasswordIcon');
 
-        function togglePasswordVisibility(e) {
-            if (e) {
-                e.preventDefault();
-            }
-
-            const isPassword = passwordInput.type === 'password';
-            passwordInput.type = isPassword ? 'text' : 'password';
-
-            if (isPassword) {
-                togglePasswordIcon.classList.remove('bi-eye');
-                togglePasswordIcon.classList.add('bi-eye-slash');
-                togglePasswordBtn.setAttribute('aria-pressed', 'true');
-            } else {
-                togglePasswordIcon.classList.remove('bi-eye-slash');
-                togglePasswordIcon.classList.add('bi-eye');
-                togglePasswordBtn.setAttribute('aria-pressed', 'false');
-            }
-
-            passwordInput.focus();
-        }
-
-        if (togglePasswordBtn && passwordInput && togglePasswordIcon) {
-            togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
-        }
-
-        // Form validation
-        const loginForm = document.getElementById('login-form');
-        if (loginForm) {
-            loginForm.addEventListener('submit', function(e) {
-                const username = document.getElementById('username').value.trim();
-                const password = document.getElementById('password').value;
-
-                if (!username) {
-                    e.preventDefault();
-                    toast.error('Please enter your username');
-                    document.getElementById('username').focus();
-                    return false;
-                }
-
-                if (!password) {
-                    e.preventDefault();
-                    toast.error('Please enter your password');
-                    document.getElementById('password').focus();
-                    return false;
-                }
-
-                if (password.length < 3) {
-                    e.preventDefault();
-                    toast.error('Invalid password');
-                    document.getElementById('password').focus();
-                    return false;
+        if (toggleIcon && passwordInput) {
+            toggleIcon.addEventListener('click', function() {
+                const isPassword = passwordInput.type === 'password';
+                passwordInput.type = isPassword ? 'text' : 'password';
+                if(isPassword) {
+                    this.classList.remove('bi-key');
+                    this.classList.add('bi-unlock');
+                } else {
+                    this.classList.remove('bi-unlock');
+                    this.classList.add('bi-key');
                 }
             });
         }

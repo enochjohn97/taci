@@ -1,90 +1,441 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
-    <div class="container-fluid">
-        <a class="navbar-brand d-flex align-items-center" href="{{ path('app_dashboard') }}">
-            <i class="bi bi-droplet-fill me-2"></i>
-            <span>{{ app_name }}</span>
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNavbar" aria-controls="topNavbar" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
+{# templates/includes/navbar.html.twig — Redesigned top bar #}
+
+{% set navRoleLabel = 'User' %}
+{% if is_granted('ROLE_SUPER_ADMIN') %}
+    {% set navRoleLabel = 'Super Admin' %}
+{% elseif is_granted('ROLE_SUB_ADMIN') %}
+    {% set navRoleLabel = 'Sub-Admin' %}
+{% elseif is_granted('ROLE_MANAGER') %}
+    {% set navRoleLabel = 'Manager' %}
+{% elseif is_granted('ROLE_STAFF') %}
+    {% set navRoleLabel = 'Staff' %}
+{% endif %}
+
+<header class="top-navbar" id="top-navbar" role="banner">
+
+    {# ── LEFT: mobile sidebar toggle + page title ── #}
+    <div class="nb-left">
+        {# Mobile hamburger (triggers sidebar overlay) #}
+        <button class="nb-mobile-toggle d-lg-none" id="nb-mobile-menu" aria-label="Open sidebar" title="Menu">
+            <i class="fa-solid fa-bars"></i>
         </button>
 
-        <div class="collapse navbar-collapse" id="topNavbar">
-            <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+        {# Live indicator #}
+        <div class="nb-live" title="Data refreshed live">
+            <span class="pulse-dot"></span>
+            <span class="nb-live-text">Live</span>
+        </div>
 
-                {# Notification Bell #}
-                <li class="nav-item me-2">
-                    <a class="nav-link position-relative" href="{{ path('app_notifications') }}" title="Notifications">
-                        <i class="bi bi-bell-fill fs-5"></i>
-                        <span id="nav-notification-badge-container">
-                            {% if unread_notifications_count is defined and unread_notifications_count > 0 %}
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
-                                    {{ unread_notifications_count > 99 ? '99+' : unread_notifications_count }}
-                                </span>
-                            {% endif %}
-                        </span>
+        {# Date range picker #}
+        <div class="nb-date-range" role="group" aria-label="Date range filter">
+            <button class="nb-range-btn active" data-range="today"   id="nbRangeToday">Today</button>
+            <button class="nb-range-btn"         data-range="week"    id="nbRangeWeek">Week</button>
+            <button class="nb-range-btn"         data-range="month"   id="nbRangeMonth">Month</button>
+        </div>
+    </div>
+
+    {# ── CENTER: Global Search Bar ── #}
+    <div class="nb-center d-none d-md-flex mx-3" style="flex: 1; max-width: 400px;">
+        <div class="input-group" style="border-radius: 99px; overflow: hidden; background: var(--bg-card); border: 1px solid var(--border-color); align-items: center; padding: 2px 10px;">
+            <i class="fa-solid fa-magnifying-glass text-muted" style="font-size: 0.85rem;"></i>
+            <input type="text" class="form-control border-0 shadow-none bg-transparent" placeholder="Search staff, transactions, alerts..." aria-label="Global search" style="font-size: 0.85rem;">
+        </div>
+    </div>
+
+    {# ── RIGHT: actions ── #}
+    <div class="nb-right">
+
+        {# Fuel price index badge #}
+        <div class="nb-fuel-badge" title="Current blended fuel price index">
+            <i class="fa-solid fa-gas-pump"></i>
+            <span id="nb-fuel-price">₦755<small>/L</small></span>
+        </div>
+
+        {# Role badge #}
+        <div class="nb-role-badge" id="nb-role-pill">{{ navRoleLabel }}</div>
+
+        {# Dark mode toggle #}
+        <button class="nb-icon-btn" id="nb-dark-toggle" aria-label="Toggle dark mode" title="Toggle dark / light mode">
+            <i class="fa-solid fa-moon" id="nb-theme-icon"></i>
+        </button>
+
+        {# Print / Export — Super Admin only #}
+        {% if is_granted('ROLE_SUPER_ADMIN') %}
+        <button class="nb-icon-btn" onclick="window.print()" aria-label="Export PDF" title="Print / Export PDF">
+            <i class="fa-solid fa-file-pdf"></i>
+        </button>
+        {% endif %}
+
+        {# Notification bell #}
+        <a class="nb-icon-btn nb-bell" href="{{ path('app_notifications') }}" aria-label="Notifications" title="Notifications">
+            <i class="fa-solid fa-bell"></i>
+            <span id="nav-notification-badge-container">
+                {% if unread_notifications_count is defined and unread_notifications_count > 0 %}
+                    <span class="nb-badge">{{ unread_notifications_count > 99 ? '99+' : unread_notifications_count }}</span>
+                {% endif %}
+            </span>
+        </a>
+
+        {# Profile dropdown #}
+        <div class="nb-profile dropdown">
+            <button class="nb-avatar-btn dropdown-toggle" id="nb-user-menu"
+                    data-bs-toggle="dropdown" aria-expanded="false" aria-label="User menu">
+                <div class="nb-avatar">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <span class="nb-username d-none d-md-inline">{{ app.user.username }}</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end nb-dropdown shadow-lg" aria-labelledby="nb-user-menu">
+                <li class="nb-dd-header">
+                    <div class="fw-700">{{ app.user.username }}</div>
+                    <div class="text-muted" style="font-size:0.78rem;">{{ app.user.email }}</div>
+                    <div class="nb-dd-role">{{ navRoleLabel }}</div>
+                </li>
+                <li><hr class="dropdown-divider my-1"></li>
+                <li>
+                    <a class="dropdown-item nb-dd-item" href="{{ path('app_settings_profile') }}">
+                        <i class="fa-solid fa-circle-user"></i> My Profile
                     </a>
                 </li>
-
-                {# User Profile Dropdown #}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <div class="avatar avatar-sm rounded-circle bg-primary d-flex align-items-center justify-content-center" style="width:32px;height:32px;">
-                            <i class="bi bi-person-fill text-white" style="font-size:1rem;"></i>
-                        </div>
-                        <span class="d-none d-md-inline">{{ app.user.username }}</span>
+                {% if is_granted('ROLE_SUPER_ADMIN') %}
+                    <li>
+                        <a class="dropdown-item nb-dd-item" href="{{ path('app_delegates_index') }}">
+                            <i class="fa-solid fa-users"></i> Delegates
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item nb-dd-item" href="{{ path('app_settings_system_info') }}">
+                            <i class="fa-solid fa-microchip"></i> System Info
+                        </a>
+                    </li>
+                {% endif %}
+                <li><hr class="dropdown-divider my-1"></li>
+                <li>
+                    <a class="dropdown-item nb-dd-item nb-dd-logout" href="{{ path('app_logout') }}">
+                        <i class="fa-solid fa-right-from-bracket"></i> Logout
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
-                        <li class="px-3 py-2 border-bottom">
-                            <div class="fw-semibold text-dark">{{ app.user.username }}</div>
-                            <div class="small text-muted">{{ app.user.email }}</div>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="{{ path('app_settings_profile') }}">
-                                <i class="bi bi-person me-2 text-secondary"></i> My Profile
-                            </a>
-                        </li>
-                        {% if is_granted('ROLE_SUPER_ADMIN') %}
-                            <li>
-                                <a class="dropdown-item" href="{{ path('app_delegates_index') }}">
-                                    <i class="bi bi-people me-2 text-secondary"></i> Delegates
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ path('app_settings_system_info') }}">
-                                    <i class="bi bi-cpu me-2 text-secondary"></i> System Info
-                                </a>
-                            </li>
-                        {% endif %}
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item text-danger" href="{{ path('app_logout') }}">
-                                <i class="bi bi-box-arrow-right me-2"></i> Logout
-                            </a>
-                        </li>
-                    </ul>
                 </li>
             </ul>
         </div>
-    </div>
-</nav>
+
+    </div>{# end nb-right #}
+</header>
+
+<style>
+/* ============================================================
+   TOP NAVBAR COMPONENT
+   ============================================================ */
+.top-navbar {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0 var(--spacing-page);
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(248,250,254,0.92);
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.3s;
+}
+
+[data-theme="dark"] .top-navbar {
+    background: rgba(15,23,42,0.93);
+}
+
+/* ── Left cluster ── */
+.nb-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+/* Mobile toggle */
+.nb-mobile-toggle {
+    background: none;
+    border: none;
+    font-size: 1.15rem;
+    color: var(--text-main);
+    cursor: pointer;
+    padding: 0.4rem;
+    border-radius: 0.5rem;
+    transition: background 0.15s;
+}
+.nb-mobile-toggle:hover { background: var(--border-color); }
+
+/* Live indicator */
+.nb-live {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.nb-live-text {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-success);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+/* Date range buttons */
+.nb-date-range {
+    display: flex;
+    background: var(--border-color);
+    border-radius: 0.6rem;
+    padding: 2px;
+    gap: 2px;
+}
+
+.nb-range-btn {
+    background: transparent;
+    border: none;
+    padding: 4px 14px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    border-radius: 0.45rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.nb-range-btn:hover { color: var(--text-main); }
+
+.nb-range-btn.active {
+    background: var(--bg-card);
+    color: var(--text-main);
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+[data-theme="dark"] .nb-range-btn.active { background: #1e293b; }
+
+/* ── Right cluster ── */
+.nb-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Fuel price badge */
+.nb-fuel-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--fuel-premium);
+    background: rgba(245,166,35,0.1);
+    padding: 4px 12px;
+    border-radius: 99px;
+    border: 1px solid rgba(245,166,35,0.2);
+    white-space: nowrap;
+}
+.nb-fuel-badge small { font-weight: 500; font-size: 0.7rem; opacity: 0.75; }
+
+/* Role badge */
+.nb-role-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 4px 12px;
+    border-radius: 99px;
+    background: rgba(13,148,136,0.1);
+    color: var(--primary);
+    border: 1px solid rgba(13,148,136,0.2);
+    white-space: nowrap;
+}
+
+body.role-sub-admin   .nb-role-badge { background: rgba(29,78,216,0.1);  color: #1d4ed8; border-color: rgba(29,78,216,0.2); }
+body.role-manager     .nb-role-badge { background: rgba(15,76,58,0.1);   color: #0F4C3A; border-color: rgba(15,76,58,0.2); }
+body.role-staff       .nb-role-badge { background: rgba(107,46,74,0.1);  color: #6B2E4A; border-color: rgba(107,46,74,0.2); }
+
+/* Icon buttons */
+.nb-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 0.6rem;
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
+    position: relative;
+}
+
+.nb-icon-btn:hover {
+    background: var(--border-color);
+    color: var(--text-main);
+    transform: translateY(-1px);
+}
+
+/* Bell badge */
+.nb-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--color-danger);
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 700;
+    min-width: 17px;
+    height: 17px;
+    border-radius: 99px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg-card);
+}
+
+/* Avatar button */
+.nb-avatar-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 0.6rem;
+    padding: 4px 10px 4px 4px;
+    cursor: pointer;
+    color: var(--text-main);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background 0.15s, border-color 0.15s;
+}
+.nb-avatar-btn:hover { background: var(--border-color); }
+.nb-avatar-btn::after { margin-left: 4px; }
+
+.nb-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 0.45rem;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.nb-username { font-size: 0.85rem; font-weight: 500; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Dropdown */
+.nb-dropdown {
+    min-width: 220px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card);
+    padding: 0.25rem 0;
+    margin-top: 6px !important;
+}
+
+[data-theme="dark"] .nb-dropdown { background: #1e293b; border-color: #334155; }
+
+.nb-dd-header {
+    padding: 0.75rem 1rem;
+}
+
+.nb-dd-role {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: rgba(13,148,136,0.1);
+    color: var(--primary);
+    margin-top: 4px;
+}
+
+.nb-dd-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.875rem;
+    color: var(--text-main);
+    padding: 0.45rem 1rem;
+    transition: background 0.12s;
+}
+.nb-dd-item:hover { background: var(--border-color); color: var(--text-main); }
+.nb-dd-logout { color: var(--color-danger) !important; }
+.nb-dd-logout:hover { background: rgba(239,68,68,0.07); }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+    .nb-fuel-badge,
+    .nb-role-badge,
+    .nb-live-text { display: none; }
+    .top-navbar { padding: 0 1rem; }
+}
+</style>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ── Dark mode toggle ──
+    const darkBtn  = document.getElementById('nb-dark-toggle');
+    const themeIcon= document.getElementById('nb-theme-icon');
+    const root     = document.documentElement;
+
+    function applyTheme(dark) {
+        document.body.setAttribute('data-theme', dark ? 'dark' : 'light');
+        if (themeIcon) themeIcon.className = dark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+        localStorage.setItem('theme', dark ? 'dark' : 'light');
+    }
+
+    // Restore saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') applyTheme(true);
+
+    darkBtn && darkBtn.addEventListener('click', function () {
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        applyTheme(!isDark);
+    });
+
+    // ── Date range buttons ──
+    document.querySelectorAll('.nb-range-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll('.nb-range-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            // Dispatch custom event for dashboard charts to react
+            document.dispatchEvent(new CustomEvent('dateRangeChange', { detail: { range: this.dataset.range } }));
+        });
+    });
+
+    // ── Mobile sidebar toggle ──
+    const mobileMenu = document.getElementById('nb-mobile-menu');
+    const sidebar    = document.getElementById('app-sidebar');
+    const overlay    = document.getElementById('sidebar-overlay');
+
+    mobileMenu && mobileMenu.addEventListener('click', function () {
+        if (sidebar) sidebar.classList.toggle('mobile-open');
+        if (overlay) overlay.classList.toggle('active');
+    });
+
+    // ── Notification count (live fetch) ──
     fetch('{{ path("app_notifications_unread_count") }}')
         .then(res => res.json())
         .then(data => {
-            if (data && typeof data.unread_count !== 'undefined' && data.unread_count > 0) {
+            if (data && data.unread_count > 0) {
                 const container = document.getElementById('nav-notification-badge-container');
                 if (container) {
-                    const badgeText = data.unread_count > 99 ? '99+' : data.unread_count;
-                    container.innerHTML = `
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
-                            \${badgeText}
-                        </span>
-                    `;
+                    const n = data.unread_count > 99 ? '99+' : data.unread_count;
+                    container.innerHTML = `<span class="nb-badge">${n}</span>`;
                 }
             }
         })
-        .catch(err => console.error('Error fetching notification count:', err));
+        .catch(() => {}); // silent fail
 });
 </script>
