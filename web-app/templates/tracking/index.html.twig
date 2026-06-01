@@ -281,7 +281,7 @@
             zoom: 6,
             center
         });
-        new google.maps.Marker({ position: center, map, title: 'Main Station' });
+        new google.maps.Marker({ position: center, map, title: '{{ main_station_name|default(app_name) }}' });
     }
 </script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initTaciTrackingMap"></script>
