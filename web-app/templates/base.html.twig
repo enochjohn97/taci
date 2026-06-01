@@ -166,6 +166,39 @@
             flex: 1;
             padding: var(--spacing-page);
             overflow-x: hidden;
+            /* reserve space for footer */
+            padding-bottom: calc(var(--spacing-page) + 64px);
+        }
+
+        /* Footer positioned at bottom of main area, spans remaining width after sidebar */
+        .app-footer {
+            position: fixed;
+            bottom: 0;
+            left: var(--sidebar-width);
+            right: 0;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            padding: 0 1.25rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            z-index: 5;
+        }
+
+        /* when sidebar is collapsed, shift footer left accordingly */
+        #main-wrapper.sidebar-is-collapsed ~ .app-footer, .app-footer {
+            left: var(--sidebar-width);
+        }
+
+        #main-wrapper.sidebar-is-collapsed .app-footer, .sidebar-is-collapsed .app-footer {
+            left: var(--sidebar-collapsed-width);
+        }
+
+        @media (max-width: 768px) {
+            .app-footer { left: 0; }
         }
 
         /* ============================================================
@@ -585,7 +618,7 @@
                     {% block content %}{% endblock %}
                 </main>
 
-                <footer style="background:var(--bg-card);border-top:1px solid var(--border-color);padding:0.9rem var(--spacing-page);font-size:0.8rem;color:var(--text-muted);display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;">
+                <footer class="app-footer">
                     <span>&copy; 2026 {{ app_name }} Company Limited. All rights reserved.</span>
                     <span>Powered by <strong>TACI</strong> &middot; v2.0</span>
                 </footer>

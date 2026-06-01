@@ -484,34 +484,44 @@ body.role-sub-admin .sb-toggle-btn {
 }
 
 <script>
+document.addEventListener('DOMContentLoaded', function(){
 (function() {
     const sidebar  = document.getElementById('app-sidebar');
     const wrapper  = document.getElementById('main-wrapper');
     const overlay  = document.getElementById('sidebar-overlay');
     const toggleBtn= document.getElementById('sb-toggle-btn');
-    const icon     = document.getElementById('sb-toggle-icon');
+    const iconEl   = document.getElementById('sb-toggle-icon');
     const isMobile = () => window.innerWidth <= 768;
 
     const bodyRoleMatch = document.body.className.match(/role-[\w-]+/);
     const storageKey = 'sidebarCollapsed_' + (bodyRoleMatch ? bodyRoleMatch[0] : 'default');
 
-    // ── Restore state from localStorage ──
-    if (!isMobile() && localStorage.getItem(storageKey) === 'true') {
-        sidebar.classList.add('collapsed');
-        wrapper && wrapper.classList.add('sidebar-is-collapsed');
-        icon.className = 'fa-solid fa-chevron-right';
+    // helper to set icon
+    function setToggleIcon(collapsed){
+        if(!iconEl) return;
+        iconEl.className = collapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-bars';
     }
+
+    // ── Restore state from localStorage ──
+    try{
+        if (!isMobile() && localStorage.getItem(storageKey) === 'true') {
+            sidebar && sidebar.classList.add('collapsed');
+            wrapper && wrapper.classList.add('sidebar-is-collapsed');
+            setToggleIcon(true);
+        }
+    }catch(e){console.warn('Cannot access localStorage', e);} 
 
     // ── Toggle function ──
     function toggleSidebar() {
+        if (!sidebar) return;
         if (isMobile()) {
             const open = sidebar.classList.toggle('mobile-open');
             overlay && overlay.classList.toggle('active', open);
         } else {
             const collapsed = sidebar.classList.toggle('collapsed');
             wrapper && wrapper.classList.toggle('sidebar-is-collapsed', collapsed);
-            icon.className = collapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-bars';
-            localStorage.setItem(storageKey, collapsed);
+            setToggleIcon(collapsed);
+            try{ localStorage.setItem(storageKey, collapsed); }catch(e){}
             // Close all sub-menus when collapsing
             if (collapsed) {
                 document.querySelectorAll('.sb-sub.open').forEach(s => s.classList.remove('open'));
@@ -524,8 +534,8 @@ body.role-sub-admin .sb-toggle-btn {
 
     // ── Close sidebar overlay on outside click (mobile) ──
     overlay && overlay.addEventListener('click', function() {
-        sidebar.classList.remove('mobile-open');
-        overlay.classList.remove('active');
+        sidebar && sidebar.classList.remove('mobile-open');
+        overlay && overlay.classList.remove('active');
     });
 
     // ── Alt+S keyboard shortcut ──
@@ -540,7 +550,7 @@ body.role-sub-admin .sb-toggle-btn {
     document.querySelectorAll('.sb-toggle').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
             // Don't fire if sidebar is collapsed on desktop
-            if (!isMobile() && sidebar.classList.contains('collapsed')) return;
+            if (!isMobile() && sidebar && sidebar.classList.contains('collapsed')) return;
             const targetId = this.dataset.target;
             const sub      = document.getElementById(targetId);
             if (!sub) return;
@@ -552,9 +562,10 @@ body.role-sub-admin .sb-toggle-btn {
     // ── Adjust main-wrapper on resize ──
     window.addEventListener('resize', function() {
         if (!isMobile()) {
-            sidebar.classList.remove('mobile-open');
+            sidebar && sidebar.classList.remove('mobile-open');
             overlay && overlay.classList.remove('active');
         }
     });
 })();
+});
 </script>
