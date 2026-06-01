@@ -18,7 +18,7 @@ class ImpersonationController extends AbstractController
     public function __construct(private EntityManagerInterface $em) {}
 
     #[Route('/impersonate', name: 'app_impersonate', methods: ['POST'])]
-    #[IsGranted('ROLE_SUB_ADMIN')]
+    #[IsGranted('ROLE_SUPER_ADMIN')]
     public function impersonate(Request $request): RedirectResponse
     {
         $targetId = $request->request->get('userId');
@@ -50,7 +50,7 @@ class ImpersonationController extends AbstractController
     }
 
     #[Route('/impersonate/exit', name: 'app_impersonate_exit', methods: ['POST'])]
-    #[IsGranted('ROLE_SUB_ADMIN')]
+    #[IsGranted('ROLE_SUPER_ADMIN')]
     public function impersonateExit(Request $request): RedirectResponse
     {
         // Log exit
