@@ -26,7 +26,10 @@ class SyncController extends AbstractController
         }
 
         $count = 0;
+        $results = [];
         foreach ($data['transactions'] as $tx) {
+            $txResult = ['offlineId' => $tx['offlineId'] ?? null, 'status' => 'logged', 'message' => null];
+
             // Basic dedup: if tx has offlineId, skip if already logged
             $offlineId = $tx['offlineId'] ?? null;
             $already = false;
@@ -38,7 +41,11 @@ class SyncController extends AbstractController
                 $already = (bool) $qb->getQuery()->getOneOrNullResult();
             }
 
-            if ($already) { continue; }
+            if ($already) {
+                $txResult['status'] = 'duplicate';
+                $results[] = $txResult;
+                continue;
+            }
 
             // If transaction looks like a sale, attempt to apply it server-side
             if (($tx['type'] ?? '') === 'sale' && isset($tx['items']) && is_array($tx['items'])) {
@@ -55,8 +62,10 @@ class SyncController extends AbstractController
                     $total = 0;
                     foreach ($tx['items'] as $it) {
                         $product = $this->em->getRepository(\App\Entity\Product::class)->find($it['productId']);
-                        if (!$product) throw new \Exception('Product not found: ' . ($it['productId'] ?? '')); 
-                        if ($product->getStockQuantity() < ($it['quantity'] ?? 0)) throw new \Exception('Insufficient stock');
+                        if (!$product) throw new \Exception('Product not found: ' . ($it['productId'] ?? ''));
+                        if ($product->getStockQuantity() < ($it['quantity'] ?? 0)) {
+                            throw new \RuntimeException('INSUFFICIENT_STOCK');
+                        }
 
                         $item = new \App\Entity\SaleItem();
                         $item->setProduct($product);
@@ -79,7 +88,7 @@ class SyncController extends AbstractController
                         $log->setStockBefore($old);
                         $log->setStockAfter($product->getStockQuantity());
                         $log->setPerformedBy($this->getUser());
-                        $log->setReference('OFFLINE#' . ($offlineId ?? '')); 
+                        $log->setReference('OFFLINE#' . ($offlineId ?? ''));
                         $this->em->persist($log);
                     }
 
@@ -111,11 +120,48 @@ class SyncController extends AbstractController
                     $this->em->flush();
 
                     $conn->commit();
+
+                    $txResult['status'] = 'applied';
+                    $txResult['saleId'] = $sale->getId();
+                    $results[] = $txResult;
                     $count++;
                     continue;
                 } catch (\Throwable $e) {
                     if ($conn->isTransactionActive()) $conn->rollBack();
-                    // Fallthrough to logging only
+
+                    if ($e instanceof \RuntimeException && $e->getMessage() === 'INSUFFICIENT_STOCK') {
+                        // mark as conflict
+                        $txResult['status'] = 'conflict';
+                        $txResult['message'] = 'Insufficient stock for one or more items';
+
+                        // persist a conflict audit with full payload for reconciliation
+                        $audit = new AuditLog();
+                        $audit->setUser($this->getUser());
+                        $audit->setAction('offline_sync_conflict');
+                        $audit->setModule('sync');
+                        $audit->setDescription(json_encode(['offlineId' => $offlineId, 'reason' => 'insufficient_stock', 'payload' => $tx]));
+                        $audit->setIpAddress($request->getClientIp() ?? '0.0.0.0');
+                        $audit->setUserAgent($request->headers->get('User-Agent'));
+                        $this->em->persist($audit);
+
+                        $results[] = $txResult;
+                        continue;
+                    }
+
+                    // otherwise log failure as audit
+                    $audit = new AuditLog();
+                    $audit->setUser($this->getUser());
+                    $audit->setAction('offline_sync_failed');
+                    $audit->setModule('sync');
+                    $audit->setDescription(json_encode(['offlineId' => $offlineId, 'error' => $e->getMessage(), 'payload' => $tx]));
+                    $audit->setIpAddress($request->getClientIp() ?? '0.0.0.0');
+                    $audit->setUserAgent($request->headers->get('User-Agent'));
+                    $this->em->persist($audit);
+
+                    $txResult['status'] = 'failed';
+                    $txResult['message'] = $e->getMessage();
+                    $results[] = $txResult;
+                    continue;
                 }
             }
 
@@ -129,10 +175,11 @@ class SyncController extends AbstractController
             $audit->setUserAgent($request->headers->get('User-Agent'));
             $this->em->persist($audit);
             $count++;
+            $results[] = $txResult;
         }
 
         $this->em->flush();
 
-        return $this->json(['accepted' => $count], 202);
+        return $this->json(['accepted' => $count, 'results' => $results], 202);
     }
 }
