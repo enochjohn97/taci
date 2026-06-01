@@ -7,6 +7,11 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class PosTransactionTest extends WebTestCase
 {
+    protected static function getKernelClass(): string
+    {
+        return \App\Kernel::class;
+    }
+
     public function testCreateTransactionEndpointExists(): void
     {
         $client = static::createClient();
