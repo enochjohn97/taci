@@ -31,12 +31,14 @@ class InventoryController extends AbstractController
             $products
         ));
 
+        $suppliers = $this->em->getRepository(\App\Entity\Supplier::class)->findAll();
         return $this->render('dashboard/index.html.twig', [
             'view_mode' => 'inventory_dashboard',
             'total_products' => count($products),
             'low_stock_count' => count($lowStockProducts),
             'total_stock_value' => $totalStockValue,
             'products' => $products,
+            'suppliers' => $suppliers,
         ]);
     }
 
@@ -66,6 +68,7 @@ class InventoryController extends AbstractController
         }
         $products = $qb->orderBy('p.' . $sortBy, $sortDir)->getQuery()->getResult();
 
+        $suppliers = $this->em->getRepository(\App\Entity\Supplier::class)->findAll();
         return $this->render('dashboard/index.html.twig', [
             'view_mode' => 'inventory_products',
             'products' => $products,
@@ -73,6 +76,7 @@ class InventoryController extends AbstractController
             'category' => $category,
             'sort_by' => $sortBy,
             'sort_dir' => $sortDir,
+            'suppliers' => $suppliers,
         ]);
     }
 
@@ -138,9 +142,11 @@ class InventoryController extends AbstractController
             return $this->redirectToRoute('app_inventory_products');
         }
 
+        $suppliers = $this->em->getRepository(\App\Entity\Supplier::class)->findAll();
         return $this->render('dashboard/index.html.twig', [
             'view_mode' => 'inventory_product_form',
             'edit' => false,
+            'suppliers' => $suppliers,
         ]);
     }
 
@@ -198,10 +204,12 @@ class InventoryController extends AbstractController
             return $this->redirectToRoute('app_inventory_products');
         }
 
+        $suppliers = $this->em->getRepository(\App\Entity\Supplier::class)->findAll();
         return $this->render('dashboard/index.html.twig', [
             'view_mode' => 'inventory_product_form',
             'product' => $product,
             'edit' => true,
+            'suppliers' => $suppliers,
         ]);
     }
 
