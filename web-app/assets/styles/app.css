@@ -1,3 +1,22 @@
-body {
-    background-color: lightgray;
+html, body {
+    height: 100%;
+    margin: 0;
 }
+
+/* Keep base theme variable driven by base.html.twig. Use app.css only for local overrides. */
+body {
+    background-color: var(--bg-page, #F8FAFE);
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+}
+
+/* Ensure app shell and main wrapper stretch so footer sits at bottom */
+.app-shell, #main-wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#main-wrapper { flex: 1; }
+#main-content { flex: 1; }
+
+footer { width: 100%; }

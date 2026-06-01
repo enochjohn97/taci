@@ -23,12 +23,32 @@ class DashboardController extends AbstractController
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function dashboard(): Response
     {
-        $user = $this->getUser();
-        
-        // Get today's sales
+        $user  = $this->getUser();
+        $roles = $user ? $user->getRoles() : [];
+
+        // Redirect based on role
+        if (in_array('ROLE_SUPER_ADMIN', $roles, true)) {
+            return $this->redirectToRoute('app_dashboard_super_admin');
+        }
+        if (in_array('ROLE_SUB_ADMIN', $roles, true)) {
+            return $this->redirectToRoute('app_dashboard_sub_admin');
+        }
+        if (in_array('ROLE_MANAGER', $roles, true)) {
+            return $this->redirectToRoute('app_dashboard_manager');
+        }
+        if (in_array('ROLE_STAFF', $roles, true)) {
+            return $this->redirectToRoute('app_dashboard_staff');
+        }
+
+        return $this->redirectToRoute('app_role_select');
+    }
+
+    private function getDashboardData($user, string $dashboardType, string $roleTheme): array
+    {
+        // ── Live DB data ──
         $today = new \DateTime();
         $today->setTime(0, 0);
-        
+
         $sales = $this->em->getRepository(Sale::class)
             ->createQueryBuilder('s')
             ->where('s.createdAt >= :today')
@@ -38,10 +58,9 @@ class DashboardController extends AbstractController
             ->getQuery()
             ->getResult();
 
-        $totalSalesAmount = array_sum(array_map(fn($s) => $s->getTotalAmount(), $sales));
+        $totalSalesAmount  = array_sum(array_map(fn($s) => $s->getTotalAmount(), $sales));
         $totalTransactions = count($sales);
 
-        // Low stock products
         $lowStockProducts = $this->em->getRepository(Product::class)
             ->createQueryBuilder('p')
             ->where('p.stockQuantity <= p.reorderLevel')
@@ -49,164 +68,154 @@ class DashboardController extends AbstractController
             ->getQuery()
             ->getResult();
 
-        // Unread notifications
         $unreadNotifications = $this->em->getRepository(Notification::class)
             ->findBy(['user' => $user, 'isRead' => false]);
 
-        return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'dashboard_overview',
-            'role_theme' => 'default',
-            'total_sales_amount' => $totalSalesAmount,
-            'total_transactions' => $totalTransactions,
-            'low_stock_products' => $lowStockProducts,
+        // ── Derived live metrics (replace mock arrays with DB-driven aggregates) ──
+        $labels = array_map(fn($h) => sprintf('%02d:00', $h), range(0, 23));
+
+        // Fuel sales by hour per product category (e.g., Premium, Diesel, Regular)
+        $fuelSalesByHour = ['labels' => $labels];
+        $categoryHourSums = [];
+        foreach ($sales as $s) {
+            $hour = (int)$s->getCreatedAt()->format('G');
+            foreach ($s->getItems() as $item) {
+                $cat = $item->getProduct() ? $item->getProduct()->getCategory() : 'unknown';
+                $catKey = strtolower(preg_replace('/[^a-z0-9]+/i', '_', $cat));
+                if (!isset($categoryHourSums[$catKey])) {
+                    $categoryHourSums[$catKey] = array_fill(0, 24, 0);
+                }
+                $categoryHourSums[$catKey][$hour] += $item->getQuantity();
+            }
+        }
+        // Attach category arrays using friendly keys (fallback to empty series)
+        foreach ($categoryHourSums as $catKey => $arr) {
+            $fuelSalesByHour[$catKey] = $arr;
+        }
+
+        // Tank levels: attempt to gather from FuelEntry or inventory logs when available
+        $tankLevels = [];
+        try {
+            $tankRepo = $this->em->getRepository(\App\Entity\FuelEntry::class);
+            $recentEntries = $tankRepo->createQueryBuilder('f')
+                ->orderBy('f.createdAt', 'DESC')
+                ->setMaxResults(10)
+                ->getQuery()
+                ->getResult();
+            // If domain has tank concepts, map them; otherwise leave empty and let UI handle defaults
+            foreach ($recentEntries as $idx => $entry) {
+                if ($idx > 2) break;
+                $tankLevels[] = ['id' => 'T-'.$idx, 'name' => 'Tank '.$idx, 'capacity' => 30000, 'current' => (int)$entry->getLiterQuantity(), 'type' => 'Unknown'];
+            }
+        } catch (\Throwable $e) {
+            $tankLevels = [];
+        }
+
+        // Pump statuses: placeholder empty array (pump status requires pump hardware integration)
+        $pumpStatuses = [];
+
+        // Delivery zones, shift notes, customer feedback, task list and other UX lists should be populated
+        // by their respective repositories; return empty arrays when no data is present.
+        $deliveryZones = [];
+        $shiftStart = (new \DateTime())->setTime(6, 0, 0)->getTimestamp();
+        $shiftNotes = [];
+        $customerFeedback = [];
+        $taskList = [];
+        $upcomingDelivery = [];
+        $safetyChecklist = [];
+        $staffPerformance = [];
+        $approvalRequests = [];
+
+        // Sparkline revenue and liters for last 7 days (derived from sales)
+        $sparklineRevenue = [];
+        $sparklineLiters = [];
+        $today = new \DateTime();
+        for ($d = 6; $d >= 0; $d--) {
+            $day = (clone $today)->modify("-{$d} days")->setTime(0,0);
+            $dayEnd = (clone $day)->modify('+1 day');
+            $daySales = $this->em->getRepository(\App\Entity\Sale::class)
+                ->createQueryBuilder('s')
+                ->where('s.createdAt >= :start')
+                ->andWhere('s.createdAt < :end')
+                ->setParameter('start', $day)
+                ->setParameter('end', $dayEnd)
+                ->getQuery()
+                ->getResult();
+            $dayTotal = array_sum(array_map(fn($s) => $s->getTotalAmount(), $daySales));
+            $liters = 0;
+            foreach ($daySales as $ds) {
+                foreach ($ds->getItems() as $it) {
+                    $liters += $it->getQuantity();
+                }
+            }
+            $sparklineRevenue[] = (int)$dayTotal;
+            $sparklineLiters[] = (int)$liters;
+        }
+
+        return [
+            'view_mode'              => 'dashboard_overview',
+            'dashboard_type'         => $dashboardType,
+            'role_theme'             => $roleTheme,
+            'total_sales_amount'     => $totalSalesAmount,
+            'total_transactions'     => $totalTransactions,
+            'low_stock_products'     => $lowStockProducts,
             'unread_notifications_count' => count($unreadNotifications),
-        ]);
+            'fuel_sales_by_hour'     => $fuelSalesByHour,
+            'tank_levels'            => $tankLevels,
+            'delivery_zones'         => $deliveryZones,
+            'approval_requests'      => $approvalRequests,
+            'sparkline_revenue'      => $sparklineRevenue,
+            'sparkline_liters'       => $sparklineLiters,
+            'pump_statuses'          => $pumpStatuses,
+            'shift_start'            => $shiftStart,
+            'shift_notes'            => $shiftNotes,
+            'customer_feedback'      => $customerFeedback,
+            'task_list'              => $taskList,
+            'upcoming_delivery'      => $upcomingDelivery,
+            'safety_checklist'       => $safetyChecklist,
+            'staff_performance'      => $staffPerformance,
+        ];
     }
 
     #[Route('/super-admin', name: 'app_dashboard_super_admin')]
     #[IsGranted('ROLE_SUPER_ADMIN')]
-    public function superAdminDashboard(): Response
+    public function superAdminDashboard(Request $request): Response
     {
-        $user = $this->getUser();
-        
-        // Get today's sales across all stores
-        $today = new \DateTime();
-        $today->setTime(0, 0);
-        
-        $sales = $this->em->getRepository(Sale::class)
-            ->createQueryBuilder('s')
-            ->where('s.createdAt >= :today')
-            ->andWhere('s.status = :status')
-            ->setParameter('today', $today)
-            ->setParameter('status', 'completed')
-            ->getQuery()
-            ->getResult();
 
-        $totalSalesAmount = array_sum(array_map(fn($s) => $s->getTotalAmount(), $sales));
-        $totalTransactions = count($sales);
-
-        // Low stock products
-        $lowStockProducts = $this->em->getRepository(Product::class)
-            ->createQueryBuilder('p')
-            ->where('p.stockQuantity <= p.reorderLevel')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult();
-
-        // Unread notifications
-        $unreadNotifications = $this->em->getRepository(Notification::class)
-            ->findBy(['user' => $user, 'isRead' => false]);
-
-        return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'dashboard_overview',
-            'role_theme' => 'super_admin',
-            'total_sales_amount' => $totalSalesAmount,
-            'total_transactions' => $totalTransactions,
-            'low_stock_products' => $lowStockProducts,
-            'unread_notifications_count' => count($unreadNotifications),
-        ]);
+        $data = $this->getDashboardData($this->getUser(), 'overview', 'super_admin');
+        return $this->render('dashboard/index.html.twig', $data);
     }
 
     #[Route('/sub-admin', name: 'app_dashboard_sub_admin')]
     #[IsGranted('ROLE_SUB_ADMIN')]
-    public function subAdminDashboard(): Response
+    public function subAdminDashboard(Request $request): Response
     {
-        $user = $this->getUser();
-        
-        // Get today's sales
-        $today = new \DateTime();
-        $today->setTime(0, 0);
-        
-        $sales = $this->em->getRepository(Sale::class)
-            ->createQueryBuilder('s')
-            ->where('s.createdAt >= :today')
-            ->andWhere('s.status = :status')
-            ->setParameter('today', $today)
-            ->setParameter('status', 'completed')
-            ->getQuery()
-            ->getResult();
 
-        $totalSalesAmount = array_sum(array_map(fn($s) => $s->getTotalAmount(), $sales));
-        $totalTransactions = count($sales);
-
-        // Low stock products
-        $lowStockProducts = $this->em->getRepository(Product::class)
-            ->createQueryBuilder('p')
-            ->where('p.stockQuantity <= p.reorderLevel')
-            ->setMaxResults(5)
-            ->getQuery()
-            ->getResult();
-
-        // Unread notifications
-        $unreadNotifications = $this->em->getRepository(Notification::class)
-            ->findBy(['user' => $user, 'isRead' => false]);
-
-        return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'dashboard_overview',
-            'role_theme' => 'sub_admin',
-            'total_sales_amount' => $totalSalesAmount,
-            'total_transactions' => $totalTransactions,
-            'low_stock_products' => $lowStockProducts,
-            'unread_notifications_count' => count($unreadNotifications),
-        ]);
+        $data = $this->getDashboardData($this->getUser(), 'overview', 'sub_admin');
+        return $this->render('dashboard/index.html.twig', $data);
     }
 
     #[Route('/manager', name: 'app_dashboard_manager')]
     #[IsGranted('ROLE_MANAGER')]
-    public function managerDashboard(): Response
+    public function managerDashboard(Request $request): Response
     {
-        $user = $this->getUser();
-        
-        // Get today's sales
-        $today = new \DateTime();
-        $today->setTime(0, 0);
-        
-        $sales = $this->em->getRepository(Sale::class)
-            ->createQueryBuilder('s')
-            ->where('s.createdAt >= :today')
-            ->andWhere('s.status = :status')
-            ->setParameter('today', $today)
-            ->setParameter('status', 'completed')
-            ->getQuery()
-            ->getResult();
 
-        $totalSalesAmount = array_sum(array_map(fn($s) => $s->getTotalAmount(), $sales));
-        $totalTransactions = count($sales);
-
-        // Low stock products
-        $lowStockProducts = $this->em->getRepository(Product::class)
-            ->createQueryBuilder('p')
-            ->where('p.stockQuantity <= p.reorderLevel')
-            ->setMaxResults(5)
-            ->getQuery()
-            ->getResult();
-
-        // Unread notifications
-        $unreadNotifications = $this->em->getRepository(Notification::class)
-            ->findBy(['user' => $user, 'isRead' => false]);
-
-        return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'dashboard_overview',
-            'role_theme' => 'manager',
-            'total_sales_amount' => $totalSalesAmount,
-            'total_transactions' => $totalTransactions,
-            'low_stock_products' => $lowStockProducts,
-            'unread_notifications_count' => count($unreadNotifications),
-        ]);
+        $data = $this->getDashboardData($this->getUser(), 'operational', 'manager');
+        return $this->render('dashboard/index.html.twig', $data);
     }
 
     #[Route('/staff', name: 'app_dashboard_staff')]
     #[IsGranted('ROLE_STAFF')]
-    public function staffDashboard(): Response
+    public function staffDashboard(Request $request): Response
     {
-        // Staff dashboard - redirect to store dashboard for POS operations
-        return $this->redirectToRoute('app_store_dashboard');
+
+        $data = $this->getDashboardData($this->getUser(), 'operational', 'staff');
+        return $this->render('dashboard/index.html.twig', $data);
     }
 
     #[Route('/analytics', name: 'app_analytics')]
     public function analytics(): Response
     {
-        // Get 30 days of sales data
         $thirtyDaysAgo = (new \DateTime())->modify('-30 days');
         
         $sales = $this->em->getRepository(Sale::class)
@@ -217,7 +226,6 @@ class DashboardController extends AbstractController
             ->getQuery()
             ->getResult();
 
-        // Group by day
         $salesByDay = [];
         foreach ($sales as $sale) {
             $day = $sale->getCreatedAt()->format('Y-m-d');
