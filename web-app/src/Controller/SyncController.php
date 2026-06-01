@@ -27,6 +27,99 @@ class SyncController extends AbstractController
 
         $count = 0;
         foreach ($data['transactions'] as $tx) {
+            // Basic dedup: if tx has offlineId, skip if already logged
+            $offlineId = $tx['offlineId'] ?? null;
+            $already = false;
+            if ($offlineId) {
+                $qb = $this->em->getRepository(AuditLog::class)->createQueryBuilder('a')
+                    ->where('a.description LIKE :p')
+                    ->setParameter('p', '%"offlineId":"' . addslashes($offlineId) . '"%')
+                    ->setMaxResults(1);
+                $already = (bool) $qb->getQuery()->getOneOrNullResult();
+            }
+
+            if ($already) { continue; }
+
+            // If transaction looks like a sale, attempt to apply it server-side
+            if (($tx['type'] ?? '') === 'sale' && isset($tx['items']) && is_array($tx['items'])) {
+                $conn = $this->em->getConnection();
+                try {
+                    $conn->beginTransaction();
+
+                    $sale = new \App\Entity\Sale();
+                    $sale->setCashier($this->getUser());
+                    $sale->setPaymentMethod($tx['paymentMethod'] ?? 'cash');
+                    $sale->setDiscountAmount((float) ($tx['discountAmount'] ?? 0));
+                    $sale->setLoyaltyPointsUsed((float) ($tx['loyaltyPointsUsed'] ?? 0));
+
+                    $total = 0;
+                    foreach ($tx['items'] as $it) {
+                        $product = $this->em->getRepository(\App\Entity\Product::class)->find($it['productId']);
+                        if (!$product) throw new \Exception('Product not found: ' . ($it['productId'] ?? '')); 
+                        if ($product->getStockQuantity() < ($it['quantity'] ?? 0)) throw new \Exception('Insufficient stock');
+
+                        $item = new \App\Entity\SaleItem();
+                        $item->setProduct($product);
+                        $item->setQuantity((int) $it['quantity']);
+                        $item->setUnitPrice($product->getUnitPrice());
+                        $item->calculateSubtotal();
+                        $sale->addItem($item);
+
+                        $total += $item->getSubtotal();
+
+                        // Deduct stock and log
+                        $old = $product->getStockQuantity();
+                        $product->setStockQuantity($old - $item->getQuantity());
+                        $this->em->persist($product);
+
+                        $log = new \App\Entity\InventoryLog();
+                        $log->setProduct($product);
+                        $log->setActionType('out');
+                        $log->setQuantityChanged($item->getQuantity());
+                        $log->setStockBefore($old);
+                        $log->setStockAfter($product->getStockQuantity());
+                        $log->setPerformedBy($this->getUser());
+                        $log->setReference('OFFLINE#' . ($offlineId ?? '')); 
+                        $this->em->persist($log);
+                    }
+
+                    $sale->setTotalAmount($total - ($tx['discountAmount'] ?? 0));
+                    $this->em->persist($sale);
+
+                    // Create a Payment record if needed
+                    $payment = new \App\Entity\Payment();
+                    $payment->setSale($sale);
+                    $payment->setMethod($tx['paymentMethod'] ?? 'cash');
+                    $payment->setAmount($sale->getTotalAmount());
+                    $payment->setStatus('completed');
+                    $payment->markAsCompleted();
+                    $this->em->persist($payment);
+
+                    // Audit
+                    $audit = new AuditLog();
+                    $audit->setUser($this->getUser());
+                    $audit->setAction('offline_sync_sale');
+                    $audit->setModule('sync');
+                    $audit->setDescription(json_encode(['offlineId' => $offlineId, 'saleId' => null, 'payload' => $tx]));
+                    $audit->setIpAddress($request->getClientIp() ?? '0.0.0.0');
+                    $audit->setUserAgent($request->headers->get('User-Agent'));
+                    $this->em->persist($audit);
+
+                    $this->em->flush();
+                    // update audit with sale id
+                    $audit->setDescription(json_encode(['offlineId' => $offlineId, 'saleId' => $sale->getId(), 'payload' => $tx]));
+                    $this->em->flush();
+
+                    $conn->commit();
+                    $count++;
+                    continue;
+                } catch (\Throwable $e) {
+                    if ($conn->isTransactionActive()) $conn->rollBack();
+                    // Fallthrough to logging only
+                }
+            }
+
+            // Default: just record audit log
             $audit = new AuditLog();
             $audit->setUser($this->getUser());
             $audit->setAction('offline_sync_tx');
