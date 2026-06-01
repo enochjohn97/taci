@@ -36,9 +36,13 @@
           </div>
           <div class="col-md-4">
             <label class="form-label small text-muted">Supplier (optional)</label>
-            <select name="supplierId" class="form-select">
+              <select name="supplierId" class="form-select">
               <option value="">Select supplier...</option>
-              {# TODO: populate suppliers dynamically from DB #}
+              {% if suppliers is defined and suppliers is iterable %}
+                {% for s in suppliers %}
+                  <option value="{{ s.id }}">{{ s.name }}</option>
+                {% endfor %}
+              {% endif %}
             </select>
           </div>
           <div class="col-12">
