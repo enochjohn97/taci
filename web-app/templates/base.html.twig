@@ -799,6 +799,19 @@
                     setOfflineQueue(q);
                 }
                 toast.info('Transaction queued for sync (offline)');
+
+                // attempt to register background sync if available
+                if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
+                    try {
+                        const reg = await navigator.serviceWorker.ready;
+                        if (reg && reg.sync) {
+                            await reg.sync.register('sync-offline-taci');
+                            console.log('Registered background sync: sync-offline-taci');
+                        }
+                    } catch (err) {
+                        console.warn('Background sync registration failed', err);
+                    }
+                }
             };
 
             window.addEventListener('online', function() { trySyncQueue(); });

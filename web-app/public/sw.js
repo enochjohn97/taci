@@ -158,6 +158,9 @@ self.addEventListener("sync", (event) => {
   if (event.tag === "sync-inventory") {
     event.waitUntil(syncInventoryChanges());
   }
+  if (event.tag === "sync-offline-taci") {
+    event.waitUntil(syncOfflineQueue());
+  }
 });
 
 async function syncPendingPayments() {
@@ -191,6 +194,63 @@ async function syncInventoryChanges() {
     }
   } catch (error) {
     console.error("[Service Worker] Sync error:", error);
+  }
+}
+
+// Sync the IndexedDB offline queue (transactions stored under 'taci_offline' DB)
+async function idbOpen() {
+  return new Promise((resolve) => {
+    const req = indexedDB.open('taci_offline', 1);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('transactions')) db.createObjectStore('transactions', { autoIncrement: true });
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => resolve(null);
+  });
+}
+
+async function idbGetAll() {
+  const db = await idbOpen();
+  if (!db) return [];
+  return new Promise((resolve) => {
+    const txn = db.transaction('transactions', 'readonly');
+    const store = txn.objectStore('transactions');
+    const req = store.getAll();
+    req.onsuccess = () => { db.close(); resolve(req.result || []); };
+    req.onerror = () => { db.close(); resolve([]); };
+  });
+}
+
+async function idbClear() {
+  const db = await idbOpen();
+  if (!db) return false;
+  return new Promise((resolve) => {
+    const txn = db.transaction('transactions', 'readwrite');
+    txn.objectStore('transactions').clear();
+    txn.oncomplete = () => { db.close(); resolve(true); };
+    txn.onerror = () => { db.close(); resolve(false); };
+  });
+}
+
+async function syncOfflineQueue() {
+  try {
+    const q = await idbGetAll();
+    if (!q || !q.length) return;
+    // Post to server sync endpoint
+    const res = await fetch('/api/sync', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ transactions: q }) });
+    if (res && res.ok) {
+      const json = await res.json();
+      // clear store on success
+      await idbClear();
+      // notify clients about result
+      const clientsList = await clients.matchAll({ includeUncontrolled: true });
+      for (const c of clientsList) {
+        c.postMessage({ type: 'OFFLINE_SYNC_RESULT', results: json.results || [], accepted: json.accepted || 0 });
+      }
+    }
+  } catch (err) {
+    console.error('[Service Worker] offline sync failed', err);
   }
 }
 

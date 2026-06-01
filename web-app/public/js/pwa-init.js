@@ -52,6 +52,38 @@
             // Ignore update check failures
           });
         }, 60000); // Check every minute
+
+        // If there are pending offline transactions, register background sync
+        (async function registerBackgroundSyncIfNeeded(){
+          try{
+            if (!('sync' in registration)) return;
+            // open idb in page context
+            function idbOpen(){
+              return new Promise((resolve) => {
+                if (!('indexedDB' in window)) return resolve(null);
+                const req = indexedDB.open('taci_offline', 1);
+                req.onupgradeneeded = (e) => {
+                  const db = e.target.result;
+                  if (!db.objectStoreNames.contains('transactions')) db.createObjectStore('transactions', { autoIncrement: true });
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => resolve(null);
+              });
+            }
+            const db = await idbOpen();
+            if (!db) return;
+            const tx = db.transaction('transactions','readonly');
+            const store = tx.objectStore('transactions');
+            const allReq = store.getAll();
+            allReq.onsuccess = async function(){
+              const items = allReq.result || [];
+              db.close();
+              if (items.length > 0){
+                try{ await registration.sync.register('sync-offline-taci'); console.log('[PWA] Background sync registered: sync-offline-taci'); }catch(e){console.warn('[PWA] Sync register failed', e);}                
+              }
+            };
+          }catch(e){console.warn('Background sync check failed', e);} 
+        })();
       })
       .catch((error) => {
         console.error("[PWA] Service Worker registration failed:", error);
