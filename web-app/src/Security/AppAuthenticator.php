@@ -88,12 +88,12 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
         // Add success flash message
         $session->getFlashBag()->add('success', 'Login successful! Welcome ' . $user->getUsername() . '.');
         
-        // Enforce role isolation by binding this session to the specific role chosen
+        // Enforce role isolation by recording the chosen role for this login attempt
+        // NOTE: previously we used a legacy ACTIVE_ROLE session key which caused UI role confusion.
+        // Store LAST_LOGIN_ROLE only and rely on it for redirect decision, avoid ACTIVE_ROLE usage.
         $lastRole = $session->get('LAST_LOGIN_ROLE');
-        $attemptId = $session->get('PENDING_ROLE_ATTEMPT_ID');
         if ($lastRole) {
-            $session->set('ACTIVE_ROLE', $lastRole);
-            $session->set('ROLE_ATTEMPT_ID', $attemptId);
+            $session->set('LAST_LOGIN_ROLE', $lastRole);
             $session->remove('PENDING_ROLE_ATTEMPT_ID');
         }
 
@@ -113,10 +113,9 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
             return new RedirectResponse($targetPath);
         }
 
-        // Redirect based on the ACTIVE_ROLE the user selected, not the raw role hierarchy.
-        // This prevents a manager (who also satisfies ROLE_STAFF via hierarchy) from landing
-        // on the wrong dashboard.
-        $activeRole = $session->get('ACTIVE_ROLE');
+        // Redirect based on the role the user selected during login (if any).
+        // This replaces the legacy ACTIVE_ROLE session usage which led to wrong dashboards being shown.
+        $selectedRole = $session->get('LAST_LOGIN_ROLE');
         $roleRouteMap = [
             'super-admin' => 'app_dashboard_super_admin',
             'sub-admin'   => 'app_dashboard_sub_admin',
@@ -124,8 +123,8 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
             'staff'       => 'app_dashboard_staff',
         ];
 
-        if ($activeRole && isset($roleRouteMap[$activeRole])) {
-            return new RedirectResponse($this->urlGenerator->generate($roleRouteMap[$activeRole]));
+        if ($selectedRole && isset($roleRouteMap[$selectedRole])) {
+            return new RedirectResponse($this->urlGenerator->generate($roleRouteMap[$selectedRole]));
         }
 
         // Fallback: derive from DB role (no hierarchy confusion — use the stored enum value)
