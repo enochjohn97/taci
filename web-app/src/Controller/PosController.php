@@ -94,98 +94,118 @@ class PosController extends AbstractController
         $loyaltyPointsUsed = (float) ($data['loyaltyPointsUsed'] ?? 0);
         $customerId = $data['customerId'] ?? null;
 
-        $sale = new Sale();
-        $sale->setCashier($this->getUser());
-        $sale->setPaymentMethod($paymentMethod);
-        $sale->setDiscountAmount($discountAmount);
-        $sale->setLoyaltyPointsUsed($loyaltyPointsUsed);
-
-        $totalAmount = 0;
+        $conn = $this->em->getConnection();
         $itemsCreated = [];
 
-        foreach ($items as $item) {
-            $product = $this->em->getRepository(Product::class)->find($item['productId']);
-            if (!$product) {
-                return $this->json(['error' => 'Product not found: ' . $item['productId']], Response::HTTP_BAD_REQUEST);
+        try {
+            $conn->beginTransaction();
+
+            $sale = new Sale();
+            $sale->setCashier($this->getUser());
+            $sale->setPaymentMethod($paymentMethod);
+            $sale->setDiscountAmount($discountAmount);
+            $sale->setLoyaltyPointsUsed($loyaltyPointsUsed);
+
+            $totalAmount = 0;
+
+            // First, create sale and items (cascade persist will handle items when persisting sale)
+            foreach ($items as $item) {
+                $product = $this->em->getRepository(Product::class)->find($item['productId']);
+                if (!$product) {
+                    throw new \Exception('Product not found: ' . $item['productId']);
+                }
+
+                if ($product->getStockQuantity() < $item['quantity']) {
+                    throw new \Exception('Insufficient stock for ' . $product->getName());
+                }
+
+                $saleItem = new SaleItem();
+                $saleItem->setProduct($product);
+                $saleItem->setQuantity($item['quantity']);
+                $saleItem->setUnitPrice($product->getUnitPrice());
+                $saleItem->calculateSubtotal();
+                $sale->addItem($saleItem);
+
+                $totalAmount += $saleItem->getSubtotal();
+
+                $itemsCreated[] = [
+                    'productId' => $product->getId(),
+                    'name' => $product->getName(),
+                    'quantity' => $item['quantity'],
+                    'unitPrice' => $product->getUnitPrice(),
+                    'subtotal' => $saleItem->getSubtotal(),
+                ];
             }
 
-            if ($product->getStockQuantity() < $item['quantity']) {
-                return $this->json(['error' => 'Insufficient stock for ' . $product->getName()], Response::HTTP_BAD_REQUEST);
+            $sale->setTotalAmount($totalAmount - $discountAmount);
+            $this->em->persist($sale);
+            $this->em->flush(); // ensure sale id exists
+
+            // Now deduct stock and create inventory logs referencing sale
+            foreach ($sale->getItems() as $saleItem) {
+                $product = $saleItem->getProduct();
+                $qty = $saleItem->getQuantity();
+
+                $oldStock = $product->getStockQuantity();
+                $product->setStockQuantity($oldStock - $qty);
+                $this->em->persist($product);
+
+                $log = new InventoryLog();
+                $log->setProduct($product);
+                $log->setActionType('out');
+                $log->setQuantityChanged($qty);
+                $log->setStockBefore($oldStock);
+                $log->setStockAfter($product->getStockQuantity());
+                $log->setPerformedBy($this->getUser());
+                $log->setReference('SALE#' . $sale->getId());
+                $this->em->persist($log);
+
+                if ($product->isLowStock()) {
+                    $notif = new Notification();
+                    $notif->setUser($this->getUser());
+                    $notif->setType('low_stock');
+                    $notif->setMessage('Product "' . $product->getName() . '" is running low (stock: ' . $product->getStockQuantity() . ')');
+                    $notif->setLink('/inventory/products/' . $product->getId());
+                    $this->em->persist($notif);
+                }
             }
 
-            $saleItem = new SaleItem();
-            $saleItem->setProduct($product);
-            $saleItem->setQuantity($item['quantity']);
-            $saleItem->setUnitPrice($product->getUnitPrice());
-            $saleItem->calculateSubtotal();
-            $sale->addItem($saleItem);
+            // Create payment record
+            $payment = new Payment();
+            $payment->setSale($sale);
+            $payment->setMethod($paymentMethod);
+            $payment->setAmount($sale->getTotalAmount());
+            $payment->setStatus('completed');
+            $payment->markAsCompleted();
+            $this->em->persist($payment);
 
-            $totalAmount += $saleItem->getSubtotal();
-
-            // Deduct from stock
-            $oldStock = $product->getStockQuantity();
-            $product->setStockQuantity($oldStock - $item['quantity']);
-
-            // Log inventory change
-            $log = new InventoryLog();
-            $log->setProduct($product);
-            $log->setActionType('out');
-            $log->setQuantityChanged($item['quantity']);
-            $log->setStockBefore($oldStock);
-            $log->setStockAfter($product->getStockQuantity());
-            $log->setPerformedBy($this->getUser());
-            $log->setReference('SALE#' . uniqid());
-            $this->em->persist($log);
-
-            // Check for low stock
-            if ($product->isLowStock()) {
-                $notif = new Notification();
-                $notif->setUser($this->getUser());
-                $notif->setType('low_stock');
-                $notif->setMessage('Product "' . $product->getName() . '" is running low (stock: ' . $product->getStockQuantity() . ')');
-                $notif->setLink('/inventory/products/' . $product->getId());
-                $this->em->persist($notif);
+            // Award loyalty points if customer
+            if ($customerId) {
+                $customer = $this->em->getRepository(\App\Entity\User::class)->find($customerId);
+                if ($customer) {
+                    $this->loyaltyService->awardPoints($customer, $totalAmount);
+                }
             }
 
-            $itemsCreated[] = [
-                'productId' => $product->getId(),
-                'name' => $product->getName(),
-                'quantity' => $item['quantity'],
-                'unitPrice' => $product->getUnitPrice(),
-                'subtotal' => $saleItem->getSubtotal(),
-            ];
+            $this->em->flush();
+            $conn->commit();
+
+            return $this->json([
+                'success' => true,
+                'saleId' => $sale->getId(),
+                'totalAmount' => $sale->getTotalAmount(),
+                'paymentMethod' => $paymentMethod,
+                'items' => $itemsCreated,
+                'timestamp' => $sale->getCreatedAt()->format('Y-m-d H:i:s'),
+            ]);
+
+        } catch (\Throwable $e) {
+            if ($conn->isTransactionActive()) {
+                $conn->rollBack();
+            }
+            // Ensure exception does not leak sensitive info
+            return $this->json(['error' => 'Transaction failed: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $sale->setTotalAmount($totalAmount - $discountAmount);
-        $this->em->persist($sale);
-
-        // Create payment record
-        $payment = new Payment();
-        $payment->setSale($sale);
-        $payment->setMethod($paymentMethod);
-        $payment->setAmount($sale->getTotalAmount());
-        $payment->setStatus('completed');
-        $payment->markAsCompleted();
-        $this->em->persist($payment);
-
-        // Award loyalty points if customer
-        if ($customerId) {
-            $customer = $this->em->getRepository(\App\Entity\User::class)->find($customerId);
-            if ($customer) {
-                $this->loyaltyService->awardPoints($customer, $totalAmount);
-            }
-        }
-
-        $this->em->flush();
-
-        return $this->json([
-            'success' => true,
-            'saleId' => $sale->getId(),
-            'totalAmount' => $sale->getTotalAmount(),
-            'paymentMethod' => $paymentMethod,
-            'items' => $itemsCreated,
-            'timestamp' => $sale->getCreatedAt()->format('Y-m-d H:i:s'),
-        ]);
     }
 
     #[Route('/api/transaction/{id}/receipt', name: 'app_pos_receipt', methods: ['GET'])]
