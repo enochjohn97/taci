@@ -187,4 +187,33 @@ class SupplierController extends AbstractController
             'deliveries' => $deliveries,
         ]);
     }
+
+    #[\Route('/supplier/{supplierId}/invoice/{invoiceId}/pdf', name: 'inventory_supplier_invoice_pdf', methods: ['GET'])]
+    #[\IsGranted('ROLE_SUB_ADMIN')]
+    public function invoicePdf(int $supplierId, int $invoiceId): Response
+    {
+        $inv = $this->em->getRepository(\App\Entity\Invoice::class)->find($invoiceId);
+        if (!$inv || $inv->getSupplier()->getId() !== $supplierId) {
+            return new JsonResponse(['error' => 'Invoice not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        // render invoice HTML
+        $html = $this->renderView('inventory/invoice-pdf.html.twig', ['invoice' => $inv, 'supplier' => $inv->getSupplier()]);
+
+        // generate PDF using Dompdf
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+        $pdf = $dompdf->output();
+
+        $response = new Response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="invoice-' . $inv->getId() . '.pdf"'
+        ]);
+
+        return $response;
+    }
 }

@@ -1,0 +1,41 @@
+{# Minimal invoice PDF template #}
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    body { font-family: DejaVu Sans, Arial, sans-serif; color:#111; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .meta { margin-bottom: 10px; }
+    .items { width: 100%; border-collapse: collapse; }
+    .items th, .items td { border: 1px solid #ddd; padding: 8px; }
+    .right { text-align: right; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>Invoice #{{ invoice.id }}</h2>
+    <div class="meta">{{ supplier.name }} &middot; {{ supplier.contact ?: '' }}</div>
+    <div class="meta small">{{ invoice.createdAt.format('Y-m-d H:i') }}</div>
+  </div>
+
+  <table class="items">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th class="right">Amount (NGN)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Invoice total</td>
+        <td class="right">{{ invoice.amount|number_format(2, '.', ',') }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top:20px;">
+    <strong>Status:</strong> {{ invoice.status|capitalize }}
+  </div>
+</body>
+</html>
