@@ -49,6 +49,52 @@ class SupplierController extends AbstractController
         return $this->json(['success' => true, 'id' => $s->getId()], Response::HTTP_CREATED);
     }
 
+    #[Route('/supplier/{id}/invoice/new', name: 'inventory_supplier_invoice_new', methods: ['POST'])]
+    #[IsGranted('ROLE_SUB_ADMIN')]
+    public function createInvoice(Supplier $supplier, Request $request): JsonResponse
+    {
+        $data = $request->request->all();
+        $amount = (float) ($data['amount'] ?? 0);
+        if ($amount <= 0) {
+            return $this->json(['error' => 'Amount must be positive'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $inv = new \App\Entity\Invoice();
+        $inv->setSupplier($supplier);
+        $inv->setAmount($amount);
+        $inv->setStatus('pending');
+        $inv->setReference($data['reference'] ?? null);
+
+        $this->em->persist($inv);
+        $this->em->flush();
+
+        return $this->json(['success' => true, 'id' => $inv->getId()], Response::HTTP_CREATED);
+    }
+
+    #[Route('/supplier/{id}/delivery/new', name: 'inventory_supplier_delivery_new', methods: ['POST'])]
+    #[IsGranted('ROLE_SUB_ADMIN')]
+    public function createDelivery(Supplier $supplier, Request $request): JsonResponse
+    {
+        $data = $request->request->all();
+        $scheduled = $data['scheduledAt'] ?? null;
+        try {
+            $dt = $scheduled ? new \DateTime($scheduled) : new \DateTime();
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Invalid scheduled date'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $d = new \App\Entity\Delivery();
+        $d->setSupplier($supplier);
+        $d->setScheduledAt($dt);
+        $d->setStatus('scheduled');
+        $d->setAssignedDriver($data['assignedDriver'] ?? null);
+
+        $this->em->persist($d);
+        $this->em->flush();
+
+        return $this->json(['success' => true, 'id' => $d->getId()], Response::HTTP_CREATED);
+    }
+
     #[Route('/supplier/{id}/edit', name: 'inventory_supplier_edit', methods: ['POST'])]
     #[IsGranted('ROLE_SUB_ADMIN')]
     public function editSupplier(Supplier $supplier, Request $request): JsonResponse
@@ -90,9 +136,26 @@ class SupplierController extends AbstractController
     #[IsGranted('ROLE_SUB_ADMIN')]
     public function viewSupplier(Supplier $supplier): Response
     {
-        // For now show basic supplier info and placeholder sections for orders/deliveries/invoices
+        $invoices = $this->em->getRepository(\App\Entity\Invoice::class)
+            ->createQueryBuilder('i')
+            ->where('i.supplier = :s')
+            ->setParameter('s', $supplier)
+            ->orderBy('i.createdAt', 'DESC')
+            ->setMaxResults(20)
+            ->getQuery()->getResult();
+
+        $deliveries = $this->em->getRepository(\App\Entity\Delivery::class)
+            ->createQueryBuilder('d')
+            ->where('d.supplier = :s')
+            ->setParameter('s', $supplier)
+            ->orderBy('d.scheduledAt', 'DESC')
+            ->setMaxResults(20)
+            ->getQuery()->getResult();
+
         return $this->render('inventory/supplier-view.html.twig', [
             'supplier' => $supplier,
+            'invoices' => $invoices,
+            'deliveries' => $deliveries,
         ]);
     }
 }

@@ -28,17 +28,43 @@
 
     <div class="card mt-3">
       <div class="card-header">Recent Deliveries</div>
-      <div class="card-body text-muted">No deliveries recorded yet.</div>
+      <div class="card-body">
+        {% if deliveries is defined and deliveries|length > 0 %}
+          <ul class="list-unstyled mb-0">
+            {% for del in deliveries %}
+              <li>
+                <strong>{{ del.scheduledAt.format('Y-m-d H:i') }}</strong> — {{ del.status|capitalize }}
+                {% if del.assignedDriver %} &middot; Driver: {{ del.assignedDriver }}{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="text-muted">No deliveries recorded yet.</div>
+        {% endif %}
+      </div>
     </div>
   </div>
 
   <div class="col-md-6">
     <div class="card">
       <div class="card-header">Invoices & Payments</div>
-      <div class="card-body text-muted">No invoices yet. Use "Create Invoice" to start billing.</div>
-    </div>
+      <div class="card-body">
+        {% if invoices is defined and invoices|length > 0 %}
+          <ul class="list-unstyled mb-0">
+            {% for inv in invoices %}
+              <li>
+                <strong>#{{ inv.id }}</strong> — {{ inv.amount }} NGN &middot; {{ inv.status|capitalize }}
+                {% if inv.reference %} &middot; Ref: {{ inv.reference }}{% endif %}
+                <div class="text-muted small">{{ inv.createdAt.format('Y-m-d H:i') }}</div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="text-muted">No invoices yet. Use "Create Invoice" to start billing.</div>
+        {% endif %}
+      </div>
 
-    <div class="card mt-3">
+      <div class="card mt-3">
       <div class="card-header">Station Stock (Provided by supplier)</div>
       <div class="card-body text-muted">Integration with station stock view coming in phase-2.</div>
     </div>
