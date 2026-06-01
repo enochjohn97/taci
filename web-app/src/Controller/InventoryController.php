@@ -100,13 +100,35 @@ class InventoryController extends AbstractController
             /** @var UploadedFile|null $image */
             $image = $request->files->get('image');
             if ($image) {
-                $filename = bin2hex(random_bytes(12)) . '.' . ($image->guessExtension() ?: 'jpg');
+                // Server-side validation
+                $maxBytes = 5 * 1024 * 1024; // 5MB
+                $allowed = ['image/jpeg', 'image/png', 'image/webp'];
+                $size = $image->getSize() ?? 0;
+                $mime = $image->getMimeType();
+
+                if ($size > $maxBytes) {
+                    $this->addFlash('error', 'Image exceeds maximum size of 5MB');
+                    return $this->redirectToRoute('app_inventory_product_new');
+                }
+
+                if (!in_array($mime, $allowed, true)) {
+                    $this->addFlash('error', 'Invalid image type. Only JPEG, PNG and WEBP allowed');
+                    return $this->redirectToRoute('app_inventory_product_new');
+                }
+
+                $extension = $image->guessExtension() ?: 'jpg';
+                $filename = bin2hex(random_bytes(12)) . '.' . $extension;
                 $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/products';
                 if (!is_dir($uploadDir)) {
                     mkdir($uploadDir, 0755, true);
                 }
-                $image->move($uploadDir, $filename);
-                $product->setImagePath('/uploads/products/' . $filename);
+                try {
+                    $image->move($uploadDir, $filename);
+                    $product->setImagePath('/uploads/products/' . $filename);
+                } catch (\Exception $e) {
+                    $this->addFlash('error', 'Failed to save uploaded image');
+                    return $this->redirectToRoute('app_inventory_product_new');
+                }
             }
 
             $this->em->persist($product);
@@ -139,13 +161,35 @@ class InventoryController extends AbstractController
             /** @var UploadedFile|null $image */
             $image = $request->files->get('image');
             if ($image) {
-                $filename = bin2hex(random_bytes(12)) . '.' . ($image->guessExtension() ?: 'jpg');
+                // Server-side validation
+                $maxBytes = 5 * 1024 * 1024; // 5MB
+                $allowed = ['image/jpeg', 'image/png', 'image/webp'];
+                $size = $image->getSize() ?? 0;
+                $mime = $image->getMimeType();
+
+                if ($size > $maxBytes) {
+                    $this->addFlash('error', 'Image exceeds maximum size of 5MB');
+                    return $this->redirectToRoute('app_inventory_product_edit', ['id' => $product->getId()]);
+                }
+
+                if (!in_array($mime, $allowed, true)) {
+                    $this->addFlash('error', 'Invalid image type. Only JPEG, PNG and WEBP allowed');
+                    return $this->redirectToRoute('app_inventory_product_edit', ['id' => $product->getId()]);
+                }
+
+                $extension = $image->guessExtension() ?: 'jpg';
+                $filename = bin2hex(random_bytes(12)) . '.' . $extension;
                 $uploadDir = $this->getParameter('kernel.project_dir') . '/public/uploads/products';
                 if (!is_dir($uploadDir)) {
                     mkdir($uploadDir, 0755, true);
                 }
-                $image->move($uploadDir, $filename);
-                $product->setImagePath('/uploads/products/' . $filename);
+                try {
+                    $image->move($uploadDir, $filename);
+                    $product->setImagePath('/uploads/products/' . $filename);
+                } catch (\Exception $e) {
+                    $this->addFlash('error', 'Failed to save uploaded image');
+                    return $this->redirectToRoute('app_inventory_product_edit', ['id' => $product->getId()]);
+                }
             }
 
             $this->em->flush();
