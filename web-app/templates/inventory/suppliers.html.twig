@@ -25,7 +25,7 @@
         <tbody>
           {% for s in suppliers %}
           <tr data-id="{{ s.id }}">
-            <td>{{ s.name }}</td>
+            <td><a href="{{ path('inventory_supplier_view', {'id': s.id}) }}">{{ s.name }}</a></td>
             <td>{{ s.contact }}</td>
             <td>{{ s.address }}</td>
             <td>{{ s.fuelTypes }}</td>

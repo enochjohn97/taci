@@ -85,4 +85,14 @@ class SupplierController extends AbstractController
             'suppliers' => $list,
         ]);
     }
+
+    #[Route('/supplier/{id}', name: 'inventory_supplier_view', methods: ['GET'])]
+    #[IsGranted('ROLE_SUB_ADMIN')]
+    public function viewSupplier(Supplier $supplier): Response
+    {
+        // For now show basic supplier info and placeholder sections for orders/deliveries/invoices
+        return $this->render('inventory/supplier-view.html.twig', [
+            'supplier' => $supplier,
+        ]);
+    }
 }

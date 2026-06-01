@@ -1,0 +1,54 @@
+{# templates/inventory/supplier-view.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Supplier - {{ supplier.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h3 class="mb-0">{{ supplier.name }}</h3>
+    <div class="text-muted">Contact: {{ supplier.contact ?: 'N/A' }} &middot; Address: {{ supplier.address ?: 'N/A' }}</div>
+  </div>
+  <div>
+    <a href="{{ path('inventory_suppliers_manage') }}" class="btn btn-light me-2">Back to Suppliers</a>
+    <button class="btn btn-primary" id="createInvoiceBtn">Create Invoice</button>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">Overview</div>
+      <div class="card-body">
+        <p><strong>Fuel Types:</strong> {{ supplier.fuelTypes ?: '—' }}</p>
+        <p><strong>Created:</strong> {{ supplier.createdAt.format('Y-m-d H:i') }}</p>
+        <p><strong>Last updated:</strong> {{ supplier.updatedAt.format('Y-m-d H:i') }}</p>
+      </div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-header">Recent Deliveries</div>
+      <div class="card-body text-muted">No deliveries recorded yet.</div>
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">Invoices & Payments</div>
+      <div class="card-body text-muted">No invoices yet. Use "Create Invoice" to start billing.</div>
+    </div>
+
+    <div class="card mt-3">
+      <div class="card-header">Station Stock (Provided by supplier)</div>
+      <div class="card-body text-muted">Integration with station stock view coming in phase-2.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('createInvoiceBtn').addEventListener('click', function() {
+  alert('Create Invoice dialog not implemented yet.');
+});
+</script>
+
+{% endblock %}
