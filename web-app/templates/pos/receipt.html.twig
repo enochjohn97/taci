@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Receipt #{{ sale.getId() }}</title>
+    <style>
+        body{font-family: Arial, Helvetica, sans-serif;font-size:14px;color:#0f172a}
+        .header{display:flex;justify-content:space-between;align-items:center}
+        .logo{font-weight:800;font-size:18px}
+        .meta{font-size:12px;color:#64748b}
+        table{width:100%;border-collapse:collapse;margin-top:12px}
+        th,td{padding:8px;border-bottom:1px solid #e6eef6;text-align:left}
+        .total{font-weight:700}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">{{ app_name|default('TACI') }}</div>
+        <div class="meta">Receipt #{{ sale.getId() }}<br/>Date: {{ sale.getCreatedAt().format('Y-m-d H:i') }}</div>
+    </div>
+
+    <div style="margin-top:8px">Cashier: {{ sale.getCashier().getUsername() }}</div>
+
+    <table>
+        <thead>
+            <tr><th>Product</th><th>Qty</th><th>Unit</th><th>Subtotal</th></tr>
+        </thead>
+        <tbody>
+            {% for item in sale.getItems() %}
+                <tr>
+                    <td>{{ item.getProduct().getName() }}</td>
+                    <td>{{ item.getQuantity() }}</td>
+                    <td>₦{{ item.getUnitPrice()|number_format(2, '.', ',') }}</td>
+                    <td>₦{{ item.getSubtotal()|number_format(2, '.', ',') }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div style="margin-top:12px;display:flex;justify-content:flex-end;gap:16px">
+        <div style="text-align:right">
+            <div>Subtotal: ₦{{ (sale.getTotalAmount() + sale.getDiscountAmount())|number_format(2, '.', ',') }}</div>
+            <div>Discount: ₦{{ sale.getDiscountAmount()|number_format(2, '.', ',') }}</div>
+            <div>Tax: ₦{{ ((sale.getTotalAmount()) * 0.12)|number_format(2, '.', ',') }}</div>
+            <div class="total">Total: ₦{{ sale.getTotalAmount()|number_format(2, '.', ',') }}</div>
+        </div>
+    </div>
+
+    <div style="margin-top:24px;font-size:12px;color:#64748b">Thank you for your purchase.</div>
+</body>
+</html>

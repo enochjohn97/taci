@@ -46,6 +46,9 @@ class Sale
     #[ORM\Column(type: 'datetime')]
     private \DateTime $updatedAt;
 
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $receiptPath = null;
+
     public function __construct()
     {
         $this->items = new ArrayCollection();
@@ -161,6 +164,17 @@ class Sale
     public function setUpdatedAt(\DateTime $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
+        return $this;
+    }
+
+    public function getReceiptPath(): ?string
+    {
+        return $this->receiptPath;
+    }
+
+    public function setReceiptPath(?string $receiptPath): self
+    {
+        $this->receiptPath = $receiptPath;
         return $this;
     }
 
