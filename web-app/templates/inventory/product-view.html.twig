@@ -46,19 +46,19 @@
                     </div>
                     <div class="list-group-item d-flex justify-content-between">
                         <span class="text-muted">Selling Price</span>
-                        <span class="fw-semibold text-primary">₦{{ product.unitPrice|number_format(2) }}</span>
+                        <span class="fw-semibold text-primary">₦{{ product.unitPrice|number_format() }}</span>
                     </div>
                     <div class="list-group-item d-flex justify-content-between">
                         <span class="text-muted">Cost Price</span>
-                        <span class="fw-semibold">₦{{ product.costPrice|default(0)|number_format(2) }}</span>
+                        <span class="fw-semibold">₦{{ product.costPrice|default(0)|number_format() }}</span>
                     </div>
                     <div class="list-group-item d-flex justify-content-between">
                         <span class="text-muted">Margin</span>
-                        <span class="badge bg-success">{{ product.marginPercentage|default(0)|number_format(1) }}%</span>
+                        <span class="badge bg-success">{{ product.marginPercentage|default(0)|number_format() }}%</span>
                     </div>
                     <div class="list-group-item d-flex justify-content-between">
                         <span class="text-muted">Stock Value</span>
-                        <span class="fw-semibold text-success">₦{{ (product.stockQuantity * product.unitPrice)|number_format(2) }}</span>
+                        <span class="fw-semibold text-success">₦{{ (product.stockQuantity * product.unitPrice)|number_format() }}</span>
                     </div>
                 </div>
             </div>

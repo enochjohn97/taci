@@ -133,7 +133,7 @@
       </div>
       <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn" style="background: #0F4C3A; color: white;" onclick="alert('Shift created and Memo sent!'); bootstrap.Modal.getInstance(document.getElementById('shiftModal')).hide();">Create Shift</button>
+        <button type="button" class="btn" style="background: #0F4C3A; color: white;" onclick="toast.success('Shift created and Memo sent!'); bootstrap.Modal.getInstance(document.getElementById('shiftModal')).hide();">Create Shift</button>
       </div>
     </div>
   </div>
@@ -184,7 +184,7 @@
       </div>
       <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn" style="background: #0F4C3A; color: white;" onclick="alert('Leave request logged!'); bootstrap.Modal.getInstance(document.getElementById('leaveModal')).hide();">Submit Request</button>
+        <button type="button" class="btn" style="background: #0F4C3A; color: white;" onclick="toast.success('Leave request logged!'); bootstrap.Modal.getInstance(document.getElementById('leaveModal')).hide();">Submit Request</button>
       </div>
     </div>
   </div>
@@ -223,7 +223,7 @@
       </div>
       <div class="modal-footer" style="border-top: 1px solid var(--border-color);">
         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-danger" onclick="alert('Incident reported successfully!'); bootstrap.Modal.getInstance(document.getElementById('incidentModal')).hide();">Submit Report</button>
+        <button type="button" class="btn btn-danger" onclick="toast.success('Incident reported successfully!'); bootstrap.Modal.getInstance(document.getElementById('incidentModal')).hide();">Submit Report</button>
       </div>
     </div>
   </div>
@@ -245,7 +245,7 @@
         <div class="mb-2 text-muted small">
             <i class="fa-solid fa-location-dot me-1"></i> Location: Station {{ app.user.stationId ?? 'N/A' }}
         </div>
-        <button type="button" class="btn btn-success w-100 mt-2 fw-bold" onclick="alert('Clock-in successful at ' + new Date().toLocaleTimeString()); bootstrap.Modal.getInstance(document.getElementById('clockInModal')).hide(); document.getElementById('clockInBtn').classList.replace('btn-success', 'btn-outline-danger'); document.getElementById('clockInBtn').innerHTML = '<i class=\'fa-solid fa-right-from-bracket me-1\'></i> Clock Out';">
+        <button type="button" class="btn btn-success w-100 mt-2 fw-bold" onclick="toast.success('Clock-in successful at ' + new Date().toLocaleTimeString()); bootstrap.Modal.getInstance(document.getElementById('clockInModal')).hide(); document.getElementById('clockInBtn').classList.replace('btn-success', 'btn-outline-danger'); document.getElementById('clockInBtn').innerHTML = '<i class=\'fa-solid fa-right-from-bracket me-1\'></i> Clock Out';">
             Confirm Clock-In
         </button>
       </div>
@@ -283,11 +283,20 @@ document.addEventListener('DOMContentLoaded', function() {
     if (clockInBtn) {
         clockInBtn.addEventListener('click', function() {
             if (this.innerText.includes('Clock Out')) {
-                if(confirm('Are you sure you want to clock out?')) {
-                    alert('Clocked out successfully at ' + new Date().toLocaleTimeString());
-                    this.classList.replace('btn-outline-danger', 'btn-success');
-                    this.innerHTML = '<i class="fa-solid fa-clock me-1"></i> Clock In';
-                }
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'Are you sure you want to clock out?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0d9488',
+                    confirmButtonText: 'Yes, clock out!'
+                }).then(res => {
+                    if (res.isConfirmed) {
+                        toast.success('Clocked out successfully at ' + new Date().toLocaleTimeString());
+                        this.classList.replace('btn-outline-danger', 'btn-success');
+                        this.innerHTML = '<i class="fa-solid fa-clock me-1"></i> Clock In';
+                    }
+                });
             } else {
                 new bootstrap.Modal(document.getElementById('clockInModal')).show();
             }
@@ -304,13 +313,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const maxBytes = 5 * 1024 * 1024;
             const allowed = ['image/jpeg','image/png','image/webp'];
             if (file.size > maxBytes) {
-                alert('Selected image exceeds 5MB');
+                toast.error('Selected image exceeds 5MB');
                 this.value = '';
                 addImagePreview.style.display = 'none';
                 return;
             }
             if (!allowed.includes(file.type)) {
-                alert('Invalid image type. Only JPEG, PNG and WEBP are allowed.');
+                toast.error('Invalid image type. Only JPEG, PNG and WEBP are allowed.');
                 this.value = '';
                 addImagePreview.style.display = 'none';
                 return;

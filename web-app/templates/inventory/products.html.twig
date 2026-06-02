@@ -1,0 +1,243 @@
+{# templates/inventory/products.html.twig #}
+{% extends "base.html.twig" %}
+
+{% block title %}Products – Inventory – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header d-print-none mb-4">
+    <div class="container-xl">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="mb-1">
+                    <ol class="breadcrumb" aria-label="breadcrumbs">
+                        <li class="breadcrumb-item"><a href="{{ path('app_inventory_dashboard') }}">Inventory</a></li>
+                        <li class="breadcrumb-item active" aria-current="page"><a href="#">Products</a></li>
+                    </ol>
+                </div>
+                <h2 class="page-title text-primary fw-bold">
+                    <i class="bi bi-box-seam me-2"></i> Inventory Products
+                </h2>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <div class="d-flex gap-2">
+                    {% if is_granted('ROLE_MANAGER') %}
+                    <a href="{{ path('app_inventory_product_new') }}" class="btn btn-primary shadow-sm hover-elevate">
+                        <i class="bi bi-plus-lg me-2"></i> Add New Product
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-wrapper">
+    <div class="container-xl">
+        {# Filters #}
+        <div class="card shadow-sm border-0 mb-4" style="border-radius: 12px;">
+            <div class="card-body p-4 bg-light bg-opacity-50">
+                <form method="GET" class="row g-3 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold text-muted small">Search</label>
+                        <div class="input-icon">
+                            <span class="input-icon-addon"><i class="bi bi-search"></i></span>
+                            <input type="text" name="search" class="form-control bg-white shadow-none" value="{{ search|default('') }}" placeholder="Product name or barcode…">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold text-muted small">Category</label>
+                        <input type="text" name="category" class="form-control bg-white shadow-none" value="{{ category|default('') }}" placeholder="All Categories">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold text-muted small">Sort By</label>
+                        <select name="sortBy" class="form-select bg-white shadow-none">
+                            <option value="name" {{ sort_by|default('name') == 'name' ? 'selected' : '' }}>Name</option>
+                            <option value="category" {{ sort_by|default('name') == 'category' ? 'selected' : '' }}>Category</option>
+                            <option value="unitPrice" {{ sort_by|default('name') == 'unitPrice' ? 'selected' : '' }}>Price</option>
+                            <option value="stockQuantity" {{ sort_by|default('name') == 'stockQuantity' ? 'selected' : '' }}>Stock</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill shadow-sm hover-elevate"><i class="bi bi-funnel me-1"></i> Filter</button>
+                        <a href="{{ path('app_inventory_products') }}" class="btn btn-light border hover-elevate" title="Reset Filters"><i class="bi bi-arrow-counterclockwise"></i></a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# Products Table #}
+        <div class="card shadow-sm border-0" style="border-radius: 16px; overflow: hidden;">
+            <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0 fw-bold">All Products <span class="badge bg-secondary-subtle text-secondary ms-2 rounded-pill">{{ products|length }}</span></h4>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover table-vcenter align-middle mb-0 custom-table">
+                    <thead class="table-light text-muted" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <tr>
+                            <th class="ps-4">Product Info</th>
+                            <th>Category</th>
+                            <th>Stock</th>
+                            <th>Price / Cost</th>
+                            <th class="pe-4 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                            <tr class="product-row" data-product="{{ product|serialize('json', {'groups': 'public'})|e('html_attr') }}"
+                                data-name="{{ product.name }}" data-barcode="{{ product.barcode }}" data-desc="{{ product.description|default('No description') }}"
+                                data-cat="{{ product.category }}" data-price="₦{{ product.unitPrice|number_format(2) }}" data-cost="₦{{ product.costPrice|default(0)|number_format(2) }}"
+                                data-stock="{{ product.stockQuantity }}" data-reorder="{{ product.reorderLevel }}">
+                                
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        {% if product.imagePath %}
+                                            <div class="avatar me-3 rounded border" style="background-image: url('{{ asset(product.imagePath) }}'); width: 48px; height: 48px;"></div>
+                                        {% else %}
+                                            <div class="avatar bg-primary-subtle text-primary me-3 rounded border" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+                                                <i class="bi bi-box"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <div class="fw-bold text-dark fs-6">{{ product.name }}</div>
+                                            <div class="text-muted small"><i class="bi bi-upc-scan me-1"></i>{{ product.barcode }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-secondary border px-2 py-1">{{ product.category }}</span>
+                                </td>
+                                <td>
+                                    {% if product.stockQuantity <= product.reorderLevel %}
+                                        <div class="text-danger fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i> {{ product.stockQuantity }} units</div>
+                                        <div class="small text-muted">Reorder at {{ product.reorderLevel }}</div>
+                                    {% else %}
+                                        <div class="text-success fw-bold"><i class="bi bi-check-circle-fill me-1"></i> {{ product.stockQuantity }} units</div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark">Price: ₦{{ product.unitPrice|number_format(2) }}</div>
+                                    <div class="small text-muted">Cost: ₦{{ product.costPrice|default(0)|number_format(2) }}</div>
+                                </td>
+                                <td class="pe-4 text-end">
+                                    <button class="btn btn-sm btn-outline-info rounded-pill px-3 preview-btn hover-elevate">
+                                        <i class="bi bi-eye me-1"></i> Preview
+                                    </button>
+                                    
+                                    {% if is_granted('ROLE_MANAGER') %}
+                                    <a href="{{ path('app_inventory_product_edit', {id: product.id}) }}" class="btn btn-sm btn-light border rounded-pill px-3 ms-2 hover-elevate text-dark">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-search fs-1 d-block mb-3 text-light"></i>
+                                    No products match your criteria.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Centered Modal for Product Preview #}
+<div class="modal fade" id="productPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+            <div class="modal-header bg-light bg-opacity-75 border-bottom-0 py-3">
+                <h5 class="modal-title fw-bold" id="previewTitle">Product Details</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="row g-0">
+                    <div class="col-md-4 bg-light d-flex align-items-center justify-content-center p-4 border-end">
+                        <div class="text-center">
+                            <i class="bi bi-box text-primary opacity-25" style="font-size: 6rem;" id="previewIcon"></i>
+                            <img src="" id="previewImage" class="img-fluid rounded shadow-sm d-none" style="max-height: 200px; object-fit: cover;">
+                        </div>
+                    </div>
+                    <div class="col-md-8 p-4 p-md-5 bg-white">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h3 class="fw-bold text-dark mb-0" id="previewName">Product Name</h3>
+                            <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill" id="previewCategory">Category</span>
+                        </div>
+                        <p class="text-muted small mb-4"><i class="bi bi-upc-scan me-1"></i> <span id="previewBarcode">123456789</span></p>
+                        
+                        <div class="mb-4">
+                            <h6 class="text-uppercase text-muted fw-bold small mb-2" style="letter-spacing: 0.5px;">Description</h6>
+                            <p class="text-dark" id="previewDesc">Product description goes here.</p>
+                        </div>
+                        
+                        <div class="row g-4 bg-light rounded-3 p-3 mb-4">
+                            <div class="col-6">
+                                <div class="text-muted small fw-semibold mb-1">Selling Price</div>
+                                <div class="h4 fw-bold text-dark mb-0" id="previewPrice">₦0.00</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small fw-semibold mb-1">Cost Price</div>
+                                <div class="h5 fw-semibold text-muted mb-0" id="previewCost">₦0.00</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-4">
+                            <div class="col-6">
+                                <div class="card border-0 bg-success-subtle rounded-3 p-3">
+                                    <div class="text-success small fw-bold text-uppercase mb-1">Current Stock</div>
+                                    <div class="h3 fw-bold text-success mb-0" id="previewStock">0</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card border-0 bg-warning-subtle rounded-3 p-3">
+                                    <div class="text-warning small fw-bold text-uppercase mb-1">Reorder Level</div>
+                                    <div class="h4 fw-semibold text-warning mb-0" id="previewReorder">0</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-top-0 d-flex justify-content-end p-3">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-elevate { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .hover-elevate:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.08)!important; }
+    .custom-table tbody tr { transition: background-color 0.2s ease; }
+    .custom-table tbody tr:hover { background-color: rgba(13, 110, 253, 0.02); }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const previewButtons = document.querySelectorAll('.preview-btn');
+    const modal = new bootstrap.Modal(document.getElementById('productPreviewModal'));
+    
+    previewButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const tr = this.closest('tr');
+            
+            document.getElementById('previewName').innerText = tr.dataset.name;
+            document.getElementById('previewBarcode').innerText = tr.dataset.barcode;
+            document.getElementById('previewCategory').innerText = tr.dataset.cat;
+            document.getElementById('previewDesc').innerText = tr.dataset.desc;
+            document.getElementById('previewPrice').innerText = tr.dataset.price;
+            document.getElementById('previewCost').innerText = tr.dataset.cost;
+            document.getElementById('previewStock').innerText = tr.dataset.stock;
+            document.getElementById('previewReorder').innerText = tr.dataset.reorder;
+            
+            modal.show();
+        });
+    });
+});
+</script>
+{% endblock %}

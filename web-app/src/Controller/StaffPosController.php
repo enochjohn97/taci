@@ -30,20 +30,26 @@ class StaffPosController extends AbstractController
         private string $paystackSecretKey,
     ) {}
 
-    #[Route('/pos', name: 'staff_reception')]
+    #[Route('/pos', name: 'staff_pos_redirect')]
+    public function posRedirect(): Response
+    {
+        return $this->redirectToRoute('staff_reception', [], Response::HTTP_MOVED_PERMANENTLY);
+    }
+
+    #[Route('/reception', name: 'staff_reception')]
     public function pos(Request $request): Response
     {
         $search = trim((string) $request->query->get('q', ''));
         $products = $this->searchProducts($search);
 
-        return $this->render('pos/staff_reception.html.twig', [
+        return $this->render('reception/staff_reception.html.twig', [
             'products' => $products,
             'paystack_public_key' => $this->paystackPublicKey,
             'initial_search' => $search,
         ]);
     }
 
-    #[Route('/pos/products', name: 'staff_reception_products', methods: ['GET'])]
+    #[Route('/reception/products', name: 'staff_reception_products', methods: ['GET'])]
     public function products(Request $request): JsonResponse
     {
         $search = trim((string) $request->query->get('q', ''));
@@ -62,7 +68,7 @@ class StaffPosController extends AbstractController
         return $this->json($payload);
     }
 
-    #[Route('/pos/checkout/initialize', name: 'staff_reception_checkout_initialize', methods: ['POST'])]
+    #[Route('/reception/checkout/initialize', name: 'staff_reception_checkout_initialize', methods: ['POST'])]
     public function initializeCheckout(Request $request): JsonResponse
     {
         $data = json_decode((string) $request->getContent(), true);
@@ -180,7 +186,7 @@ class StaffPosController extends AbstractController
         ]);
     }
 
-    #[Route('/pos/checkout/verify/{reference}', name: 'staff_reception_checkout_verify', methods: ['POST'])]
+    #[Route('/reception/checkout/verify/{reference}', name: 'staff_reception_checkout_verify', methods: ['POST'])]
     public function verifyCheckout(string $reference): JsonResponse
     {
         /** @var \App\Entity\User $staff */

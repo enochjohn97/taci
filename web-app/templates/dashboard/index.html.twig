@@ -9,7 +9,6 @@
     {% elseif view_mode starts with 'memo' %}Memos
     {% elseif view_mode starts with 'pos' %}POS
     {% elseif view_mode starts with 'reports' %}Reports
-    {% elseif view_mode starts with 'loyalty' or view_mode starts with 'engagement' %}Customer Rewards
     {% elseif view_mode starts with 'notifications' %}Notifications
     {% elseif view_mode starts with 'dashboard' %}Overview Dashboard
     {% else %}Dashboard
@@ -28,7 +27,6 @@
                     {% elseif view_mode starts with 'memo' %}<i class="bi bi-envelope-paper me-2"></i>Internal Memos
                     {% elseif view_mode starts with 'pos' %}<i class="bi bi-cart4 me-2"></i>Point of Sale
                     {% elseif view_mode starts with 'reports' %}<i class="bi bi-graph-up me-2"></i>Business Intelligence
-                    {% elseif view_mode starts with 'loyalty' or view_mode starts with 'engagement' %}<i class="bi bi-gem me-2"></i>Customer Rewards Hub
                     {% elseif view_mode starts with 'notifications' %}<i class="bi bi-bell me-2"></i>Notifications
                     {% else %}<i class="bi bi-grid me-2"></i>System Module
                     {% endif %}
@@ -63,7 +61,7 @@
                         </div>
                         <span class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> 0%</span>
                     </div>
-                    <div class="kpi-value" data-counter="{{ total_sales_amount|default(960000)|round }}" id="kpiRevenue">₦0</div>
+                    <div class="kpi-value" data-counter="{{ total_sales_amount|default(0)|round }}" id="kpiRevenue">₦0</div>
                     <div class="kpi-label mt-1">Total Fuel Revenue (Today)</div>
                     <div class="sparkline-wrap"><canvas id="sparkRevenue"></canvas></div>
                     <div class="kpi-strip" style="background: linear-gradient(90deg,#0D9488,#38bdf8);"></div>
@@ -84,25 +82,21 @@
                     <div class="kpi-strip" style="background: linear-gradient(90deg,#F5A623,#fcd34d);"></div>
                 </div>
             </div>
-            {# Card 3: Active Nozzles #}
+            {# Card 3: Memos#}
             <div class="col-sm-6 col-xl-3">
                 <div class="card kpi-card p-4">
                     <div class="d-flex align-items-start justify-content-between mb-3">
-                        <div class="kpi-icon" style="background:rgba(59,130,246,0.1); color:var(--fuel-regular);">
-                            <i class="fa-solid fa-plug"></i>
+                        <div class="kpi-icon" style="background:rgba(239,68,68,0.1); color:var(--color-);">
+                            <i class="fa-solid fa-memo"></i>
                         </div>
-                        <span class="kpi-change up">4 fueling</span>
+                        <span class="kpi-change down"><i class="fa-solid fa-arrow-trend-down"></i> 0%</span>
                     </div>
-                    <div class="kpi-value">0<span style="font-size:1rem;font-weight:500;color:var(--text-muted);">/0</span></div>
-                    <div class="kpi-label mt-1">Active Nozzles</div>
-                    <div class="d-flex gap-1 mt-2 flex-wrap">
-                        {% for pump in pump_statuses|default([]) %}
-                            <span style="width:10px;height:10px;border-radius:50%;background:{% if pump.status=='fueling' %}var(--color-success){% elseif pump.status=='blocked' %}var(--color-danger){% else %}var(--border-color){% endif %};display:inline-block;" title="{{ pump.id }}: {{ pump.status }}"></span>
-                        {% endfor %}
-                    </div>
-                    <div class="kpi-strip" style="background: linear-gradient(90deg,#3B82F6,#818cf8);"></div>
+                    <div class="kpi-value" data-counter="{{ total_memos|default(0) }}" id="kpiTx">0</div>
+                    <div class="kpi-label mt-1">Memos</div>
+                    <div class="kpi-strip" style="background: linear-gradient(90deg,#ef4444,#f87171);"></div>
                 </div>
             </div>
+        
             {# Card 4: Digital Transactions #}
             <div class="col-sm-6 col-xl-3">
                 <div class="card kpi-card p-4">
@@ -533,7 +527,7 @@
                         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                             <div>
                                 <div style="font-weight:700;">{{ del.supplier|default('N/A') }}</div>
-                                <div style="font-size:0.82rem;color:var(--text-muted);">{{ del.liters|default(8000)|number_format(0) }} L — {{ del.fuel_type|default('Diesel') }}</div>
+                                <div style="font-size:0.82rem;color:var(--text-muted);">{{ del.liters|default(0)|number_format(0) }} L — {{ del.fuel_type|default('Diesel') }}</div>
                             </div>
                             <div class="text-end">
                                 <div style="font-size:0.72rem;color:var(--text-muted);">ETA</div>

@@ -45,12 +45,6 @@
     {# ── RIGHT: actions ── #}
     <div class="nb-right">
 
-        {# Fuel price index badge #}
-        <div class="nb-fuel-badge" title="Current blended fuel price index">
-            <i class="fa-solid fa-gas-pump"></i>
-            <span id="nb-fuel-price">₦755<small>/L</small></span>
-        </div>
-
         {# Role badge #}
         <div class="nb-role-badge" id="nb-role-pill">{{ navRoleLabel }}</div>
 
@@ -67,14 +61,25 @@
         {% endif %}
 
         {# Notification bell #}
-        <a class="nb-icon-btn nb-bell" href="{{ path('app_notifications') }}" aria-label="Notifications" title="Notifications">
-            <i class="fa-solid fa-bell"></i>
-            <span id="nav-notification-badge-container">
-                {% if unread_notifications_count is defined and unread_notifications_count > 0 %}
-                    <span class="nb-badge">{{ unread_notifications_count > 99 ? '99+' : unread_notifications_count }}</span>
-                {% endif %}
-            </span>
-        </a>
+        <div class="nb-profile dropdown">
+            <button class="nb-icon-btn nb-bell dropdown-toggle" id="nb-notif-menu" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications" title="Notifications" style="background:transparent; border:1px solid var(--border-color);">
+                <i class="fa-solid fa-bell"></i>
+                <span id="nav-notification-badge-container">
+                    {% if unread_notifications_count is defined and unread_notifications_count > 0 %}
+                        <span class="nb-badge">{{ unread_notifications_count > 99 ? '99+' : unread_notifications_count }}</span>
+                    {% endif %}
+                </span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end nb-dropdown shadow-lg" aria-labelledby="nb-notif-menu" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                <li class="nb-dd-header border-bottom d-flex justify-content-between align-items-center p-3">
+                    <div class="fw-700">Notifications</div>
+                    <a href="{{ path('app_notifications') }}" class="text-decoration-none small" style="font-size:0.75rem;">View all</a>
+                </li>
+                <div id="notification-list-container">
+                    <li class="p-3 text-center text-muted small"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</li>
+                </div>
+            </ul>
+        </div>
 
         {# Profile dropdown #}
         <div class="nb-profile dropdown">
@@ -437,5 +442,34 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         })
         .catch(() => {}); // silent fail
+
+    // ── Notification Dropdown Fetch ──
+    const notifBtn = document.getElementById('nb-notif-menu');
+    if (notifBtn) {
+        notifBtn.addEventListener('show.bs.dropdown', function () {
+            const container = document.getElementById('notification-list-container');
+            container.innerHTML = '<li class="p-3 text-center text-muted small"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</li>';
+            
+            fetch('{{ path("app_notifications_list") }}')
+                .then(res => res.json())
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        container.innerHTML = '<li class="p-4 text-center text-muted small"><i class="fa-regular fa-bell-slash fs-4 mb-2 d-block"></i> No notifications yet.</li>';
+                        return;
+                    }
+                    container.innerHTML = data.map(n => `
+                        <li>
+                            <a class="dropdown-item nb-dd-item ${!n.isRead ? 'fw-bold bg-light' : ''}" href="${n.link || '#'}" style="white-space: normal; line-height: 1.4;">
+                                <div class="small">${n.message}</div>
+                                <div class="text-muted mt-1" style="font-size:0.7rem;">${n.createdAt}</div>
+                            </a>
+                        </li>
+                    `).join('');
+                })
+                .catch(() => {
+                    container.innerHTML = '<li class="p-3 text-center text-danger small">Failed to load notifications.</li>';
+                });
+        });
+    }
 });
 </script>

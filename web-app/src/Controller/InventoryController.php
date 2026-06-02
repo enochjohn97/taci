@@ -32,8 +32,7 @@ class InventoryController extends AbstractController
         ));
 
         $suppliers = $this->em->getRepository(\App\Entity\Supplier::class)->findAll();
-        return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'inventory_dashboard',
+        return $this->render('inventory/dashboard.html.twig', [
             'total_products' => count($products),
             'low_stock_count' => count($lowStockProducts),
             'total_stock_value' => $totalStockValue,
@@ -69,8 +68,7 @@ class InventoryController extends AbstractController
         $products = $qb->orderBy('p.' . $sortBy, $sortDir)->getQuery()->getResult();
 
         $suppliers = $this->em->getRepository(\App\Entity\Supplier::class)->findAll();
-        return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'inventory_products',
+        return $this->render('inventory/products.html.twig', [
             'products' => $products,
             'search' => $search,
             'category' => $category,
@@ -83,6 +81,8 @@ class InventoryController extends AbstractController
     #[Route('/product/new', name: 'app_inventory_product_new', methods: ['GET', 'POST'])]
     public function newProduct(Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_MANAGER');
+
         if ($request->isMethod('POST')) {
             $data = $request->request->all();
             
@@ -143,8 +143,7 @@ class InventoryController extends AbstractController
         }
 
         $suppliers = $this->em->getRepository(\App\Entity\Supplier::class)->findAll();
-        return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'inventory_product_form',
+        return $this->render('inventory/product_form.html.twig', [
             'edit' => false,
             'suppliers' => $suppliers,
         ]);
@@ -153,6 +152,8 @@ class InventoryController extends AbstractController
     #[Route('/product/{id}/edit', name: 'app_inventory_product_edit', methods: ['GET', 'POST'])]
     public function editProduct(Product $product, Request $request): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_MANAGER');
+
         if ($request->isMethod('POST')) {
             $data = $request->request->all();
 
@@ -205,8 +206,7 @@ class InventoryController extends AbstractController
         }
 
         $suppliers = $this->em->getRepository(\App\Entity\Supplier::class)->findAll();
-        return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'inventory_product_form',
+        return $this->render('inventory/product_form.html.twig', [
             'product' => $product,
             'edit' => true,
             'suppliers' => $suppliers,
@@ -228,6 +228,8 @@ class InventoryController extends AbstractController
     #[Route('/product/{id}/adjust', name: 'app_inventory_adjust', methods: ['POST'])]
     public function adjustStock(Product $product, Request $request): JsonResponse
     {
+        $this->denyAccessUnlessGranted('ROLE_MANAGER');
+
         $data = json_decode($request->getContent(), true);
         $quantity = (int) $data['quantity'];
         $notes = $data['notes'] ?? null;

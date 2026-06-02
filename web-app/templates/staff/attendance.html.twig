@@ -1,0 +1,128 @@
+{# templates/staff/attendance.html.twig #}
+{% extends "base.html.twig" %}
+
+{% block title %}Attendance Log – {{ app_name|default('TACI') }}{% endblock %}
+
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title mt-4">
+                    <i class="bi bi-clock-history me-2"></i>Attendance Log
+                </h2>
+            </div>
+            <div class="col-auto ms-auto d-print-none mt-4">
+                <div class="btn-list">
+                    <a href="#" class="btn btn-primary d-none d-sm-inline-block">
+                        <i class="bi bi-file-earmark-arrow-down me-1"></i> Export Report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-wrapper mt-4">
+    <div class="container-xl">
+        
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm border-0">
+                    <div class="d-flex align-items-center">
+                        <div class="subheader">Present Today</div>
+                    </div>
+                    <div class="h1 mb-0 text-success">0 / 0</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm border-0">
+                    <div class="d-flex align-items-center">
+                        <div class="subheader">Late Arrivals</div>
+                    </div>
+                    <div class="h1 mb-0 text-warning">0</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm border-0">
+                    <div class="d-flex align-items-center">
+                        <div class="subheader">Absent</div>
+                    </div>
+                    <div class="h1 mb-0 text-danger">0</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm border-0">
+                    <div class="d-flex align-items-center">
+                        <div class="subheader">Avg. Weekly Hours</div>
+                    </div>
+                    <div class="h1 mb-0 text-primary">0 hrs</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Daily Attendance Log</h5>
+                <div class="d-flex gap-2">
+                    <input type="date" class="form-control form-control-sm" value="{{ "now"|date("Y-m-d") }}">
+                    <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-funnel me-1"></i> Filter</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Staff Member</th>
+                            <th>Date</th>
+                            <th>Clock In</th>
+                            <th>Clock Out</th>
+                            <th>Total Hours</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in attendance_records|default([]) %}
+                        <tr>
+                            <td>
+                                <div class="d-flex py-1 align-items-center">
+                                    <span class="avatar avatar-sm me-2 rounded-circle">ST</span>
+                                    <div class="font-weight-medium">{{ record.staff }}</div>
+                                </div>
+                            </td>
+                            <td class="text-muted">{{ record.date }}</td>
+                            <td><strong>{{ record.clock_in }}</strong></td>
+                            <td class="text-muted">{{ record.clock_out }}</td>
+                            <td>{{ record.hours }}</td>
+                            <td>
+                                {% if record.status == 'On Time' %}
+                                    <span class="badge bg-success-lt">On Time</span>
+                                {% elseif record.status == 'Late' %}
+                                    <span class="badge bg-warning-lt">Late</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-lt">{{ record.status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No attendance records found for this date.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer d-flex align-items-center">
+                <ul class="pagination m-0 ms-auto">
+                    <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true">prev</a></li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">next</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

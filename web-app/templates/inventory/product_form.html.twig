@@ -1,0 +1,166 @@
+{# templates/inventory/product_form.html.twig #}
+{% extends "base.html.twig" %}
+
+{% block title %}{{ edit ? 'Edit' : 'Add' }} Product – Inventory – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header d-print-none mb-4">
+    <div class="container-xl">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="mb-1">
+                    <ol class="breadcrumb" aria-label="breadcrumbs">
+                        <li class="breadcrumb-item"><a href="{{ path('app_inventory_dashboard') }}">Inventory</a></li>
+                        <li class="breadcrumb-item"><a href="{{ path('app_inventory_products') }}">Products</a></li>
+                        <li class="breadcrumb-item active" aria-current="page"><a href="#">{{ edit ? 'Edit' : 'New' }}</a></li>
+                    </ol>
+                </div>
+                <h2 class="page-title text-primary fw-bold">
+                    <i class="bi {{ edit ? 'bi-pencil-square' : 'bi-plus-circle' }} me-2"></i> 
+                    {{ edit ? 'Edit Product' : 'Add New Product' }}
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-wrapper">
+    <div class="container-xl">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <form method="POST" enctype="multipart/form-data" class="card shadow-sm border-0" style="border-radius: 16px; overflow: hidden;">
+                    <div class="card-header bg-white border-bottom pt-4 pb-3 px-4">
+                        <h4 class="card-title mb-0 fw-bold">Product Information</h4>
+                    </div>
+                    <div class="card-body p-4 p-md-5">
+                        
+                        {# Display flash messages #}
+                        {% for message in app.flashes('error') %}
+                            <div class="alert alert-danger alert-dismissible" role="alert">
+                                <div class="d-flex">
+                                    <div><i class="bi bi-exclamation-triangle me-2"></i></div>
+                                    <div>{{ message }}</div>
+                                </div>
+                                <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
+                            </div>
+                        {% endfor %}
+
+                        <div class="row g-4">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-dark">Product Name <span class="text-danger">*</span></label>
+                                    <input type="text" name="name" class="form-control form-control-lg bg-light" value="{{ product.name|default('') }}" required placeholder="e.g. Engine Oil 5W-40">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-dark">Barcode <span class="text-danger">*</span></label>
+                                    <input type="text" name="barcode" class="form-control form-control-lg bg-light" value="{{ product.barcode|default('') }}" required placeholder="Scan or enter code">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-dark">Category <span class="text-danger">*</span></label>
+                                    <select name="category" class="form-select form-select-lg bg-light" required>
+                                        <option value="">Select a category</option>
+                                        <option value="Lubricants" {{ (product.category|default('')) == 'Lubricants' ? 'selected' : '' }}>Lubricants</option>
+                                        <option value="Accessories" {{ (product.category|default('')) == 'Accessories' ? 'selected' : '' }}>Accessories</option>
+                                        <option value="Spares" {{ (product.category|default('')) == 'Spares' ? 'selected' : '' }}>Spares</option>
+                                        <option value="Consumables" {{ (product.category|default('')) == 'Consumables' ? 'selected' : '' }}>Consumables</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-dark">Supplier</label>
+                                    <select name="supplier_id" class="form-select form-select-lg bg-light">
+                                        <option value="">None</option>
+                                        {% for sup in suppliers|default([]) %}
+                                            <option value="{{ sup.id }}">{{ sup.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-dark">Description</label>
+                                    <textarea name="description" class="form-control bg-light" rows="3" placeholder="Brief description of the product...">{{ product.description|default('') }}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="col-12 mt-4">
+                                <h5 class="fw-bold mb-3 border-bottom pb-2">Pricing & Stock</h5>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-dark">Selling Price (₦) <span class="text-danger">*</span></label>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text bg-light border-end-0">₦</span>
+                                        <input type="number" step="0.01" name="unitPrice" class="form-control bg-light border-start-0" value="{{ product.unitPrice|default('') }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-dark">Cost Price (₦)</label>
+                                    <div class="input-group input-group-lg">
+                                        <span class="input-group-text bg-light border-end-0">₦</span>
+                                        <input type="number" step="0.01" name="costPrice" class="form-control bg-light border-start-0" value="{{ product.costPrice|default('') }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if not edit %}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-dark">Initial Stock Quantity <span class="text-danger">*</span></label>
+                                    <input type="number" name="stockQuantity" class="form-control form-control-lg bg-light" value="{{ product.stockQuantity|default('0') }}" required>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="col-md-{{ edit ? '12' : '6' }}">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold text-dark">Reorder Level <span class="text-danger">*</span></label>
+                                    <input type="number" name="reorderLevel" class="form-control form-control-lg bg-light" value="{{ product.reorderLevel|default('5') }}" required>
+                                    <div class="form-hint mt-1 small text-muted">Get alerted when stock falls below this level.</div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12 mt-4">
+                                <h5 class="fw-bold mb-3 border-bottom pb-2">Product Image</h5>
+                                <div class="mb-3">
+                                    <input type="file" name="image" class="form-control form-control-lg bg-light" accept="image/jpeg,image/png,image/webp">
+                                    <div class="form-hint mt-1 small text-muted">Max size: 5MB. Formats: JPG, PNG, WEBP.</div>
+                                </div>
+                                {% if edit and product.imagePath %}
+                                    <div class="mt-2">
+                                        <img src="{{ asset(product.imagePath) }}" class="img-thumbnail rounded" style="max-height: 100px;" alt="Current product image">
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                        </div>
+                    </div>
+                    <div class="card-footer bg-light border-top-0 d-flex justify-content-end p-4">
+                        <a href="{{ path('app_inventory_products') }}" class="btn btn-link text-muted me-3">Cancel</a>
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm hover-elevate">
+                            <i class="bi bi-check2 me-2"></i> {{ edit ? 'Save Changes' : 'Create Product' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-elevate { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .hover-elevate:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.08)!important; }
+</style>
+{% endblock %}

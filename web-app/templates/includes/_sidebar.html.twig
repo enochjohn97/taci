@@ -1,1 +1,538 @@
-{% include 'includes/sidebar.html.twig' %}
+{# templates/includes/_sidebar.html.twig — Collapsible role-colored sidebar #}
+
+{# ── Determine role label ── #}
+{% set roleLabel = 'User' %}
+{% set roleClass = '' %}
+{% if is_granted('ROLE_SUPER_ADMIN') %}
+    {% set roleLabel = 'Super Admin' %}
+    {% set roleClass = 'role-super-admin' %}
+{% elseif is_granted('ROLE_SUB_ADMIN') %}
+    {% set roleLabel = 'Sub-Admin' %}
+    {% set roleClass = 'role-sub-admin' %}
+{% elseif is_granted('ROLE_MANAGER') %}
+    {% set roleLabel = 'Manager' %}
+    {% set roleClass = 'role-manager' %}
+{% elseif is_granted('ROLE_STAFF') %}
+    {% set roleLabel = 'Staff' %}
+    {% set roleClass = 'role-staff' %}
+{% endif %}
+
+<nav id="app-sidebar" class="app-sidebar" aria-label="Main navigation">
+
+    {# ── Logo / Brand ── #}
+    <div class="sb-header">
+        <div class="sb-logo">
+            <i class="fa-solid fa-gas-pump sb-logo-icon"></i>
+            <span class="sb-label sb-brand-name">{{ app_name }}</span>
+        </div>
+        <div class="sb-role-badge sb-label">{{ roleLabel }}</div>
+    </div>
+
+    {# ── Nav items ── #}
+    <ul class="sb-nav" role="list">
+
+        {# Overview — all roles #}
+        <li class="sb-item">
+            <a class="sb-link {% if app.request.get('_route') starts with 'app_dashboard' %}active{% endif %}"
+               href="{{ path('app_dashboard') }}"
+               data-tooltip="Overview">
+                <i class="fa-solid fa-gauge-high sb-icon"></i>
+                <span class="sb-label">Overview</span>
+            </a>
+        </li>
+
+        {# Fuel Management — Super Admin & Sub-Admin #}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') %}
+        {% set fuelOpen = app.request.get('_route') starts with 'app_fuel' %}
+        <li class="sb-item sb-has-sub">
+            <button type="button" class="sb-link sb-toggle {% if fuelOpen %}active{% endif %}" data-bs-toggle="collapse" data-bs-target="#fuelMenu" aria-expanded="{{ fuelOpen ? 'true' : 'false' }}" aria-controls="fuelMenu" data-tooltip="Fuel">
+                <i class="fa-solid fa-droplet sb-icon"></i>
+                <span class="sb-label">Fuel Management</span>
+                <i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
+            </button>
+            <ul class="sb-sub collapse {% if fuelOpen %}show{% endif %}" id="fuelMenu">
+                <li><a class="sb-sub-link" href="{{ path('app_fuel_dashboard') }}">Dashboard</a></li>
+                <li><a class="sb-sub-link" href="{{ path('app_fuel_entry_new') }}">Log Entry</a></li>
+                <li><a class="sb-sub-link" href="{{ path('app_fuel_price_history') }}">Price History</a></li>
+            </ul>
+        </li>
+        {% endif %}
+
+        {# Staff Management — Super Admin, Sub-Admin & Manager #}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') %}
+        {% set staffOpen = app.request.get('_route') starts with 'app_staff' %}
+        <li class="sb-item sb-has-sub">
+            <button type="button" class="sb-link sb-toggle {% if staffOpen %}active{% endif %}" data-bs-toggle="collapse" data-bs-target="#staffMenu" aria-expanded="{{ staffOpen ? 'true' : 'false' }}" aria-controls="staffMenu" data-tooltip="Staff">
+                <i class="fa-solid fa-users sb-icon"></i>
+                <span class="sb-label">Staff Management</span>
+                <i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
+            </button>
+            <ul class="sb-sub collapse {% if staffOpen %}show{% endif %}" id="staffMenu">
+                <li><a class="sb-sub-link" href="{{ path('app_staff_dashboard') }}">Dashboard</a></li>
+                <li><a class="sb-sub-link" href="{{ path('app_staff_directory') }}">Staffs</a></li>
+                <li><a class="sb-sub-link" href="{{ path('app_staff_shifts') }}">Shifts &amp; Roster</a></li>
+                <li><a class="sb-sub-link" href="{{ path('app_staff_leave_requests') }}">Leave Requests</a></li>
+                {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') %}
+                    <li><a class="sb-sub-link" href="{{ path('app_staff_attendance') }}">Attendance Log</a></li>
+                    <li><a class="sb-sub-link" href="{{ path('app_staff_payroll') }}">Payroll Summary</a></li>
+                {% endif %}
+            </ul>
+        </li>
+        {% endif %}
+
+        {# Inventory — all roles #}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF') %}
+        {% set inventoryOpen = app.request.get('_route') starts with 'app_inventory' %}
+        <li class="sb-item sb-has-sub">
+            <button type="button" class="sb-link sb-toggle {% if inventoryOpen %}active{% endif %}" data-bs-toggle="collapse" data-bs-target="#inventoryMenu" aria-expanded="{{ inventoryOpen ? 'true' : 'false' }}" aria-controls="inventoryMenu" data-tooltip="Inventory">
+                <i class="fa-solid fa-boxes-stacked sb-icon"></i>
+                <span class="sb-label">Inventory</span>
+                <i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
+            </button>
+            <ul class="sb-sub collapse {% if inventoryOpen %}show{% endif %}" id="inventoryMenu">
+                <li><a class="sb-sub-link" href="{{ path('app_inventory_dashboard') }}">Dashboard</a></li>
+                <li><a class="sb-sub-link" href="{{ path('app_inventory_products') }}">Products</a></li>
+                {% if not is_granted('ROLE_STAFF') %}
+                    <li><a class="sb-sub-link" href="{{ path('app_inventory_alerts') }}">Low Stock Alerts</a></li>
+                    <li><a class="sb-sub-link" href="{{ path('app_inventory_audit') }}">Audit Trail</a></li>
+                    <li><a class="sb-sub-link" href="{{ path('inventory_suppliers_list') }}">Suppliers</a></li>           
+                {% endif %}
+            </ul>
+        </li>
+        {% endif %}
+
+        {# Store Sales / POS — all roles #}
+        {% set posOpen = app.request.get('_route') starts with 'app_pos' or app.request.get('_route') == 'staff_reception' %}
+        <li class="sb-item sb-has-sub">
+            <button type="button" class="sb-link sb-toggle {% if posOpen %}active{% endif %}" data-bs-toggle="collapse" data-bs-target="#posMenu" aria-expanded="{{ posOpen ? 'true' : 'false' }}" aria-controls="posMenu" data-tooltip="Sales">
+                <i class="fa-solid fa-cash-register sb-icon"></i>
+                <span class="sb-label">Store Sales</span>
+                <i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
+            </button>
+            <ul class="sb-sub collapse {% if posOpen %}show{% endif %}" id="posMenu">
+                <li><a class="sb-sub-link" href="{{ path('app_pos_dashboard') }}">Dashboard</a></li>
+                <li><a class="sb-sub-link" href="{{ path('staff_reception') }}">Sales Screen</a></li>
+                <li><a class="sb-sub-link" href="{{ path('app_pos_daily_summary') }}">Daily Summary</a></li>
+            </ul>
+        </li>
+
+        {# Memos — all roles #}
+        {% set memosOpen = app.request.get('_route') starts with 'app_memo' %}
+        <li class="sb-item sb-has-sub">
+            <button type="button" class="sb-link sb-toggle {% if memosOpen %}active{% endif %}" data-bs-toggle="collapse" data-bs-target="#memosMenu" aria-expanded="{{ memosOpen ? 'true' : 'false' }}" aria-controls="memosMenu" data-tooltip="Memos">
+                <i class="fa-solid fa-envelope sb-icon"></i>
+                <span class="sb-label">Memos</span>
+                <i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
+            </button>
+            <ul class="sb-sub collapse {% if memosOpen %}show{% endif %}" id="memosMenu">
+                <li><a class="sb-sub-link" href="{{ path('app_memo_dashboard') }}">Dashboard</a></li>
+                <li><a class="sb-sub-link" href="{{ path('app_memo_new') }}">New Memo</a></li>
+            </ul>
+        </li>
+
+        {# Reports — Super Admin & Sub-Admin #}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') %}
+        {% set reportsOpen = app.request.get('_route') starts with 'app_reports' %}
+        <li class="sb-item sb-has-sub">
+            <button type="button" class="sb-link sb-toggle {% if reportsOpen %}active{% endif %}" data-bs-toggle="collapse" data-bs-target="#reportsMenu" aria-expanded="{{ reportsOpen ? 'true' : 'false' }}" aria-controls="reportsMenu" data-tooltip="Reports">
+                <i class="fa-solid fa-chart-line sb-icon"></i>
+                <span class="sb-label">Reports</span>
+                <i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
+            </button>
+            <ul class="sb-sub collapse {% if reportsOpen %}show{% endif %}" id="reportsMenu">
+                <li><a class="sb-sub-link" href="{{ path('app_reports_dashboard') }}">Dashboard</a></li>
+                <li><a class="sb-sub-link" href="{{ path('app_reports_sales') }}">Sales</a></li>
+                <li><a class="sb-sub-link" href="{{ path('app_reports_inventory') }}">Inventory</a></li>
+                <li><a class="sb-sub-link" href="{{ path('app_reports_profit_loss') }}">Profit / Loss</a></li>
+            </ul>
+        </li>
+        {% endif %}
+
+        {# Tracking — Super Admin & Sub-Admin #}
+        {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') %}
+        <li class="sb-item">
+            <a class="sb-link {% if app.request.get('_route') starts with 'app_tracking' %}active{% endif %}"
+               href="{{ path('app_tracking') }}"
+               data-tooltip="Tracking">
+                <i class="fa-solid fa-location-dot sb-icon"></i>
+                <span class="sb-label">Tracking</span>
+            </a>
+        </li>
+        {% endif %}
+
+    </ul>{# end sb-nav #}
+
+    {# ── Bottom: toggle button ── #}
+    <button id="sb-toggle-btn" class="sb-toggle-btn" aria-label="Toggle sidebar" title="Toggle sidebar (Alt+S)">
+        <i class="fa-solid fa-bars" id="sb-toggle-icon"></i>
+    </button>
+
+</nav>{# end #app-sidebar #}
+
+<style>
+/* ============================================================
+   SIDEBAR COMPONENT STYLES
+   ============================================================ */
+
+.app-sidebar {
+    background: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 80px; /* room for toggle button */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+
+/* ── Header ── */
+.sb-header {
+    padding: 1.5rem 1.25rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+}
+
+body.role-sub-admin .sb-header {
+    border-bottom-color: rgba(10,25,47,0.12);
+}
+
+.sb-logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.sb-logo-icon {
+    font-size: 1.5rem;
+    color: var(--sidebar-accent);
+    flex-shrink: 0;
+    width: 32px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.sb-brand-name {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--sidebar-active-text);
+    letter-spacing: -0.02em;
+}
+
+.sb-role-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 3px 10px;
+    border-radius: 99px;
+    background: var(--sidebar-active-bg);
+    color: var(--sidebar-accent);
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* ── Nav list ── */
+.sb-nav {
+    list-style: none;
+    margin: 0.75rem 0 0;
+    padding: 0 0.75rem;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* ── Nav item ── */
+.sb-item { margin-bottom: 2px; }
+
+.sb-link {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    border-radius: 0.65rem;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--sidebar-text);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease;
+    position: relative;
+    white-space: nowrap;
+    text-align: left;
+    overflow: hidden;
+}
+
+.sb-link:hover {
+    background: var(--sidebar-active-bg);
+    color: var(--sidebar-active-text);
+}
+
+.sb-link.active, .sb-link[aria-expanded="true"] {
+    background: var(--sidebar-active-bg);
+    color: var(--sidebar-active-text);
+    font-weight: 600;
+}
+
+.sb-link.active::before, .sb-link[aria-expanded="true"]::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 20%; bottom: 20%;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--sidebar-accent);
+}
+
+/* ── Icon ── */
+.sb-icon {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+    flex-shrink: 0;
+    color: var(--sidebar-accent);
+    transition: transform 0.2s ease;
+}
+
+.sb-link:hover .sb-icon,
+.sb-link.active .sb-icon, .sb-link[aria-expanded="true"] .sb-icon { transform: scale(1.15); }
+
+/* ── Label (fades on collapse) ── */
+.sb-label {
+    opacity: 1;
+    transition: opacity 0.2s ease, transform 0.2s ease, max-width 0.3s ease;
+    max-width: 200px;
+    overflow: hidden;
+    transform: scale(1);
+}
+
+/* ── Chevron ── */
+.sb-chevron {
+    margin-left: auto;
+    font-size: 0.7rem;
+    transition: transform 0.25s ease, opacity 0.2s ease;
+}
+
+.sb-toggle[aria-expanded="true"] .sb-chevron { transform: rotate(180deg); }
+
+/* ── Sub-menu ── */
+.sb-sub {
+    list-style: none;
+    padding: 0 0 0 2.75rem;
+    margin: 0;
+}
+
+.sb-sub.collapse:not(.show) {
+    display: none;
+}
+
+.sb-sub.collapsing {
+    height: 0;
+    overflow: hidden;
+    transition: height 0.35s ease;
+}
+
+.sb-sub.collapse.show {
+    display: block;
+    padding: 0.25rem 0 0.35rem 2.75rem;
+}
+
+.sb-sub-link {
+    display: block;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.82rem;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    border-radius: 0.5rem;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.sb-sub-link:hover {
+    background: var(--sidebar-active-bg);
+    color: var(--sidebar-active-text);
+}
+
+/* ── Toggle button ── */
+.sb-toggle-btn {
+    position: absolute;
+    bottom: 1.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--sidebar-active-bg);
+    color: var(--sidebar-active-text);
+    border: 1.5px solid rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.18s, left 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+body.role-sub-admin .sb-toggle-btn {
+    border-color: rgba(10,25,47,0.2);
+}
+
+.sb-toggle-btn:hover {
+    background: var(--sidebar-accent);
+    color: #fff;
+    transform: translateX(-50%) scale(1.08);
+}
+
+/* ============================================================
+   COLLAPSED STATE
+   ============================================================ */
+.app-sidebar.collapsed .sb-label {
+    opacity: 0;
+    max-width: 0;
+    transform: scale(0.85);
+    pointer-events: none;
+}
+
+.app-sidebar.collapsed .sb-role-badge {
+    opacity: 0;
+    max-width: 0;
+    pointer-events: none;
+}
+
+.app-sidebar.collapsed .sb-sub { display: none !important; }
+.app-sidebar.collapsed .sb-link { justify-content: center; gap: 0; padding: 0.65rem; }
+.app-sidebar.collapsed .sb-logo { justify-content: center; }
+.app-sidebar.collapsed .sb-nav  { padding: 0 0.5rem; }
+
+/* ── Collapsed tooltips ── */
+.app-sidebar.collapsed .sb-link[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: #1e293b;
+    color: #f1f5f9;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 9999;
+}
+
+.app-sidebar.collapsed .sb-link[data-tooltip]:hover::before {
+    content: '';
+    position: absolute;
+    left: calc(100% + 6px);
+    top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent;
+    border-right-color: #1e293b;
+    z-index: 9999;
+}
+
+/* ── Logo icon spin on collapse ── */
+.app-sidebar.collapsed .sb-logo-icon { transform: rotate(15deg) scale(1.1); }
+
+/* ============================================================
+   MOBILE (sidebar as overlay)
+   ============================================================ */
+@media (max-width: 768px) {
+    .app-sidebar {
+        transform: translateX(-100%);
+        width: var(--sidebar-width) !important;
+        transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    }
+
+    .app-sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+    .app-sidebar.collapsed { width: var(--sidebar-width) !important; }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+(function() {
+    const sidebar  = document.getElementById('app-sidebar');
+    const wrapper  = document.getElementById('main-wrapper');
+    const overlay  = document.getElementById('sidebar-overlay');
+    const toggleBtn= document.getElementById('sb-toggle-btn');
+    const iconEl   = document.getElementById('sb-toggle-icon');
+    const isMobile = () => window.innerWidth <= 768;
+
+    const bodyRoleMatch = document.body.className.match(/role-[\w-]+/);
+    const storageKey = 'sidebarCollapsed_' + (bodyRoleMatch ? bodyRoleMatch[0] : 'default');
+
+    // helper to set icon
+    function setToggleIcon(collapsed){
+        if(!iconEl) return;
+        iconEl.className = collapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-bars';
+    }
+
+    // ── Restore state from localStorage ──
+    try{
+        if (!isMobile() && localStorage.getItem(storageKey) === 'true') {
+            sidebar && sidebar.classList.add('collapsed');
+            wrapper && wrapper.classList.add('sidebar-is-collapsed');
+            setToggleIcon(true);
+        }
+    }catch(e){console.warn('Cannot access localStorage', e);} 
+
+    // ── Toggle function ──
+    function toggleSidebar() {
+        if (!sidebar) return;
+        if (isMobile()) {
+            const open = sidebar.classList.toggle('mobile-open');
+            overlay && overlay.classList.toggle('active', open);
+        } else {
+            const collapsed = sidebar.classList.toggle('collapsed');
+            wrapper && wrapper.classList.toggle('sidebar-is-collapsed', collapsed);
+            setToggleIcon(collapsed);
+            try{ localStorage.setItem(storageKey, collapsed); }catch(e){}
+            // Close all visible Bootstrap 5 sub-menus when collapsing.
+            if (collapsed && window.bootstrap) {
+                document.querySelectorAll('.sb-sub.show').forEach(el => {
+                    const bsCollapse = bootstrap.Collapse.getInstance(el) || new bootstrap.Collapse(el, {toggle: false});
+                    bsCollapse.hide();
+                });
+            }
+        }
+    }
+
+    toggleBtn && toggleBtn.addEventListener('click', toggleSidebar);
+
+    // ── Close sidebar overlay on outside click (mobile) ──
+    overlay && overlay.addEventListener('click', function() {
+        sidebar && sidebar.classList.remove('mobile-open');
+        overlay && overlay.classList.remove('active');
+    });
+
+    // ── Alt+S keyboard shortcut ──
+    document.addEventListener('keydown', function(e) {
+        if (e.altKey && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            toggleSidebar();
+        }
+    });
+
+    // ── Adjust main-wrapper on resize ──
+    window.addEventListener('resize', function() {
+        if (!isMobile()) {
+            sidebar && sidebar.classList.remove('mobile-open');
+            overlay && overlay.classList.remove('active');
+        }
+    });
+})();
+});
+</script>

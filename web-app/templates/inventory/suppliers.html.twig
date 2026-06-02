@@ -167,9 +167,16 @@ document.addEventListener('DOMContentLoaded', function() {
     bsModal.show();
   }));
 
-  // Delete button
   document.querySelectorAll('.delete-supplier-btn').forEach(btn => btn.addEventListener('click', async function() {
-    if (!confirm('Delete this supplier?')) return;
+    const isConfirmed = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'Delete this supplier?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      confirmButtonText: 'Yes, delete it!'
+    }).then(r => r.isConfirmed);
+    if (!isConfirmed) return;
     const tr = this.closest('tr');
     const id = tr.dataset.id;
     try {

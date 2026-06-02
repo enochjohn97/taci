@@ -120,7 +120,7 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
             'super-admin' => 'app_dashboard_super_admin',
             'sub-admin'   => 'app_dashboard_sub_admin',
             'manager'     => 'app_dashboard_manager',
-            'staff'       => 'staff_pos',
+            'staff'       => 'staff_reception',
         ];
 
         if ($selectedRole && isset($roleRouteMap[$selectedRole])) {
@@ -139,7 +139,7 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
             return new RedirectResponse($this->urlGenerator->generate('app_dashboard_manager'));
         }
         if (in_array('ROLE_STAFF', $roles, true)) {
-            return new RedirectResponse($this->urlGenerator->generate('staff_pos'));
+            return new RedirectResponse($this->urlGenerator->generate('staff_reception'));
         }
 
         return new RedirectResponse($this->urlGenerator->generate('app_role_select'));

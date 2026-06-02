@@ -1,0 +1,205 @@
+{# templates/staff/shifts.html.twig #}
+{% extends "base.html.twig" %}
+
+{% block title %}Shifts & Rosters – {{ app_name|default('TACI') }}{% endblock %}
+
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title mt-4">
+                    <i class="bi bi-calendar-range me-2"></i>Shifts & Rosters
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-wrapper mt-4">
+    <div class="container-xl">
+        
+        {# Active Shifts Row #}
+        <div class="row g-3 mb-4">
+            <div class="col-md-12">
+                <div class="card shadow-sm border-primary">
+                    <div class="card-header bg-primary-lt">
+                        <h5 class="mb-0 text-primary"><i class="bi bi-clock-history me-2"></i>Active Shifts Today</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for shift in active_shifts|default([]) %}
+                            <div class="col-md-4">
+                                <div class="card p-3 border">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="me-auto">
+                                            <h3 class="mb-0">{{ shift.name }}</h3>
+                                            <div class="text-muted small">{{ shift.time }}</div>
+                                        </div>
+                                        <span class="badge bg-success-lt text-success">{{ shift.status }}</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <div class="d-flex align-items-center">
+                                            <span class="avatar avatar-sm me-2 rounded-circle">JD</span>
+                                            <span class="font-weight-medium">{{ shift.staff }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="col-12 text-center text-muted">
+                                No active shifts at the moment.
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Roster Table #}
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Upcoming Roster</h5>
+                <div class="d-flex gap-2">
+                    <input type="date" class="form-control form-control-sm" value="{{ "now"|date("Y-m-d") }}">
+                    <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-funnel me-1"></i> Filter</button>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Shift Name</th>
+                            <th>Time</th>
+                            <th>Assigned Staff</th>
+                            <th>Status</th>
+                            <th class="w-1"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for roster in rosters|default([]) %}
+                        <tr>
+                            <td class="text-nowrap text-muted">{{ roster.date }}</td>
+                            <td><strong>{{ roster.name }}</strong></td>
+                            <td class="text-muted">{{ roster.time }}</td>
+                            <td>
+                                <div class="d-flex py-1 align-items-center">
+                                    <span class="avatar avatar-sm me-2 rounded-circle">ST</span>
+                                    <div class="font-weight-medium">{{ roster.staff }}</div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if roster.status == 'Active' %}
+                                    <span class="badge bg-success-lt">Active</span>
+                                {% elseif roster.status == 'Pending' %}
+                                    <span class="badge bg-warning-lt">Pending</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-lt">Scheduled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-list flex-nowrap">
+                                    <a href="#" class="btn btn-white btn-sm">Edit</a>
+                                    <a href="#" class="btn btn-danger btn-sm text-danger border-danger">Cancel</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No upcoming rosters found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer d-flex align-items-center">
+                <ul class="pagination m-0 ms-auto">
+                    <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true">prev</a></li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">next</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Create Shift Modal #}
+<div class="modal modal-blur fade" id="createShiftModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Shift</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label">Shift Type</label>
+                                <select class="form-select" name="shift_type">
+                                    <option value="morning">Morning Shift (06:00 - 14:00)</option>
+                                    <option value="afternoon">Afternoon Shift (14:00 - 22:00)</option>
+                                    <option value="night">Night Shift (22:00 - 06:00)</option>
+                                    <option value="custom">Custom Shift</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label">Date</label>
+                                <input type="date" class="form-control" name="date" value="{{ "now"|date("Y-m-d") }}">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label">Start Time</label>
+                                <input type="time" class="form-control" name="start_time" value="06:00">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <label class="form-label">End Time</label>
+                                <input type="time" class="form-control" name="end_time" value="14:00">
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="mb-3">
+                                <label class="form-label">Assign Staff</label>
+                                <select class="form-select" name="staff_id">
+                                    <option value="">-- Select Staff --</option>
+                                    {% for staff in staffs|default([{'id':1, 'name': 'John Doe'}]) %}
+                                        <option value="{{ staff.id }}">{{ staff.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="mb-3">
+                                <label class="form-label">Assign Pump (Optional)</label>
+                                <select class="form-select" name="pump_id">
+                                    <option value="">-- Select Pump --</option>
+                                    <option value="1">Pump 1 (Diesel)</option>
+                                    <option value="2">Pump 2 (Premium)</option>
+                                    <option value="3">Pump 3 (Regular)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</a>
+                <a href="#" class="btn btn-primary ms-auto" data-bs-dismiss="modal">
+                    <i class="bi bi-calendar-check me-1"></i> Schedule Shift
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
