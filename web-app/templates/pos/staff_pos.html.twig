@@ -1,0 +1,114 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}POS — Reception{% endblock %}
+
+{% block body %}
+<div class="container mx-auto" x-data="posApp()" x-init>
+    <div class="flex gap-6">
+        <!-- Product Grid -->
+        <div class="w-2/3">
+            <div class="flex items-center gap-4 mb-4">
+                <input x-model="query" type="search" placeholder="Search products..." class="form-control p-2 rounded shadow-sm w-full" />
+                <div class="text-sm text-gray-500">{{ products|length }} products</div>
+            </div>
+            <div class="grid grid-cols-3 gap-4">
+                {% for product in products %}
+                    <div class="card p-3" x-show="matches({ name: '{{ product.getName()|e('js') }}' }, query)" x-bind:data-id="{{ product.getId() }}">
+                        <img src="{{ asset('/uploads/products/' ~ product.getImagePath) }}" alt="{{ product.getName() }}" class="w-full h-36 object-cover rounded-md mb-2" onerror="this.src='/images/no-image.png'" />
+                        <div class="font-semibold">{{ product.getName() }}</div>
+                        <div class="text-sm text-gray-500">{{ product.getCategory() }}</div>
+                        <div class="mt-2 flex items-center justify-between">
+                            <div class="font-bold">₦{{ product.getUnitPrice()|number_format(2, '.', ',') }}</div>
+                            <button @click="addToCart({ id: {{ product.getId() }}, name: '{{ product.getName()|e('js') }}', price: {{ product.getUnitPrice() }}, stock: {{ product.getStockQuantity() }} })" class="btn btn-primary px-3 py-1 rounded">Add</button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Cart -->
+        <div class="w-1/3">
+            <div class="card p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-semibold">Current Order</h3>
+                    <div class="text-sm text-gray-500">Items: <span x-text="cart.length"></span></div>
+                </div>
+
+                <template x-for="(item, idx) in cart" :key="item.id">
+                    <div class="flex items-center gap-3 border-b py-2">
+                        <div class="flex-1">
+                            <div class="font-medium" x-text="item.name"></div>
+                            <div class="text-sm text-gray-500">₦<span x-text="item.price.toFixed(2)"></span></div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button @click="decrement(idx)" class="px-2 py-1 rounded bg-gray-100">-</button>
+                            <div class="px-2" x-text="item.quantity"></div>
+                            <button @click="increment(idx)" class="px-2 py-1 rounded bg-gray-100">+</button>
+                        </div>
+                        <div class="w-20 text-right">₦<span x-text="(item.price * item.quantity).toFixed(2)"></span></div>
+                    </div>
+                </template>
+
+                <div class="mt-4">
+                    <div class="flex justify-between"><div>Subtotal</div><div>₦<span x-text="subtotal().toFixed(2)"></span></div></div>
+                    <div class="flex justify-between"><div>Tax (12%)</div><div>₦<span x-text="(subtotal()*0.12).toFixed(2)"></span></div></div>
+                    <div class="flex justify-between items-center mt-2">
+                        <div>Discount</div>
+                        <input type="number" x-model.number="discount" class="w-24 p-1 border rounded" />
+                    </div>
+                    <hr class="my-3" />
+                    <div class="flex justify-between font-bold text-lg">Total <div>₦<span x-text="grandTotal().toFixed(2)"></span></div></div>
+
+                    <div class="mt-4 flex gap-2">
+                        <button @click="clearCart()" class="btn btn-danger flex-1 py-2">CANCEL</button>
+                        <button @click="checkout()" class="btn btn-success flex-1 py-2">PAYMENT</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function posApp(){
+    return {
+        query: '',
+        cart: [],
+        discount: 0,
+        matches(product, q){
+            if(!q) return true;
+            return (product.name || '').toLowerCase().includes(q.toLowerCase());
+        },
+        addToCart(prod){
+            let idx = this.cart.findIndex(i=>i.id===prod.id);
+            if(idx===-1){
+                this.cart.push({...prod, quantity: 1});
+            } else {
+                this.cart[idx].quantity++;
+            }
+        },
+        increment(i){this.cart[i].quantity++;},
+        decrement(i){ if(this.cart[i].quantity>1) this.cart[i].quantity--; else this.cart.splice(i,1); },
+        subtotal(){ return this.cart.reduce((s,i)=>s + i.price * i.quantity, 0); },
+        grandTotal(){ return Math.max(0, this.subtotal() + (this.subtotal()*0.12) - this.discount); },
+        clearCart(){ this.cart = []; this.discount = 0; },
+        checkout(){
+            if(this.cart.length===0){ alert('Cart is empty'); return; }
+            const payload = {
+                items: this.cart.map(i=>({ productId: i.id, quantity: i.quantity })),
+                paymentMethod: 'paystack',
+                discountAmount: this.discount
+            };
+            fetch('/pos/api/transaction/create', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)})
+                .then(r=>r.json()).then(data=>{
+                    if(data.success){
+                        alert('Payment recorded. Sale #' + data.saleId);
+                        window.location.reload();
+                    } else {
+                        alert('Payment failed: ' + (data.error||'Unknown'));
+                    }
+                }).catch(e=>{ alert('Request failed'); });
+        }
+    }
+}
+</script>

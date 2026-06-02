@@ -43,15 +43,13 @@
 
         {# Fuel Management — Super Admin & Sub-Admin #}
         {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') %}
-        <li class="sb-item sb-has-sub">
-            <button type="button" class="sb-link sb-toggle {% if app.request.get('_route') starts with 'app_fuel' %}active{% endif %}"
-                    data-target="fuelSub" aria-expanded="{% if app.request.get('_route') starts with 'app_fuel' %}true{% else %}false{% endif %}"
-                    data-tooltip="Fuel">
+        <li class="sb-item sb-has-sub" x-data="{ open: {{ app.request.get('_route') starts with 'app_fuel' ? 'true' : 'false' }} }">
+            <button type="button" @click="open = !open" class="sb-link sb-toggle" :class="{ 'active': open }" :aria-expanded="open.toString()" data-tooltip="Fuel">
                 <i class="fa-solid fa-droplet sb-icon"></i>
                 <span class="sb-label">Fuel Management</span>
                 <i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
             </button>
-            <ul class="sb-sub {% if app.request.get('_route') starts with 'app_fuel' %}open{% endif %}" id="fuelSub">
+            <ul class="sb-sub" x-show="open" x-cloak>
                 <li><a class="sb-sub-link" href="{{ path('app_fuel_dashboard') }}">Dashboard</a></li>
                 <li><a class="sb-sub-link" href="{{ path('app_fuel_entry_new') }}">Log Entry</a></li>
                 <li><a class="sb-sub-link" href="{{ path('app_fuel_price_history') }}">Price History</a></li>
@@ -61,15 +59,13 @@
 
         {# Staff Management — Super Admin, Sub-Admin & Manager #}
         {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') %}
-        <li class="sb-item sb-has-sub">
-            <button type="button" class="sb-link sb-toggle {% if app.request.get('_route') starts with 'app_staff' %}active{% endif %}"
-                    data-target="staffSub" aria-expanded="{% if app.request.get('_route') starts with 'app_staff' %}true{% else %}false{% endif %}"
-                    data-tooltip="Staff">
+        <li class="sb-item sb-has-sub" x-data="{ open: {{ app.request.get('_route') starts with 'app_staff' ? 'true' : 'false' }} }">
+            <button type="button" @click="open = !open" class="sb-link sb-toggle" :class="{ 'active': open }" :aria-expanded="open.toString()" data-tooltip="Staff">
                 <i class="fa-solid fa-users sb-icon"></i>
                 <span class="sb-label">Staff Management</span>
                 <i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
             </button>
-            <ul class="sb-sub {% if app.request.get('_route') starts with 'app_staff' %}open{% endif %}" id="staffSub">
+            <ul class="sb-sub" x-show="open" x-cloak>
                 <li><a class="sb-sub-link" href="#">Staff Directory</a></li>
                 <li><a class="sb-sub-link" href="#">Shifts &amp; Roster</a></li>
                 <li><a class="sb-sub-link" href="#">Leave Requests</a></li>
@@ -83,15 +79,13 @@
 
         {# Inventory — all roles #}
         {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF') %}
-        <li class="sb-item sb-has-sub">
-            <button type="button" class="sb-link sb-toggle {% if app.request.get('_route') starts with 'app_inventory' %}active{% endif %}"
-                    data-target="inventorySub" aria-expanded="{% if app.request.get('_route') starts with 'app_inventory' %}true{% else %}false{% endif %}"
-                    data-tooltip="Inventory">
+        <li class="sb-item sb-has-sub" x-data="{ open: {{ app.request.get('_route') starts with 'app_inventory' ? 'true' : 'false' }} }">
+            <button type="button" @click="open = !open" class="sb-link sb-toggle" :class="{ 'active': open }" :aria-expanded="open.toString()" data-tooltip="Inventory">
                 <i class="fa-solid fa-boxes-stacked sb-icon"></i>
                 <span class="sb-label">Inventory</span>
                 <i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
             </button>
-            <ul class="sb-sub {% if app.request.get('_route') starts with 'app_inventory' %}open{% endif %}" id="inventorySub">
+            <ul class="sb-sub" x-show="open" x-cloak>
                 <li><a class="sb-sub-link" href="{{ path('app_inventory_dashboard') }}">Dashboard</a></li>
                 <li><a class="sb-sub-link" href="{{ path('app_inventory_products') }}">Products</a></li>
                 {% if not is_granted('ROLE_STAFF') %}
@@ -105,15 +99,13 @@
         {% endif %}
 
         {# POS — all roles #}
-        <li class="sb-item sb-has-sub">
-            <button type="button" class="sb-link sb-toggle {% if app.request.get('_route') starts with 'app_pos' %}active{% endif %}"
-                    data-target="posSub" aria-expanded="{% if app.request.get('_route') starts with 'app_pos' %}true{% else %}false{% endif %}"
-                    data-tooltip="POS">
+        <li class="sb-item sb-has-sub" x-data="{ open: {{ app.request.get('_route') starts with 'app_pos' ? 'true' : 'false' }} }">
+            <button type="button" @click="open = !open" class="sb-link sb-toggle" :class="{ 'active': open }" :aria-expanded="open.toString()" data-tooltip="POS">
                 <i class="fa-solid fa-cash-register sb-icon"></i>
                 <span class="sb-label">POS</span>
                 <i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
             </button>
-            <ul class="sb-sub {% if app.request.get('_route') starts with 'app_pos' %}open{% endif %}" id="posSub">
+            <ul class="sb-sub" x-show="open" x-cloak>
                 <li><a class="sb-sub-link" href="{{ path('app_pos_dashboard') }}">Dashboard</a></li>
                 <li><a class="sb-sub-link" href="{{ path('app_pos_register') }}">Register</a></li>
                 <li><a class="sb-sub-link" href="{{ path('app_pos_daily_summary') }}">Daily Summary</a></li>
@@ -122,15 +114,13 @@
 
         {# Customer Rewards — Super Admin, Manager, Staff #}
         {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF') %}
-        <li class="sb-item sb-has-sub">
-            <button type="button" class="sb-link sb-toggle {% if app.request.get('_route') starts with 'app_engagement' %}active{% endif %}"
-                    data-target="rewardsSub" aria-expanded="{% if app.request.get('_route') starts with 'app_engagement' %}true{% else %}false{% endif %}"
-                    data-tooltip="Rewards">
+        <li class="sb-item sb-has-sub" x-data="{ open: {{ app.request.get('_route') starts with 'app_engagement' ? 'true' : 'false' }} }">
+            <button type="button" @click="open = !open" class="sb-link sb-toggle" :class="{ 'active': open }" :aria-expanded="open.toString()" data-tooltip="Rewards">
                 <i class="fa-solid fa-gem sb-icon"></i>
                 <span class="sb-label">Customer Rewards</span>
                 <i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
             </button>
-            <ul class="sb-sub {% if app.request.get('_route') starts with 'app_engagement' %}open{% endif %}" id="rewardsSub">
+            <ul class="sb-sub" x-show="open" x-cloak>
                 {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_MANAGER') %}
                     <li><a class="sb-sub-link" href="{{ path('app_engagement_dashboard') }}">Hub Dashboard</a></li>
                     <li><a class="sb-sub-link" href="{{ path('app_engagement_tiers') }}">Reward Tiers</a></li>
@@ -145,15 +135,13 @@
         {% endif %}
 
         {# Memos — all roles #}
-        <li class="sb-item sb-has-sub">
-            <button type="button" class="sb-link sb-toggle {% if app.request.get('_route') starts with 'app_memo' %}active{% endif %}"
-                    data-target="memoSub" aria-expanded="{% if app.request.get('_route') starts with 'app_memo' %}true{% else %}false{% endif %}"
-                    data-tooltip="Memos">
+        <li class="sb-item sb-has-sub" x-data="{ open: {{ app.request.get('_route') starts with 'app_memo' ? 'true' : 'false' }} }">
+            <button type="button" @click="open = !open" class="sb-link sb-toggle" :class="{ 'active': open }" :aria-expanded="open.toString()" data-tooltip="Memos">
                 <i class="fa-solid fa-envelope sb-icon"></i>
                 <span class="sb-label">Memos</span>
                 <i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
             </button>
-            <ul class="sb-sub {% if app.request.get('_route') starts with 'app_memo' %}open{% endif %}" id="memoSub">
+            <ul class="sb-sub" x-show="open" x-cloak>
                 <li><a class="sb-sub-link" href="{{ path('app_memo_dashboard') }}">Dashboard</a></li>
                 <li><a class="sb-sub-link" href="{{ path('app_memo_new') }}">New Memo</a></li>
             </ul>
