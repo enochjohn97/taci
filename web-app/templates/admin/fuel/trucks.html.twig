@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+{% block title %}Trucks - Fuel Management{% endblock %}
+{% block body %}
+<div class="container">
+    <h3 class="mb-4">Trucks</h3>
+    <a href="{{ path('admin_fuel_truck_new') }}" class="btn btn-primary mb-3">Add Truck</a>
+    <div class="grid grid-cols-1 gap-3">
+        {% for truck in trucks %}
+            <div class="card p-3 flex items-center justify-between">
+                <div>
+                    <div class="fw-bold">{{ truck.getRegistrationNumber() }} — {{ truck.getDriverName() }}</div>
+                    <div class="text-sm text-muted">Capacity: {{ truck.getCapacity() }} L — Current: {{ truck.getCurrentFuel() }} L</div>
+                </div>
+                <div class="flex gap-2">
+                    <a href="{{ path('admin_fuel_truck_track', {'id': truck.getId()}) }}" class="btn btn-sm btn-outline-primary">Track</a>
+                    <form method="post" action="#" onsubmit="return confirm('Delete?');"><button class="btn btn-sm btn-danger">Delete</button></form>
+                </div>
+            </div>
+        {% else %}
+            <div class="card p-3">No trucks found</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

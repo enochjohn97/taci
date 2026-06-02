@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+{% block title %}Track Truck {{ truck.getRegistrationNumber() }}{% endblock %}
+{% block body %}
+<div class="container">
+    <h3>Tracking — {{ truck.getRegistrationNumber() }}</h3>
+    <div id="map" style="height:500px;border-radius:12px;border:1px solid var(--border-color)"></div>
+</div>
+{% block extra_scripts %}
+<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+<script>
+    document.addEventListener('DOMContentLoaded', function(){
+        const lat = {{ truck.getLastLat() ?? 6.5244 }};
+        const lng = {{ truck.getLastLng() ?? 3.3792 }};
+        const map = L.map('map').setView([lat, lng], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+        const marker = L.marker([lat, lng]).addTo(map).bindPopup('{{ truck.getRegistrationNumber() }}');
+
+        // Poll for updates every 5s
+        setInterval(()=>{
+            fetch('{{ path('admin_fuel_truck_location', {'id': truck.getId()}) }}', { method: 'GET' })
+                .then(r=>r.json()).then(data=>{
+                    if(data.lastLat && data.lastLng){
+                        marker.setLatLng([data.lastLat, data.lastLng]);
+                        map.panTo([data.lastLat, data.lastLng]);
+                    }
+                }).catch(()=>{});
+        }, 5000);
+    });
+</script>
+{% endblock %}
+{% endblock %}

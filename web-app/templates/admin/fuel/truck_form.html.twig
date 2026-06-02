@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+{% block title %}Add Truck{% endblock %}
+{% block body %}
+<div class="container">
+    <h3>Add Truck</h3>
+    <form method="post">
+        <div class="mb-3"><label>Registration</label><input name="registration" class="form-control" required></div>
+        <div class="mb-3"><label>Capacity (L)</label><input name="capacity" type="number" class="form-control" required></div>
+        <div class="mb-3"><label>Current Fuel (L)</label><input name="currentFuel" type="number" class="form-control" value="0"></div>
+        <div class="mb-3"><label>Driver Name</label><input name="driverName" class="form-control"></div>
+        <div class="mb-3"><label>Status</label><select name="status" class="form-control"><option>idle</option><option>en route</option><option>delivered</option></select></div>
+        <button class="btn btn-primary">Save</button>
+    </form>
+</div>
+{% endblock %}

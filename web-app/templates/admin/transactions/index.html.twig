@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+{% block title %}Transactions{% endblock %}
+{% block body %}
+<div class="container">
+    <h3>Transactions</h3>
+    <table class="table">
+        <thead><tr><th>ID</th><th>Staff</th><th>Total</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody>
+            {% for s in sales %}
+                <tr>
+                    <td>{{ s.getId() }}</td>
+                    <td>{{ s.getCashier().getUsername() }}</td>
+                    <td>₦{{ s.getTotalAmount()|number_format(2, '.', ',') }}</td>
+                    <td>{{ s.getStatus() }}</td>
+                    <td>{{ s.getCreatedAt().format('Y-m-d H:i') }}</td>
+                    <td>
+                        {% if s.getStatus() == 'completed' %}
+                            <form method="post" action="{{ path('admin_transaction_approve', {'id': s.getId()}) }}" style="display:inline"><button class="btn btn-sm btn-success">Approve</button></form>
+                            <form method="post" action="{{ path('admin_transaction_decline', {'id': s.getId()}) }}" style="display:inline"><button class="btn btn-sm btn-danger">Decline</button></form>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
