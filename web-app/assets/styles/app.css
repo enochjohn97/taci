@@ -20,3 +20,44 @@ body {
 #main-content { flex: 1; }
 
 footer { width: 100%; }
+
+/* Design tokens: extracted from dashboard screenshots (approximate) */
+:root {
+    --bg-page: #f4f7f8;
+    --card: #ffffff;
+    --muted: #eef3f4;
+    --text: #1f2b30;
+
+    --primary: #0f6b4a;
+    --primary-dark: #0b4f37;
+    --accent-blue: #4aa3ff;
+    --accent-yellow: #f4b84a;
+    --accent-red: #ff6b6b;
+    --success: #28a745;
+    --warning: #ffcf6b;
+    --danger: #ff7a7a;
+
+    --sidebar-maroon: #6f2f3e;
+    --sidebar-navy: #0f2a36;
+}
+
+/* Minimal header / navbar styles using tokens */
+.app-nav{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    padding:10px 18px;
+    background:linear-gradient(90deg,var(--primary-dark),var(--primary));
+    color:var(--card);
+}
+.app-nav .menu{
+    background:transparent;border:none;color:inherit;font-size:18px;padding:6px 8px;border-radius:6px;cursor:pointer
+}
+.app-nav .search input{padding:8px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:var(--card)}
+.btn.primary{background:var(--accent-blue);color:#fff;padding:8px 12px;border-radius:8px;border:none}
+.avatar{width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,0.12)}
+
+/* Utility helpers for cards and muted backgrounds */
+.card{background:var(--card);box-shadow:0 1px 4px rgba(31,43,48,0.06);border-radius:8px;padding:16px;color:var(--text)}
+.muted{background:var(--muted);padding:10px;border-radius:6px;color:var(--text)}
+
