@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+{% block title %}Welcome to TACI Petroleum{% endblock %}
+{% block body %}
+<div class="container text-center py-5">
+    <h1 class="mb-3">Welcome to TACI Petroleum</h1>
+    <p class="mb-4 text-muted">Station operations and POS management simplified.</p>
+    <div class="d-flex justify-content-center gap-3">
+        <a href="{{ path('app_role_select') }}" class="btn btn-primary btn-lg">Staff Portal</a>
+        <a href="{{ path('app_role_select') }}" class="btn btn-outline-secondary btn-lg">Login / Role Select</a>
+    </div>
+</div>
+{% endblock %}
