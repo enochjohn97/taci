@@ -28,6 +28,8 @@ security:
       lazy: true
       provider: app_user_provider
       custom_authenticator: App\Security\AppAuthenticator
+      # Redirect denied requests to role-aware dashboard instead of raw 403 exception page.
+      access_denied_url: /dashboard
       logout:
         path: app_logout
         target: app_role_select
@@ -63,5 +65,4 @@ security:
     - { path: ^/dashboard/super-admin, roles: ROLE_SUPER_ADMIN }
     - { path: ^/dashboard/sub-admin, roles: ROLE_SUB_ADMIN }
     - { path: ^/dashboard/manager, roles: ROLE_MANAGER }
-    - { path: ^/dashboard/staff, roles: ROLE_STAFF }
     - { path: ^/, roles: IS_AUTHENTICATED_FULLY }

@@ -2,12 +2,29 @@
 {% block title %}Transactions{% endblock %}
 {% block body %}
 <div class="container">
-    <h3>Transactions</h3>
+    <h3 class="d-flex justify-content-between align-items-center">Transactions
+        <div>
+            <button id="export-selected" class="btn btn-secondary btn-sm">Export Selected CSV</button>
+        </div>
+    </h3>
+
+    <form id="transactions-form">
     <table class="table">
-        <thead><tr><th>ID</th><th>Staff</th><th>Total</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="select-all"></th>
+                <th>ID</th>
+                <th>Staff</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
         <tbody>
             {% for s in sales %}
                 <tr>
+                    <td><input type="checkbox" name="selected[]" value="{{ s.getId() }}"></td>
                     <td>{{ s.getId() }}</td>
                     <td>{{ s.getCashier().getUsername() }}</td>
                     <td>₦{{ s.getTotalAmount()|number_format(2, '.', ',') }}</td>
@@ -15,15 +32,61 @@
                     <td>{{ s.getCreatedAt().format('Y-m-d H:i') }}</td>
                     <td>
                         {% if s.getStatus() == 'completed' %}
-                            <form method="post" action="{{ path('admin_transaction_approve', {'id': s.getId()}) }}" style="display:inline"><button class="btn btn-sm btn-success">Approve</button></form>
-                            <form method="post" action="{{ path('admin_transaction_decline', {'id': s.getId()}) }}" style="display:inline"><button class="btn btn-sm btn-danger">Decline</button></form>
+                            <form method="post" action="{{ path('admin_transaction_approve', {'id': s.getId()}) }}" style="display:inline">
+                                <input type="hidden" name="_token" value="{{ csrf_token('approve' ~ s.getId()) }}">
+                                <button class="btn btn-sm btn-success">Approve</button>
+                            </form>
+                            <form method="post" action="{{ path('admin_transaction_decline', {'id': s.getId()}) }}" style="display:inline">
+                                <input type="hidden" name="_token" value="{{ csrf_token('decline' ~ s.getId()) }}">
+                                <button class="btn btn-sm btn-danger">Decline</button>
+                            </form>
                         {% else %}
                             -
+                        {% endif %}
+                        {% if is_granted('ROLE_SUPER_ADMIN') %}
+                            <a href="{{ path('admin_transaction_edit', {'id': s.getId()}) }}" class="btn btn-sm btn-outline-primary">Edit</a>
                         {% endif %}
                     </td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
+    </form>
 </div>
+
+{% block extra_scripts %}
+<script>
+document.getElementById('select-all').addEventListener('change', function(e){
+    document.querySelectorAll('input[name="selected[]"]').forEach(function(cb){ cb.checked = e.target.checked; });
+});
+
+document.getElementById('export-selected').addEventListener('click', function(){
+    const checked = Array.from(document.querySelectorAll('input[name="selected[]"]:checked')).map(c=>c.value);
+    if (!checked.length) {
+        alert('Please select rows to export');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('entity', 'sales');
+    checked.forEach(id => formData.append('ids[]', id));
+    // include CSRF token for export
+    formData.append('_token', '{{ csrf_token('export_selected') }}');
+
+    fetch('{{ path('app_reports_export_selected') }}', {
+        method: 'POST',
+        body: formData,
+    }).then(r => r.blob()).then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'sales-selected-' + new Date().toISOString().slice(0,10) + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    }).catch(err => { console.error(err); alert('Export failed') });
+});
+</script>
+{% endblock %}
+
 {% endblock %}

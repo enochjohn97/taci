@@ -4,6 +4,7 @@
 namespace App\Service;
 
 use App\Entity\Sale;
+use App\Entity\Transaction;
 use Doctrine\ORM\EntityManagerInterface;
 use Dompdf\Dompdf;
 use Twig\Environment;
@@ -37,6 +38,30 @@ class ReceiptService
         // Save path on sale
         $sale->setReceiptPath('/receipts/' . $filename);
         $this->em->persist($sale);
+        $this->em->flush();
+
+        return '/receipts/' . $filename;
+    }
+
+    public function generateTransactionReceipt(Transaction $transaction): string
+    {
+        $html = $this->twig->render('pos/transaction_receipt.html.twig', ['transaction' => $transaction]);
+
+        $dompdf = new Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $filename = 'receipt_txn_' . $transaction->getId() . '_' . time() . '.pdf';
+        $dir = $this->params->get('kernel.project_dir') . '/public/receipts';
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+        $path = $dir . '/' . $filename;
+        file_put_contents($path, $dompdf->output());
+
+        $transaction->setReceiptUrl('/receipts/' . $filename);
+        $this->em->persist($transaction);
         $this->em->flush();
 
         return '/receipts/' . $filename;

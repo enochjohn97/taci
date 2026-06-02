@@ -597,7 +597,7 @@
 // Mercure real-time subscription for notifications (if MERCURE_PUBLIC_URL provided)
 {% if app.user %}
 (function(){
-    const mercureUrl = '{{ env("MERCURE_PUBLIC_URL")|default("/hub") }}';
+    const mercureUrl = '{{ mercure_public_url|default("/hub") }}';
     const userTopic = 'notifications/' + {{ app.user.id }};
     try {
         const url = new URL(mercureUrl, window.location.origin);
@@ -647,7 +647,7 @@
         <div id="sidebar-overlay"></div>
 
         <div class="app-shell">
-            {% include 'includes/sidebar.html.twig' %}
+            {% include 'includes/_sidebar.html.twig' %}
 
             <div id="main-wrapper">
                 {% include 'includes/navbar.html.twig' %}

@@ -1,0 +1,78 @@
+{% extends 'base.html.twig' %}
+{% block title %}Staff Sales Screen{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-slate-50 p-4 md:p-6" x-data="staffSalesApp()" x-init="init()">
+    <div class="mx-auto max-w-7xl">
+        <div class="mb-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+            <div class="flex flex-wrap items-center gap-3">
+                <input type="search" x-model.debounce.300ms="query" placeholder="Search store items..." class="min-w-[240px] flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm">
+                <a href="{{ path('app_notifications') }}" class="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700">
+                    <i class="bi bi-bell"></i>
+                    <span x-show="unreadCount > 0" x-text="unreadCount" class="absolute -right-1 -top-1 rounded-full bg-rose-500 px-1.5 py-0.5 text-[11px] font-semibold text-white"></span>
+                </a>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 gap-4 xl:grid-cols-12">
+            <section class="xl:col-span-8">
+                <div class="grid grid-cols-2 gap-4 md:grid-cols-3">
+                    {% for product in products %}
+                    <article x-show="'{{ product.getName()|lower|e('js') }}'.includes(query.toLowerCase())" class="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+                        <img src="{{ asset('uploads/products/' ~ (product.getImagePath() ?? '')) }}" alt="{{ product.getName() }}" class="h-32 w-full rounded-xl object-cover" onerror="this.src='{{ asset('images/no-image.png') }}'">
+                        <h3 class="mt-3 line-clamp-1 text-sm font-semibold text-slate-900">{{ product.getName() }}</h3>
+                        <p class="mt-1 text-sm font-bold text-slate-700">₦{{ product.getUnitPrice()|number_format(2, '.', ',') }}</p>
+                        <button @click="addToCart({ id: {{ product.getId() }}, name: '{{ product.getName()|e('js') }}', price: {{ product.getUnitPrice() }} })" class="mt-2 w-full rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white">Add</button>
+                    </article>
+                    {% endfor %}
+                </div>
+            </section>
+            <aside class="xl:col-span-4">
+                <div class="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+                    <h2 class="text-base font-semibold text-slate-900">Current Sale</h2>
+                    <div class="mt-2">
+                        <label class="mb-1 block text-xs font-semibold uppercase text-slate-500">Payment Method</label>
+                        <select x-model="paymentMethod" class="w-full rounded border border-slate-200 px-2 py-2 text-sm">
+                            <option value="cash">Cash</option>
+                            <option value="card">Card (POS)</option>
+                            <option value="transfer">Transfer (POS)</option>
+                        </select>
+                    </div>
+                    <div class="mt-3 max-h-64 overflow-auto rounded-xl border border-slate-100">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><tr><th class="px-2 py-2">Product</th><th class="px-2 py-2">Price</th><th class="px-2 py-2">Qty</th><th class="px-2 py-2 text-right">Total</th></tr></thead>
+                            <tbody>
+                                <template x-for="(item, index) in cart" :key="item.id">
+                                    <tr class="border-t border-slate-100">
+                                        <td class="px-2 py-2" x-text="item.name"></td><td class="px-2 py-2">₦<span x-text="currency(item.price)"></span></td>
+                                        <td class="px-2 py-2"><div class="inline-flex items-center gap-1"><button @click="decrement(index)" class="rounded border px-2">-</button><button @click="selectedIndex = index" class="min-w-8 rounded border px-2" x-text="item.quantity"></button><button @click="increment(index)" class="rounded border px-2">+</button></div></td>
+                                        <td class="px-2 py-2 text-right">₦<span x-text="currency(item.price * item.quantity)"></span></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 grid grid-cols-3 gap-2">
+                        <template x-for="n in [1,2,3,4,5,6,7,8,9]" :key="n"><button @click="keypadInput(n)" class="rounded-lg border border-slate-200 bg-slate-50 py-2 text-sm font-semibold" x-text="n"></button></template>
+                        <button @click="keypadInput(0)" class="rounded-lg border border-slate-200 bg-slate-50 py-2 text-sm font-semibold">0</button>
+                        <button @click="quantityBuffer=''" class="rounded-lg border border-slate-200 bg-slate-50 py-2 text-sm font-semibold">CLR</button>
+                        <button @click="applySelectedQty()" class="rounded-lg bg-slate-900 py-2 text-sm font-semibold text-white">SET</button>
+                    </div>
+                    <div class="mt-4 space-y-2 text-sm">
+                        <div class="flex justify-between"><span>Subtotal</span><span>₦<span x-text="currency(subtotal())"></span></span></div>
+                        <div class="flex justify-between"><span>Tax (12%)</span><span>₦<span x-text="currency(tax())"></span></span></div>
+                        <div class="flex items-center justify-between"><span>Discount</span><input type="number" min="0" x-model.number="discount" class="w-24 rounded border border-slate-200 px-2 py-1 text-right"></div>
+                        <div class="flex justify-between border-t border-slate-200 pt-2 text-base font-bold"><span>Grand Total</span><span>₦<span x-text="currency(grandTotal())"></span></span></div>
+                    </div>
+                    <div class="mt-4 grid grid-cols-2 gap-2">
+                        <button @click="clearCart()" class="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">CANCEL</button>
+                        <button @click="checkout()" :disabled="processing || cart.length === 0" class="rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60">PAYMENT</button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</div>
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<script>
+function staffSalesApp(){return{query:'{{ initial_search|e('js') }}',unreadCount:0,cart:[],selectedIndex:null,quantityBuffer:'',discount:0,paymentMethod:'cash',processing:false,async init(){await this.loadUnread();setInterval(()=>this.loadUnread(),8000);},async loadUnread(){const r=await fetch('{{ path('app_notifications_unread_count') }}');if(!r.ok)return;const d=await r.json();this.unreadCount=d.unread_count||0;},addToCart(p){const e=this.cart.find(i=>i.id===p.id);if(e){e.quantity+=1;return;}this.cart.push({...p,quantity:1});},increment(i){this.cart[i].quantity+=1;this.selectedIndex=i;},decrement(i){if(this.cart[i].quantity<=1){this.cart.splice(i,1);if(this.selectedIndex===i)this.selectedIndex=null;return;}this.cart[i].quantity-=1;this.selectedIndex=i;},keypadInput(v){if(this.selectedIndex===null)return;this.quantityBuffer+=String(v);},applySelectedQty(){if(this.selectedIndex===null||this.quantityBuffer==='')return;const q=parseInt(this.quantityBuffer,10);this.quantityBuffer='';if(!q||q<1)return;this.cart[this.selectedIndex].quantity=q;},subtotal(){return this.cart.reduce((s,i)=>s+(i.price*i.quantity),0);},tax(){return this.subtotal()*0.12;},grandTotal(){return Math.max(0,this.subtotal()+this.tax()-(this.discount||0));},currency(v){return Number(v||0).toFixed(2);},clearCart(){this.cart=[];this.selectedIndex=null;this.quantityBuffer='';this.discount=0;},async checkout(){if(this.cart.length===0||this.processing)return;this.processing=true;try{const initRes=await fetch('{{ path('staff_reception_checkout_initialize') }}',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:this.cart.map(i=>({productId:i.id,quantity:i.quantity})),discount:Number(this.discount||0),paymentMethod:this.paymentMethod})});const initData=await initRes.json();if(!initData.success){alert(initData.error||'Unable to initialize payment.');this.processing=false;return;}if(this.paymentMethod==='cash'){alert('Cash sale completed.');if(initData.receiptUrl){window.open(initData.receiptUrl,'_blank');}this.clearCart();await this.loadUnread();this.processing=false;return;}const handler=PaystackPop.setup({key:'{{ paystack_public_key|e('js') }}',email:'{{ app.user.email|e('js') }}',amount:Math.round(initData.amount*100),ref:initData.reference,callback:async(resp)=>{const verifyRes=await fetch('{{ path('staff_reception_checkout_verify', { reference: '__REF__' }) }}'.replace('__REF__',encodeURIComponent(resp.reference)),{method:'POST'});const verifyData=await verifyRes.json();if(verifyData.success){alert(this.paymentMethod==='transfer'?'Transfer payment completed.':'Card payment completed.');if(verifyData.receiptUrl){window.open(verifyData.receiptUrl,'_blank');}this.clearCart();await this.loadUnread();}else{alert(verifyData.error||'Payment verification failed.');}this.processing=false;},onClose:()=>{this.processing=false;}});handler.openIframe();}catch(_e){this.processing=false;alert('Payment request failed.');}}}}
+</script>
+{% endblock %}

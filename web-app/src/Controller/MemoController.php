@@ -9,6 +9,7 @@ use App\Entity\MemoAttachment;
 use App\Entity\User;
 use App\Entity\UserRole;
 use App\Entity\Notification;
+use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,7 +22,12 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
 class MemoController extends AbstractController
 {
-    public function __construct(private EntityManagerInterface $em) {}
+    private NotificationService $notificationService;
+
+    public function __construct(private EntityManagerInterface $em, NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
 
     #[Route('', name: 'app_memo_dashboard')]
     public function dashboard(): Response
@@ -95,13 +101,14 @@ class MemoController extends AbstractController
 
                     // Send notification
                     if ($memo->getStatus() === 'sent') {
-                        $notif = new Notification();
-                        $notif->setUser($recipient);
-                        $notif->setType('memo_received');
-                        $notif->setMessage('New memo from ' . $this->getUser()->getUsername() . ': ' . $memo->getSubject());
-                        $notif->setLink('/memos/' . $memo->getId());
-                        $this->em->persist($notif);
-                    }
+                                            // Use NotificationService to persist and broadcast
+                                            $this->notificationService->sendNotification(
+                                                $recipient,
+                                                'memo_received',
+                                                'New memo from ' . $this->getUser()->getUsername() . ': ' . $memo->getSubject(),
+                                                '/memos/' . $memo->getId()
+                                            );
+                                        }
                 }
             }
 
@@ -219,12 +226,13 @@ class MemoController extends AbstractController
                     $memoRecipient->setRecipient($recipient);
                     $this->em->persist($memoRecipient);
 
-                    $notif = new Notification();
-                    $notif->setUser($recipient);
-                    $notif->setType('memo_received');
-                    $notif->setMessage('Forwarded memo from ' . $sender->getUsername() . ': ' . $forward->getSubject());
-                    $notif->setLink('/memos/' . $forward->getId());
-                    $this->em->persist($notif);
+                    // Use NotificationService to persist and broadcast
+                    $this->notificationService->sendNotification(
+                        $recipient,
+                        'memo_received',
+                        'Forwarded memo from ' . $sender->getUsername() . ': ' . $forward->getSubject(),
+                        '/memos/' . $forward->getId()
+                    );
                 }
             }
 
@@ -274,13 +282,13 @@ class MemoController extends AbstractController
         $memoRecipient->setRecipient($memo->getSender());
         $this->em->persist($memoRecipient);
 
-        // Notify original sender
-        $notif = new Notification();
-        $notif->setUser($memo->getSender());
-        $notif->setType('memo_received');
-        $notif->setMessage('Reply from ' . $this->getUser()->getUsername());
-        $notif->setLink('/memos/' . $memo->getId());
-        $this->em->persist($notif);
+        // Notify original sender via NotificationService
+        $this->notificationService->sendNotification(
+            $memo->getSender(),
+            'memo_received',
+            'Reply from ' . $this->getUser()->getUsername(),
+            '/memos/' . $memo->getId()
+        );
 
         $this->em->flush();
 
@@ -298,13 +306,12 @@ class MemoController extends AbstractController
         $this->em->flush();
 
         // Notify sender
-        $notif = new Notification();
-        $notif->setUser($memo->getSender());
-        $notif->setType('memo_approved');
-        $notif->setMessage('Your memo "' . $memo->getSubject() . '" was approved');
-        $notif->setLink('/memos/' . $memo->getId());
-        $this->em->persist($notif);
-        $this->em->flush();
+        $this->notificationService->sendNotification(
+            $memo->getSender(),
+            'memo_approved',
+            'Your memo "' . $memo->getSubject() . '" was approved',
+            '/memos/' . $memo->getId()
+        );
 
         return $this->json(['success' => true, 'message' => 'Memo approved']);
     }
@@ -319,13 +326,12 @@ class MemoController extends AbstractController
         $this->em->flush();
 
         // Notify sender
-        $notif = new Notification();
-        $notif->setUser($memo->getSender());
-        $notif->setType('memo_declined');
-        $notif->setMessage('Your memo "' . $memo->getSubject() . '" was declined');
-        $notif->setLink('/memos/' . $memo->getId());
-        $this->em->persist($notif);
-        $this->em->flush();
+        $this->notificationService->sendNotification(
+            $memo->getSender(),
+            'memo_declined',
+            'Your memo "' . $memo->getSubject() . '" was declined',
+            '/memos/' . $memo->getId()
+        );
 
         return $this->json(['success' => true, 'message' => 'Memo declined']);
     }

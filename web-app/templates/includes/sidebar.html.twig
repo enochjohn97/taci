@@ -66,12 +66,12 @@
                 <i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
             </button>
             <ul class="sb-sub" x-show="open" x-cloak>
-                <li><a class="sb-sub-link" href="#">Staff Directory</a></li>
-                <li><a class="sb-sub-link" href="#">Shifts &amp; Roster</a></li>
-                <li><a class="sb-sub-link" href="#">Leave Requests</a></li>
+                <li><a class="sb-sub-link" href="{{ path('api_staff_list') }}">Staff Directory</a></li>
+                <li><a class="sb-sub-link" href="{{ path('app_dashboard_manager') }}">Shifts &amp; Roster</a></li>
+                <li><a class="sb-sub-link" href="{{ path('app_settings_profile') }}">Leave Requests</a></li>
                 {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') %}
-                    <li><a class="sb-sub-link" href="#">Attendance Log</a></li>
-                    <li><a class="sb-sub-link" href="#">Payroll Summary</a></li>
+                    <li><a class="sb-sub-link" href="{{ path('app_notifications') }}">Attendance Log</a></li>
+                    <li><a class="sb-sub-link" href="{{ path('app_reports_dashboard') }}">Payroll Summary</a></li>
                 {% endif %}
             </ul>
         </li>
@@ -98,16 +98,16 @@
         </li>
         {% endif %}
 
-        {# POS — all roles #}
+        {# Store Sales / POS — all roles #}
         <li class="sb-item sb-has-sub" x-data="{ open: {{ app.request.get('_route') starts with 'app_pos' ? 'true' : 'false' }} }">
-            <button type="button" @click="open = !open" class="sb-link sb-toggle" :class="{ 'active': open }" :aria-expanded="open.toString()" data-tooltip="POS">
+            <button type="button" @click="open = !open" class="sb-link sb-toggle" :class="{ 'active': open }" :aria-expanded="open.toString()" data-tooltip="Sales">
                 <i class="fa-solid fa-cash-register sb-icon"></i>
-                <span class="sb-label">POS</span>
+                <span class="sb-label">Store Sales</span>
                 <i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
             </button>
             <ul class="sb-sub" x-show="open" x-cloak>
                 <li><a class="sb-sub-link" href="{{ path('app_pos_dashboard') }}">Dashboard</a></li>
-                <li><a class="sb-sub-link" href="{{ path('app_pos_register') }}">Register</a></li>
+                <li><a class="sb-sub-link" href="{{ path('staff_reception') }}">Sales Screen</a></li>
                 <li><a class="sb-sub-link" href="{{ path('app_pos_daily_summary') }}">Daily Summary</a></li>
             </ul>
         </li>
@@ -149,15 +149,14 @@
 
         {# Reports — Super Admin & Sub-Admin #}
         {% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') %}
-        <li class="sb-item sb-has-sub">
-            <button type="button" class="sb-link sb-toggle {% if app.request.get('_route') starts with 'app_reports' %}active{% endif %}"
-                    data-target="reportsSub" aria-expanded="{% if app.request.get('_route') starts with 'app_reports' %}true{% else %}false{% endif %}"
-                    data-tooltip="Reports">
+        <li class="sb-item sb-has-sub" x-data="{ open: {{ app.request.get('_route') starts with 'app_reports' ? 'true' : 'false' }} }">
+            <button type="button" @click="open = !open" class="sb-link sb-toggle {% if app.request.get('_route') starts with 'app_reports' %}active{% endif %}"
+                    :aria-expanded="open.toString()" data-tooltip="Reports">
                 <i class="fa-solid fa-chart-line sb-icon"></i>
                 <span class="sb-label">Reports</span>
                 <i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
             </button>
-            <ul class="sb-sub {% if app.request.get('_route') starts with 'app_reports' %}open{% endif %}" id="reportsSub">
+            <ul class="sb-sub" x-show="open" x-cloak>
                 <li><a class="sb-sub-link" href="{{ path('app_reports_dashboard') }}">Dashboard</a></li>
                 <li><a class="sb-sub-link" href="{{ path('app_reports_sales') }}">Sales</a></li>
                 <li><a class="sb-sub-link" href="{{ path('app_reports_inventory') }}">Inventory</a></li>
@@ -470,6 +469,7 @@ body.role-sub-admin .sb-toggle-btn {
 
     .app-sidebar.collapsed { width: var(--sidebar-width) !important; }
 }
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function(){
@@ -510,9 +510,8 @@ document.addEventListener('DOMContentLoaded', function(){
             wrapper && wrapper.classList.toggle('sidebar-is-collapsed', collapsed);
             setToggleIcon(collapsed);
             try{ localStorage.setItem(storageKey, collapsed); }catch(e){}
-            // Close all sub-menus when collapsing
+            // Close all visible Alpine sub-menus when collapsing.
             if (collapsed) {
-                document.querySelectorAll('.sb-sub.open').forEach(s => s.classList.remove('open'));
                 document.querySelectorAll('.sb-toggle').forEach(b => b.setAttribute('aria-expanded', 'false'));
             }
         }
@@ -532,19 +531,6 @@ document.addEventListener('DOMContentLoaded', function(){
             e.preventDefault();
             toggleSidebar();
         }
-    });
-
-    // ── Sub-menu toggles ──
-    document.querySelectorAll('.sb-toggle').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            // Don't fire if sidebar is collapsed on desktop
-            if (!isMobile() && sidebar && sidebar.classList.contains('collapsed')) return;
-            const targetId = this.dataset.target;
-            const sub      = document.getElementById(targetId);
-            if (!sub) return;
-            const isOpen = sub.classList.toggle('open');
-            this.setAttribute('aria-expanded', isOpen);
-        });
     });
 
     // ── Adjust main-wrapper on resize ──

@@ -50,7 +50,7 @@ class AuthController extends AbstractController
                 return $this->redirectToRoute('app_dashboard_manager');
             }
             if (in_array('ROLE_STAFF', $roles, true)) {
-                return $this->redirectToRoute('app_dashboard_staff');
+                return $this->redirectToRoute('staff_reception');
             }
         }
 

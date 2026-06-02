@@ -5,6 +5,7 @@ namespace App\Service;
 
 use App\Entity\User;
 use App\Entity\Notification;
+use App\Entity\UserRole;
 use Doctrine\ORM\EntityManagerInterface;
 use Firebase\JWT\JWT;
 use Symfony\Component\HttpClient\HttpClient;
@@ -167,6 +168,27 @@ class NotificationService
             "Payment of ₦" . number_format($amount, 2) . " received",
             '/sales'
         );
+    }
+
+    public function notifyTransferCompleted(float $amount, string $staffName): array
+    {
+        $targets = $this->em->getRepository(User::class)->createQueryBuilder('u')
+            ->where('u.role IN (:roles)')
+            ->setParameter('roles', [
+                UserRole::ROLE_SUPER_ADMIN->value,
+                UserRole::ROLE_SUB_ADMIN->value,
+                UserRole::ROLE_MANAGER->value,
+            ])
+            ->getQuery()
+            ->getResult();
+
+        $message = sprintf(
+            'Transfer of ₦%s from %s completed',
+            number_format($amount, 2),
+            $staffName
+        );
+
+        return $this->sendBulkNotification($targets, 'transfer_completed', $message, '/notifications');
     }
 
     public function notifyInventoryRestocked(User $manager, string $productName, int $quantity): Notification

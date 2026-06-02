@@ -37,7 +37,7 @@ class DashboardController extends AbstractController
             return $this->redirectToRoute('app_dashboard_manager');
         }
         if (in_array('ROLE_STAFF', $roles, true)) {
-            return $this->redirectToRoute('app_dashboard_staff');
+            return $this->redirectToRoute('staff_reception');
         }
 
         return $this->redirectToRoute('app_role_select');
@@ -201,15 +201,6 @@ class DashboardController extends AbstractController
     {
 
         $data = $this->getDashboardData($this->getUser(), 'operational', 'manager');
-        return $this->render('dashboard/index.html.twig', $data);
-    }
-
-    #[Route('/staff', name: 'app_dashboard_staff')]
-    #[IsGranted('ROLE_STAFF')]
-    public function staffDashboard(Request $request): Response
-    {
-
-        $data = $this->getDashboardData($this->getUser(), 'operational', 'staff');
         return $this->render('dashboard/index.html.twig', $data);
     }
 

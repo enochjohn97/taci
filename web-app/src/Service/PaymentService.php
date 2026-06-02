@@ -29,6 +29,8 @@ class PaymentService
         private string $paystackPublicKey,
         private string $paystackSecretKey,
         private string $adminEmail,
+        private \App\Service\NotificationService $notificationService,
+        private \App\Service\ReceiptService $receiptService
     ) {
         $this->httpClient = HttpClient::create();
     }
@@ -124,17 +126,49 @@ class PaymentService
             $payment->setStatus('completed');
             $payment->setCompletedAt(new \DateTime());
             $payment->setGatewayResponse(json_encode($gatewayData));
-            $payment->getSale()->setStatus('completed');
+            $sale = $payment->getSale();
+            $sale->setStatus('completed');
 
-            // Notify admin of payment completion
-            $adminNotif = new Notification();
-            $adminNotif->setUser($payment->getSale()->getCashier());
-            $adminNotif->setType('payment_received');
-            $adminNotif->setMessage('Payment of ₦' . number_format($payment->getAmount(), 2) . ' received for Sale #' . $payment->getSale()->getId());
-            $adminNotif->setLink('/sales/' . $payment->getSale()->getId());
-            $this->em->persist($adminNotif);
+            // Deduct stock and create inventory logs
+            foreach ($sale->getItems() as $saleItem) {
+                $product = $saleItem->getProduct();
+                $qty = $saleItem->getQuantity();
+
+                $oldStock = $product->getStockQuantity();
+                $product->setStockQuantity($oldStock - $qty);
+                $this->em->persist($product);
+
+                $log = new \App\Entity\InventoryLog();
+                $log->setProduct($product);
+                $log->setActionType('out');
+                $log->setQuantityChanged($qty);
+                $log->setStockBefore($oldStock);
+                $log->setStockAfter($product->getStockQuantity());
+                $log->setPerformedBy($sale->getCashier());
+                $log->setReference('SALE#' . $sale->getId());
+                $this->em->persist($log);
+
+                if (method_exists($product, 'isLowStock') && $product->isLowStock()) {
+                    // notify managers/admins via NotificationService
+                    $admins = $this->em->getRepository(\App\Entity\User::class)->findBy(['roles' => ['ROLE_MANAGER']]);
+                    foreach ($admins as $admin) {
+                        $this->notificationService->notifyLowStock($admin, $product->getName());
+                    }
+                }
+            }
 
             $this->em->flush();
+
+            // Generate receipt PDF and notify cashier via NotificationService
+            $receiptPath = $this->receiptService->generateSaleReceipt($sale);
+            if ($sale->getCashier()) {
+                $this->notificationService->sendNotification(
+                    $sale->getCashier(),
+                    'payment_received',
+                    'Payment of ₦' . number_format($payment->getAmount(), 2) . ' received',
+                    $receiptPath
+                );
+            }
         }
     }
 

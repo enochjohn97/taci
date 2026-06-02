@@ -61,7 +61,7 @@
                         <div class="kpi-icon" style="background:rgba(13,148,136,0.1); color:var(--fuel-diesel);">
                             <i class="fa-solid fa-naira-sign"></i>
                         </div>
-                        <span class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +5.2%</span>
+                        <span class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> 0%</span>
                     </div>
                     <div class="kpi-value" data-counter="{{ total_sales_amount|default(960000)|round }}" id="kpiRevenue">₦0</div>
                     <div class="kpi-label mt-1">Total Fuel Revenue (Today)</div>
@@ -76,7 +76,7 @@
                         <div class="kpi-icon" style="background:rgba(245,166,35,0.1); color:var(--fuel-premium);">
                             <i class="fa-solid fa-gas-pump"></i>
                         </div>
-                        <span class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> +8.1%</span>
+                        <span class="kpi-change up"><i class="fa-solid fa-arrow-trend-up"></i> 0%</span>
                     </div>
                     <div class="kpi-value" data-counter="12450" data-suffix=" L" id="kpiLiters">0 L</div>
                     <div class="kpi-label mt-1">Liters Sold (Today)</div>
@@ -93,7 +93,7 @@
                         </div>
                         <span class="kpi-change up">4 fueling</span>
                     </div>
-                    <div class="kpi-value">8<span style="font-size:1rem;font-weight:500;color:var(--text-muted);">/12</span></div>
+                    <div class="kpi-value">0<span style="font-size:1rem;font-weight:500;color:var(--text-muted);">/0</span></div>
                     <div class="kpi-label mt-1">Active Nozzles</div>
                     <div class="d-flex gap-1 mt-2 flex-wrap">
                         {% for pump in pump_statuses|default([]) %}
@@ -110,7 +110,7 @@
                         <div class="kpi-icon" style="background:rgba(239,68,68,0.1); color:var(--color-danger);">
                             <i class="fa-solid fa-receipt"></i>
                         </div>
-                        <span class="kpi-change down"><i class="fa-solid fa-arrow-trend-down"></i> -1.4%</span>
+                        <span class="kpi-change down"><i class="fa-solid fa-arrow-trend-down"></i> 0%</span>
                     </div>
                     <div class="kpi-value" data-counter="{{ total_transactions|default(0) }}" id="kpiTx">0</div>
                     <div class="kpi-label mt-1">Digital Transactions</div>
@@ -174,25 +174,25 @@
                     <div class="card-body">
                         <div class="row g-3 mb-4">
                             <div class="col-6 col-md-3 text-center">
-                                <div style="font-size:1.6rem;font-weight:800;color:var(--fuel-diesel);">142</div>
+                                <div style="font-size:1.6rem;font-weight:800;color:var(--fuel-diesel);">0</div>
                                 <div style="font-size:0.78rem;color:var(--text-muted);">First-time Fleet Customers</div>
                             </div>
                             <div class="col-6 col-md-3 text-center">
-                                <div style="font-size:1.6rem;font-weight:800;color:var(--fuel-premium);">318</div>
+                                <div style="font-size:1.6rem;font-weight:800;color:var(--fuel-premium);">0</div>
                                 <div style="font-size:0.78rem;color:var(--text-muted);">Returning Loyalty Members</div>
                             </div>
                             <div class="col-6 col-md-3 text-center">
-                                <div style="font-size:1.6rem;font-weight:800;color:var(--color-success);">+12.4%</div>
+                                <div style="font-size:1.6rem;font-weight:800;color:var(--color-success);">0%</div>
                                 <div style="font-size:0.78rem;color:var(--text-muted);">Week-over-Week Footfall</div>
                             </div>
                             <div class="col-6 col-md-3 text-center">
-                                <div style="font-size:1.6rem;font-weight:800;color:var(--color-info);">86</div>
+                                <div style="font-size:1.6rem;font-weight:800;color:var(--color-info);">0</div>
                                 <div style="font-size:0.78rem;color:var(--text-muted);">Daily Avg Vehicles</div>
                             </div>
                         </div>
                         <div class="mb-2 d-flex justify-content-between" style="font-size:0.82rem;">
                             <span style="font-weight:600;">Pump Utilization Rate</span>
-                            <span style="color:var(--color-success);font-weight:700;">78%</span>
+                            <span style="color:var(--color-success);font-weight:700;">0%</span>
                         </div>
                         <div class="progress mb-4" style="height:10px;">
                             <div class="progress-bar" style="width:78%;background:linear-gradient(90deg,var(--fuel-diesel),var(--color-success));"></div>
@@ -250,9 +250,9 @@
                     <div class="card-body text-center">
                         <canvas id="fleetDonutChart" height="140"></canvas>
                         <div class="mt-3" style="font-size:0.8rem;">
-                            <span class="badge" style="background:rgba(16,185,129,0.12);color:#059669;">Satisfied 62%</span>
-                            <span class="badge ms-1" style="background:rgba(245,158,11,0.12);color:#d97706;">Neutral 24%</span>
-                            <span class="badge ms-1" style="background:rgba(239,68,68,0.12);color:#dc2626;">Issues 14%</span>
+                            <span class="badge" style="background:rgba(16,185,129,0.12);color:#059669;">Satisfied 0%</span>
+                            <span class="badge ms-1" style="background:rgba(245,158,11,0.12);color:#d97706;">Neutral 0%</span>
+                            <span class="badge ms-1" style="background:rgba(239,68,68,0.12);color:#dc2626;">Issues 0%</span>
                         </div>
                         <p class="mt-3 mb-0" style="font-size:0.82rem;color:var(--text-muted);">
                             <i class="fa-solid fa-circle-check" style="color:var(--color-success);"></i>
@@ -270,7 +270,7 @@
                     </div>
                     <div class="card-body">
                         <div class="sticky-note hot">
-                            <strong>HOT:</strong> Price change at 15:00 — Diesel ₦750→₦755
+                            <strong>HOT:</strong> Price change at 15:00 — Diesel ₦0→₦0
                         </div>
                         <div class="sticky-note">
                             <strong>Reminder:</strong> Filter maintenance due this Friday.
@@ -281,13 +281,13 @@
                         <div class="mt-3">
                             <div class="d-flex justify-content-between mb-1" style="font-size:0.8rem;">
                                 <span style="font-weight:600;">Monthly Revenue Target</span>
-                                <span style="color:var(--color-success);font-weight:700;">87%</span>
+                                <span style="color:var(--color-success);font-weight:700;">0%</span>
                             </div>
                             <div class="progress mb-1" style="height:8px;">
                                 <div class="progress-bar" style="width:87%;background:linear-gradient(90deg,var(--color-success),#34d399);"></div>
                             </div>
                             <div class="d-flex justify-content-between" style="font-size:0.72rem;color:var(--text-muted);">
-                                <span>₦0</span><span>₦8.7M / ₦10M</span>
+                                <span>₦0</span><span>₦0 / ₦0</span>
                             </div>
                         </div>
                     </div>
@@ -348,7 +348,7 @@
                     <div class="kpi-icon mb-2" style="background:rgba(13,148,136,0.1);color:var(--fuel-diesel);">
                         <i class="fa-solid fa-gas-pump"></i>
                     </div>
-                    <div class="kpi-value" style="font-size:1.4rem;">2,450 <span style="font-size:0.85rem;font-weight:500;">L</span></div>
+                    <div class="kpi-value" style="font-size:1.4rem;">0 <span style="font-size:0.85rem;font-weight:500;">L</span></div>
                     <div class="kpi-label">Liters Dispensed (Shift)</div>
                     <div class="kpi-strip" style="background:var(--fuel-diesel);"></div>
                 </div>
@@ -358,7 +358,7 @@
                     <div class="kpi-icon mb-2" style="background:rgba(245,166,35,0.1);color:var(--fuel-premium);">
                         <i class="fa-solid fa-coins"></i>
                     </div>
-                    <div class="kpi-value" style="font-size:1.4rem;">62% <span style="font-size:0.75rem;font-weight:500;color:var(--text-muted);">Cash</span></div>
+                    <div class="kpi-value" style="font-size:1.4rem;">0% <span style="font-size:0.75rem;font-weight:500;color:var(--text-muted);">Cash</span></div>
                     <div class="kpi-label">Cash / Digital Split</div>
                     <div class="progress mt-2" style="height:6px;">
                         <div class="progress-bar" style="width:62%;background:var(--fuel-premium);"></div>
@@ -371,7 +371,7 @@
                     <div class="kpi-icon mb-2" style="background:rgba(59,130,246,0.1);color:var(--fuel-regular);">
                         <i class="fa-solid fa-stopwatch"></i>
                     </div>
-                    <div class="kpi-value" style="font-size:1.4rem;">4.2 <span style="font-size:0.85rem;font-weight:500;">min</span></div>
+                    <div class="kpi-value" style="font-size:1.4rem;">0 <span style="font-size:0.85rem;font-weight:500;">min</span></div>
                     <div class="kpi-label">Avg Fill Time</div>
                     <div class="kpi-strip" style="background:var(--fuel-regular);"></div>
                 </div>
@@ -381,7 +381,7 @@
                     <div class="kpi-icon mb-2" style="background:rgba(16,185,129,0.1);color:var(--color-success);">
                         <i class="fa-solid fa-users"></i>
                     </div>
-                    <div class="kpi-value" style="font-size:1.4rem;">4 <span style="font-size:0.85rem;font-weight:500;color:var(--text-muted);">/ 6</span></div>
+                    <div class="kpi-value" style="font-size:1.4rem;">0 <span style="font-size:0.85rem;font-weight:500;color:var(--text-muted);">/ 0</span></div>
                     <div class="kpi-label">Staff On Duty</div>
                     <div class="kpi-strip" style="background:var(--color-success);"></div>
                 </div>
@@ -393,7 +393,7 @@
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div>
                     <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;opacity:0.7;">Current Shift</div>
-                    <div style="font-size:1.1rem;font-weight:700;">Morning Shift — Started 06:00</div>
+                    <div style="font-size:1.1rem;font-weight:700;">Morning Shift — Started 00:00</div>
                 </div>
                 <div class="text-center">
                     <div style="font-size:0.72rem;opacity:0.7;text-transform:uppercase;letter-spacing:0.05em;">Elapsed</div>
@@ -583,7 +583,7 @@
                 </div>
 
                 {# Sticky Notes #}
-                <div class="sticky-note hot"><strong>HOT:</strong> Price change at 15:00 — update boards!</div>
+                <div class="sticky-note hot"><strong>HOT:</strong> Price change at 00:00 — update boards!</div>
                 <div class="sticky-note"><strong>Reminder:</strong> Filter change due this Friday.</div>
 
             </div>
@@ -594,7 +594,7 @@
             <div class="col-md-6">
                 <div class="card h-100">
                     <div class="card-header">
-                        <h6 class="section-title mb-0"><i class="fa-solid fa-chart-line me-2" style="color:var(--fuel-diesel);"></i>Fuel Flow vs Target (Last 8 Hours)</h6>
+                        <h6 class="section-title mb-0"><i class="fa-solid fa-chart-line me-2" style="color:var(--fuel-diesel);"></i>Fuel Flow vs Target (Last 0 Hours)</h6>
                     </div>
                     <div class="card-body">
                         <canvas id="fuelFlowChart" height="100"></canvas>

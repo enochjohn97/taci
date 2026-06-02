@@ -251,4 +251,67 @@ class ReportsController extends AbstractController
 
         return $response;
     }
+
+    #[Route('/export/selected', name: 'app_reports_export_selected', methods: ['POST'])]
+    public function exportSelected(Request $request): Response
+    {
+        $entity = $request->request->get('entity');
+        $ids = $request->request->get('ids', []);
+
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('export_selected', $token)) {
+            return $this->json(['error' => 'Invalid CSRF token'], 400);
+        }
+
+        if (empty($entity) || empty($ids) || !is_array($ids)) {
+            return $this->json(['error' => 'Missing entity or ids'], 400);
+        }
+
+        $handle = fopen('php://memory', 'r+');
+
+        switch ($entity) {
+            case 'products':
+                fputcsv($handle, ['Product ID', 'Name', 'Category', 'Unit Price', 'Stock']);
+                $products = $this->em->getRepository(Product::class)->findBy(['id' => $ids]);
+                foreach ($products as $product) {
+                    fputcsv($handle, [
+                        $product->getId(),
+                        $product->getName(),
+                        $product->getCategory(),
+                        $product->getUnitPrice(),
+                        $product->getStockQuantity(),
+                    ]);
+                }
+                $filename = 'products-selected-' . date('Y-m-d') . '.csv';
+                break;
+
+            case 'sales':
+                fputcsv($handle, ['Sale ID', 'Date', 'Cashier', 'Amount', 'Status']);
+                $sales = $this->em->getRepository(Sale::class)->findBy(['id' => $ids]);
+                foreach ($sales as $sale) {
+                    fputcsv($handle, [
+                        $sale->getId(),
+                        $sale->getCreatedAt()->format('Y-m-d H:i:s'),
+                        $sale->getCashier()?->getUsername() ?? 'N/A',
+                        $sale->getTotalAmount(),
+                        $sale->getStatus(),
+                    ]);
+                }
+                $filename = 'sales-selected-' . date('Y-m-d') . '.csv';
+                break;
+
+            default:
+                return $this->json(['error' => 'Unsupported entity'], 400);
+        }
+
+        rewind($handle);
+        $content = stream_get_contents($handle);
+        fclose($handle);
+
+        $response = new Response($content);
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment;filename=' . $filename);
+
+        return $response;
+    }
 }
