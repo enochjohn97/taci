@@ -64,4 +64,46 @@ class OfflineConflictController extends AbstractController
         $this->addFlash('success', 'Conflict marked as resolved.');
         return $this->redirectToRoute('admin_offline_conflicts');
     }
+
+    #[Route('/{id}/reprocess', name: 'admin_offline_conflict_reprocess', methods: ['POST'])]
+    #[IsGranted('ROLE_SUB_ADMIN')]
+    public function reprocess(AuditLog $audit, Request $request): Response
+    {
+        // Attempt to re-run the original payload through the /api/sync handler
+        $desc = $audit->getDescription();
+        $payload = [];
+        try { $payload = json_decode($desc, true); } catch (\Throwable $e) { $payload = ['raw' => $desc]; }
+        if (!is_array($payload)) {
+            $this->addFlash('error', 'Invalid payload; cannot reprocess');
+            return $this->redirectToRoute('admin_offline_conflicts');
+        }
+
+        // Extract the original transaction payload (may be wrapped)
+        $tx = $payload['payload'] ?? $payload;
+        // Ensure transactions is an array of tx objects
+        $transactions = [];
+        if (isset($tx[0]) && is_array($tx)) {
+            $transactions = $tx;
+        } else {
+            $transactions = [$tx];
+        }
+
+        $subContent = json_encode(['transactions' => $transactions]);
+        $subRequest = Request::create('/api/sync', 'POST', [], [], [], [], $subContent);
+        $subRequest->headers->set('Content-Type', 'application/json');
+        $subRequest->headers->set('User-Agent', $request->headers->get('User-Agent', 'offline-reprocess'));
+
+        // Forwarding to the SyncController by calling it directly ensures the same security context
+        try {
+            $sync = $this->container->get(\App\Controller\SyncController::class);
+            $resp = $sync->sync($subRequest);
+            $body = json_decode($resp->getContent(), true);
+            $accepted = $body['accepted'] ?? 0;
+            $this->addFlash('success', sprintf('Reprocess completed — %d transaction(s) accepted.', $accepted));
+        } catch (\Throwable $e) {
+            $this->addFlash('error', 'Reprocess failed: ' . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('admin_offline_conflicts');
+    }
 }

@@ -43,9 +43,14 @@
                 <td>{{ reason }}</td>
                 <td><pre style="max-height:120px;overflow:auto">{{ payload|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre></td>
                 <td>
-                  <form method="post" action="{{ path('admin_offline_conflict_resolve', {'id': c.getId()}) }}">
-                    <button class="btn btn-sm btn-success">Mark Resolved</button>
-                  </form>
+                  <div class="d-flex gap-2">
+                    <form method="post" action="{{ path('admin_offline_conflict_resolve', {'id': c.getId()}) }}">
+                      <button class="btn btn-sm btn-success">Mark Resolved</button>
+                    </form>
+                    <form method="post" action="{{ path('admin_offline_conflict_reprocess', {'id': c.getId()}) }}">
+                      <button class="btn btn-sm btn-primary">Reprocess</button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             {% endfor %}
