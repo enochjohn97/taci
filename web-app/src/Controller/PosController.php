@@ -170,14 +170,16 @@ class PosController extends AbstractController
                 }
             }
 
-            // Create payment record
-            $payment = new Payment();
-            $payment->setSale($sale);
-            $payment->setMethod($paymentMethod);
-            $payment->setAmount($sale->getTotalAmount());
-            $payment->setStatus('completed');
-            $payment->markAsCompleted();
-            $this->em->persist($payment);
+            // For non-card payments create payment immediately; for card we'll initialize separately
+            if ($paymentMethod !== 'card') {
+                $payment = new Payment();
+                $payment->setSale($sale);
+                $payment->setMethod($paymentMethod);
+                $payment->setAmount($sale->getTotalAmount());
+                $payment->setStatus('completed');
+                $payment->markAsCompleted();
+                $this->em->persist($payment);
+            }
 
             // Award loyalty points if customer
             if ($customerId) {
@@ -205,6 +207,68 @@ class PosController extends AbstractController
             }
             // Ensure exception does not leak sensitive info
             return $this->json(['error' => 'Transaction failed: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/api/transaction/initialize', name: 'app_pos_initialize_transaction', methods: ['POST'])]
+    public function initializeTransaction(Request $request, \App\Service\PaymentService $paymentService): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        if (!$data || !isset($data['items'])) {
+            return $this->json(['error' => 'Invalid data: items are required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $items = $data['items'];
+        $discountAmount = (float) ($data['discountAmount'] ?? 0);
+
+        $conn = $this->em->getConnection();
+
+        try {
+            $conn->beginTransaction();
+
+            $sale = new Sale();
+            $sale->setCashier($this->getUser());
+            $sale->setPaymentMethod('card');
+            $sale->setDiscountAmount($discountAmount);
+
+            $totalAmount = 0;
+            foreach ($items as $item) {
+                $product = $this->em->getRepository(Product::class)->find($item['productId']);
+                if (!$product) {
+                    throw new \Exception('Product not found: ' . $item['productId']);
+                }
+                if ($product->getStockQuantity() < $item['quantity']) {
+                    throw new \Exception('Insufficient stock for ' . $product->getName());
+                }
+
+                $saleItem = new SaleItem();
+                $saleItem->setProduct($product);
+                $saleItem->setQuantity($item['quantity']);
+                $saleItem->setUnitPrice($product->getUnitPrice());
+                $saleItem->calculateSubtotal();
+                $sale->addItem($saleItem);
+
+                $totalAmount += $saleItem->getSubtotal();
+            }
+
+            $sale->setTotalAmount($totalAmount - $discountAmount);
+            $this->em->persist($sale);
+            $this->em->flush(); // need sale id for payment initialization
+
+            // Do not deduct stock yet; finalize after payment verification via webhook
+            $init = $paymentService->initializePaystackTransaction($sale, $sale->getTotalAmount());
+
+            $conn->commit();
+
+            if (!($init['success'] ?? false)) {
+                return $this->json(['success' => false, 'error' => $init['error'] ?? 'Failed to initialize payment'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            return $this->json(['success' => true, 'authorizationUrl' => $init['authorizationUrl'], 'reference' => $init['reference']]);
+
+        } catch (\Throwable $e) {
+            if ($conn->isTransactionActive()) $conn->rollBack();
+            return $this->json(['error' => 'Initialization failed: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

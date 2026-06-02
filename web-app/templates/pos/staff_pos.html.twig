@@ -99,13 +99,20 @@ function posApp(){
                 paymentMethod: 'paystack',
                 discountAmount: this.discount
             };
-            fetch('/pos/api/transaction/create', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)})
+            // If using Paystack, initialize and redirect to authorization URL
+            fetch('/pos/api/transaction/initialize', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)})
                 .then(r=>r.json()).then(data=>{
-                    if(data.success){
+                    if(data.success && data.authorizationUrl){
+                        // open Paystack in new tab/window
+                        window.open(data.authorizationUrl, '_blank');
+                        // optionally show message
+                        alert('Redirecting to payment provider. After payment completes the receipt will be generated.');
+                        this.clearCart();
+                    } else if(data.success && data.saleId){
                         alert('Payment recorded. Sale #' + data.saleId);
                         window.location.reload();
                     } else {
-                        alert('Payment failed: ' + (data.error||'Unknown'));
+                        alert('Payment initialization failed: ' + (data.error||'Unknown'));
                     }
                 }).catch(e=>{ alert('Request failed'); });
         }
