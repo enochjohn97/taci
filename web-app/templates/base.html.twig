@@ -590,6 +590,40 @@
             #main-wrapper.sidebar-is-collapsed { margin-left: var(--sidebar-collapsed-width); }
         }
     </style>
+
+{% block extra_scripts %}{% endblock %}
+
+<script>
+// Mercure real-time subscription for notifications (if MERCURE_PUBLIC_URL provided)
+{% if app.user %}
+(function(){
+    const mercureUrl = '{{ env("MERCURE_PUBLIC_URL")|default("/hub") }}';
+    const userTopic = 'notifications/' + {{ app.user.id }};
+    try {
+        const url = new URL(mercureUrl, window.location.origin);
+        url.searchParams.append('topic', userTopic);
+        const es = new EventSource(url.toString());
+        es.onmessage = function(e){
+            try{
+                const payload = JSON.parse(e.data);
+                // increment badge
+                const badge = document.querySelector('.nb-badge');
+                if(badge) {
+                    const current = parseInt(badge.textContent) || 0;
+                    badge.textContent = (current + 1).toString();
+                }
+                // simple toast
+                const toast = document.createElement('div');
+                toast.textContent = payload.message || 'Notification';
+                toast.style.position='fixed';toast.style.right='20px';toast.style.bottom='20px';toast.style.background='#111';toast.style.color='#fff';toast.style.padding='10px 14px';toast.style.borderRadius='6px';toast.style.boxShadow='0 6px 18px rgba(0,0,0,0.2)';toast.style.zIndex=9999;
+                document.body.appendChild(toast);
+                setTimeout(()=>toast.remove(),5000);
+            }catch(e){ console.error('Mercure message parse failed', e); }
+        };
+    }catch(e){ console.warn('Mercure init failed', e); }
+})();
+{% endif %}
+</script>
     
     {% block styles %}{% endblock %}
 </head>
