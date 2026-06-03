@@ -14,9 +14,11 @@
             </div>
             <div class="col-auto ms-auto d-print-none mt-4">
                 <div class="btn-list">
+                    {% if is_granted('ROLE_MANAGER') and not is_granted('ROLE_SUB_ADMIN') %}
                     <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#addStaffModal">
                         <i class="bi bi-plus-lg me-1"></i> Add New Staff
                     </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -75,7 +77,9 @@
                             </td>
                             <td>
                                 <div class="btn-list flex-nowrap">
+                                    {% if is_granted('ROLE_MANAGER') and not is_granted('ROLE_SUB_ADMIN') %}
                                     <a href="#" class="btn btn-white btn-sm">Edit</a>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>

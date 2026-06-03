@@ -54,8 +54,7 @@ class MemoController extends AbstractController
         $unreadCount = $this->em->getRepository(MemoRecipient::class)
             ->count(['recipient' => $user, 'isRead' => false]);
 
-        return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'memo_dashboard',
+        return $this->render('memo/dashboard.html.twig', [
             'inbox' => $inbox,
             'sent' => $sent,
             'drafts' => $drafts,
@@ -157,8 +156,7 @@ class MemoController extends AbstractController
             return in_array($user->getRole()->value, $allowedRecipientRoles, true);
         }));
 
-        return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'memo_form',
+        return $this->render('memo/new.html.twig', [
             'users' => $users,
             'roles' => $allowedRecipientRoles,
         ]);
@@ -182,8 +180,7 @@ class MemoController extends AbstractController
         $replies = $this->em->getRepository(Memo::class)
             ->findBy(['parentMemo' => $memo], ['createdAt' => 'ASC']);
 
-        return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'memo_view',
+        return $this->render('memo/view.html.twig', [
             'memo' => $memo,
             'replies' => $replies,
             'attachments' => $memo->getAttachments(),
@@ -254,8 +251,7 @@ class MemoController extends AbstractController
             return $user !== $this->getUser() && in_array($user->getRole()->value, $allowedRecipientRoles, true);
         }));
 
-        return $this->render('dashboard/index.html.twig', [
-            'view_mode' => 'memo_forward',
+        return $this->render('memo/forward.html.twig', [
             'memo' => $memo,
             'users' => $users,
             'roles' => $allowedRecipientRoles,
@@ -352,11 +348,24 @@ class MemoController extends AbstractController
 
     private function getAllowedRecipientRoles(string $senderRole): array
     {
+        // Each role may address all other roles (sender's own role is always excluded at the user-filter level).
         return match ($senderRole) {
-            UserRole::ROLE_STAFF->value => [UserRole::ROLE_MANAGER->value],
-            UserRole::ROLE_MANAGER->value => [UserRole::ROLE_SUPER_ADMIN->value, UserRole::ROLE_SUB_ADMIN->value],
-            UserRole::ROLE_SUB_ADMIN->value, UserRole::ROLE_SUPER_ADMIN->value => [
+            UserRole::ROLE_STAFF->value => [
                 UserRole::ROLE_SUPER_ADMIN->value,
+                UserRole::ROLE_SUB_ADMIN->value,
+                UserRole::ROLE_MANAGER->value,
+            ],
+            UserRole::ROLE_MANAGER->value => [
+                UserRole::ROLE_SUPER_ADMIN->value,
+                UserRole::ROLE_SUB_ADMIN->value,
+                UserRole::ROLE_STAFF->value,
+            ],
+            UserRole::ROLE_SUB_ADMIN->value => [
+                UserRole::ROLE_SUPER_ADMIN->value,
+                UserRole::ROLE_MANAGER->value,
+                UserRole::ROLE_STAFF->value,
+            ],
+            UserRole::ROLE_SUPER_ADMIN->value => [
                 UserRole::ROLE_SUB_ADMIN->value,
                 UserRole::ROLE_MANAGER->value,
                 UserRole::ROLE_STAFF->value,

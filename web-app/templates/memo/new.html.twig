@@ -1,0 +1,62 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+	<div class="row">
+		<div class="col-lg-8 mx-auto">
+			<div class="card shadow-lg border-0 memo-branded memo-watermark">
+				<div class="card-header border-0 text-white py-3" style="background: linear-gradient(90deg, var(--primary), var(--primary-dark));">
+					<div class="fw-bold fs-5">{{ app_name }}</div>
+					<div class="small opacity-75">Compose Internal Memo</div>
+				</div>
+				<div class="card-body px-4">
+					<form action="{{ path('app_memo_new') }}" method="POST" enctype="multipart/form-data">
+						<div class="mb-3">
+							<label class="form-label">Recipients</label>
+							<div class="row">
+								<div class="col-md-6">
+									<label class="small text-muted">Specific Users</label>
+									<select name="recipientIds[]" class="form-select" multiple size="5">
+										{% for user in users %}
+											{% if user != app.user %}
+												<option value="{{ user.id }}">{{ user.username }}</option>
+											{% endif %}
+										{% endfor %}
+									</select>
+								</div>
+								<div class="col-md-6">
+									<label class="small text-muted">By Role</label>
+									<select name="recipientRoles[]" class="form-select" multiple size="5">
+										{% for role in roles %}
+											<option value="{{ role }}">{{ role|replace({'ROLE_': ''})|capitalize }}</option>
+										{% endfor %}
+									</select>
+								</div>
+							</div>
+							<div class="form-text">Hold Ctrl/Cmd to select multiple.</div>
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Subject</label>
+							<input type="text" name="subject" class="form-control" required placeholder="e.g. Request for Stock Replenishment">
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Message Body</label>
+							<textarea name="body" class="form-control" rows="8" required></textarea>
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Attachments (Optional)</label>
+							<input type="file" name="attachments[]" class="form-control" multiple>
+							<div class="form-text">Max 10MB per file.</div>
+						</div>
+						<div class="d-flex justify-content-between mt-4">
+							<a href="{{ path('app_memo_dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+							<div>
+								<button type="submit" name="status" value="draft" class="btn btn-outline-primary me-2">Save Draft</button>
+								<button type="submit" name="status" value="sent" class="btn btn-primary px-4">Send Memo</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+{% endblock %}

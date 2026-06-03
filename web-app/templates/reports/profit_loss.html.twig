@@ -1,0 +1,77 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Profit & Loss – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row align-items-center">
+            <div class="col">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1" style="font-size:0.8rem;">
+                        <li class="breadcrumb-item"><a href="{{ path('app_reports_dashboard') }}">Reports</a></li>
+                        <li class="breadcrumb-item active">Profit & Loss</li>
+                    </ol>
+                </nav>
+                <h2 class="page-title mt-1">
+                    <i class="bi bi-piggy-bank me-2"></i>Profit & Loss Statement
+                </h2>
+            </div>
+            <div class="col-auto">
+                <form method="GET" class="d-flex gap-2 align-items-center">
+                    <input type="date" name="startDate" class="form-control form-control-sm" value="{{ start_date|date('Y-m-d') }}">
+                    <span class="text-muted small">to</span>
+                    <input type="date" name="endDate" class="form-control form-control-sm" value="{{ end_date|date('Y-m-d') }}">
+                    <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-wrapper mt-4">
+    <div class="container-xl">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <h3 class="fw-bold mb-1">Profit & Loss Summary</h3>
+                            <div class="text-muted small">From {{ start_date|date('M d, Y') }} to {{ end_date|date('M d, Y') }}</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between py-3 border-bottom">
+                            <span class="fs-5">Total Revenue</span>
+                            <span class="fs-5 fw-bold text-success">₦{{ total_revenue|number_format(2) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-3 border-bottom">
+                            <span class="fs-5">Cost of Goods Sold (COGS)</span>
+                            <span class="fs-5 fw-bold text-danger">- ₦{{ total_cogs|number_format(2) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between py-3 border-bottom bg-light px-2 rounded mt-2">
+                            <span class="fs-5 fw-semibold">Gross Profit</span>
+                            <span class="fs-5 fw-bold">₦{{ gross_profit|number_format(2) }}</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between py-3 border-bottom mt-3">
+                            <span class="fs-5">Discounts Given</span>
+                            <span class="fs-5 fw-bold text-warning">- ₦{{ total_discount|number_format(2) }}</span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between py-4 border-bottom bg-primary bg-opacity-10 px-3 rounded mt-3">
+                            <span class="fs-4 fw-bold text-primary">Net Profit</span>
+                            <span class="fs-4 fw-bold text-primary">₦{{ net_profit|number_format(2) }}</span>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <div class="badge bg-info bg-opacity-10 text-info px-3 py-2 fs-6">
+                                Profit Margin: {{ profit_margin|number_format(1) }}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

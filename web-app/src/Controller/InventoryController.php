@@ -52,7 +52,7 @@ class InventoryController extends AbstractController
         $qb = $this->em->getRepository(Product::class)->createQueryBuilder('p');
 
         if ($search) {
-            $qb->where('p.name LIKE :search OR p.barcode LIKE :search')
+            $qb->andWhere('p.name LIKE :search OR p.barcode LIKE :search')
                ->setParameter('search', '%' . $search . '%');
         }
 

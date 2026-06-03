@@ -20,7 +20,7 @@
             </div>
             <div class="col-auto ms-auto d-print-none">
                 <div class="d-flex gap-2">
-                    {% if is_granted('ROLE_MANAGER') %}
+                    {% if is_granted('ROLE_MANAGER') and not is_granted('ROLE_SUB_ADMIN') %}
                     <a href="{{ path('app_inventory_product_new') }}" class="btn btn-primary shadow-sm hover-elevate">
                         <i class="bi bi-plus-lg me-2"></i> Add New Product
                     </a>
@@ -39,14 +39,24 @@
                 <form method="GET" class="row g-3 align-items-end">
                     <div class="col-md-5">
                         <label class="form-label fw-semibold text-muted small">Search</label>
-                        <div class="input-icon">
-                            <span class="input-icon-addon"><i class="bi bi-search"></i></span>
-                            <input type="text" name="search" class="form-control bg-white shadow-none" value="{{ search|default('') }}" placeholder="Product name or barcode…">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-search"></i></span>
+                            <input type="text" name="search" class="form-control bg-white shadow-none border-start-0" value="{{ search|default('') }}" placeholder="Product name or barcode…">
                         </div>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label fw-semibold text-muted small">Category</label>
-                        <input type="text" name="category" class="form-control bg-white shadow-none" value="{{ category|default('') }}" placeholder="All Categories">
+                        <select name="category" class="form-select bg-white shadow-none">
+                            <option value="">All Categories</option>
+                            <option value="Lubricants" {{ category|default('') == 'Lubricants' ? 'selected' : '' }}>Lubricants</option>
+                            <option value="Accessories" {{ category|default('') == 'Accessories' ? 'selected' : '' }}>Accessories</option>
+                            <option value="Spares" {{ category|default('') == 'Spares' ? 'selected' : '' }}>Spares</option>
+                            <option value="Consumables" {{ category|default('') == 'Consumables' ? 'selected' : '' }}>Consumables</option>
+                            <option value="Foods" {{ category|default('') == 'Foods' ? 'selected' : '' }}>Foods</option>
+                            <option value="Beverages" {{ category|default('') == 'Beverages' ? 'selected' : '' }}>Beverages</option>
+                            <option value="Utensils" {{ category|default('') == 'Utensils' ? 'selected' : '' }}>Utensils</option>
+                            <option value="Snacks" {{ category|default('') == 'Snacks' ? 'selected' : '' }}>Snacks</option>
+                        </select>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label fw-semibold text-muted small">Sort By</label>
@@ -86,12 +96,12 @@
                             <tr class="product-row" data-product="{{ product|serialize('json', {'groups': 'public'})|e('html_attr') }}"
                                 data-name="{{ product.name }}" data-barcode="{{ product.barcode }}" data-desc="{{ product.description|default('No description') }}"
                                 data-cat="{{ product.category }}" data-price="₦{{ product.unitPrice|number_format(2) }}" data-cost="₦{{ product.costPrice|default(0)|number_format(2) }}"
-                                data-stock="{{ product.stockQuantity }}" data-reorder="{{ product.reorderLevel }}">
+                                data-stock="{{ product.stockQuantity }}" data-reorder="{{ product.reorderLevel }}" data-image="{{ product.imagePath ? asset(product.imagePath) : '' }}">
                                 
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center">
                                         {% if product.imagePath %}
-                                            <div class="avatar me-3 rounded border" style="background-image: url('{{ asset(product.imagePath) }}'); width: 48px; height: 48px;"></div>
+                                            <img src="{{ asset(product.imagePath) }}" class="me-3 rounded border" style="width: 48px; height: 48px; object-fit: cover;" alt="{{ product.name }}">
                                         {% else %}
                                             <div class="avatar bg-primary-subtle text-primary me-3 rounded border" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
                                                 <i class="bi bi-box"></i>
@@ -123,7 +133,7 @@
                                         <i class="bi bi-eye me-1"></i> Preview
                                     </button>
                                     
-                                    {% if is_granted('ROLE_MANAGER') %}
+                                    {% if is_granted('ROLE_MANAGER') and not is_granted('ROLE_SUB_ADMIN') %}
                                     <a href="{{ path('app_inventory_product_edit', {id: product.id}) }}" class="btn btn-sm btn-light border rounded-pill px-3 ms-2 hover-elevate text-dark">
                                         <i class="bi bi-pencil"></i>
                                     </a>
@@ -234,6 +244,19 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('previewCost').innerText = tr.dataset.cost;
             document.getElementById('previewStock').innerText = tr.dataset.stock;
             document.getElementById('previewReorder').innerText = tr.dataset.reorder;
+            
+            const imgUrl = tr.dataset.image;
+            const imgEl = document.getElementById('previewImage');
+            const iconEl = document.getElementById('previewIcon');
+            if (imgUrl) {
+                imgEl.src = imgUrl;
+                imgEl.classList.remove('d-none');
+                iconEl.classList.add('d-none');
+            } else {
+                imgEl.src = '';
+                imgEl.classList.add('d-none');
+                iconEl.classList.remove('d-none');
+            }
             
             modal.show();
         });

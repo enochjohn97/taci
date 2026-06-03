@@ -1,0 +1,133 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Memos – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row align-items-center">
+            <div class="col">
+                <h2 class="page-title mt-4">
+                    <i class="bi bi-envelope-paper me-2"></i>Internal Memos
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-wrapper mt-4">
+    <div class="container-xl">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="list-group mb-4 shadow-sm">
+                    <a href="{{ path('app_memo_dashboard') }}?tab=inbox" class="list-group-item list-group-item-action {{ app.request.query.get('tab','inbox') == 'inbox' ? 'active' : '' }}">
+                        <i class="bi bi-inbox me-2"></i> Inbox {% if unread_count|default(0) > 0 %}<span class="badge bg-danger float-end">{{ unread_count }}</span>{% endif %}
+                    </a>
+                    <a href="{{ path('app_memo_dashboard') }}?tab=sent" class="list-group-item list-group-item-action {{ app.request.query.get('tab') == 'sent' ? 'active' : '' }}">
+                        <i class="bi bi-send me-2"></i> Sent
+                    </a>
+                    <a href="{{ path('app_memo_dashboard') }}?tab=drafts" class="list-group-item list-group-item-action {{ app.request.query.get('tab') == 'drafts' ? 'active' : '' }}">
+                        <i class="bi bi-file-earmark me-2"></i> Drafts
+                    </a>
+                    <a href="{{ path('app_memo_new') }}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-pencil-square me-2"></i> Compose
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="card shadow-sm memo-branded memo-watermark">
+                    <div class="card-header memo-letterhead bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-bold text-primary fs-5">{{ app_name }}</div>
+                                <div class="small text-muted">Internal Correspondence</div>
+                            </div>
+                            <a href="{{ path('app_memo_new') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i> New Memo</a>
+                        </div>
+                    </div>
+                    {% set tab = app.request.query.get('tab', 'inbox') %}
+                    <div class="card-header bg-transparent border-0 pt-0">
+                        <h5 class="mb-0">{% if tab == 'sent' %}Sent Memos{% elseif tab == 'drafts' %}Drafts{% else %}Inbox{% endif %}</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0" id="memoListTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th><input type="checkbox" id="selectAll_memoListTable"></th>
+                                    <th>Sender</th><th>Subject</th><th>Date</th><th>Status</th><th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if tab == 'sent' %}
+                                    {% for memo in sent|default([]) %}
+                                        <tr data-sender="{{ memo.sender.username }}" data-subject="{{ memo.subject }}" data-date="{{ memo.createdAt|date('Y-m-d H:i') }}" data-status="{{ memo.status }}">
+                                            <td><input type="checkbox" class="row-checkbox-memoListTable"></td>
+                                            <td>{{ memo.sender.username }}</td>
+                                            <td>{{ memo.subject }}</td>
+                                            <td class="text-muted small">{{ memo.createdAt|date('M d, H:i') }}</td>
+                                            <td><span class="badge bg-secondary">{{ memo.status|capitalize }}</span></td>
+                                            <td><a href="{{ path('app_memo_view', {id: memo.id}) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+                                        </tr>
+                                    {% else %}
+                                        <tr><td colspan="6" class="text-center text-muted py-4">No sent memos.</td></tr>
+                                    {% endfor %}
+                                {% elseif tab == 'drafts' %}
+                                    {% for memo in drafts|default([]) %}
+                                        <tr data-sender="{{ memo.sender.username }}" data-subject="{{ memo.subject }}" data-date="{{ memo.createdAt|date('Y-m-d H:i') }}" data-status="draft">
+                                            <td><input type="checkbox" class="row-checkbox-memoListTable"></td>
+                                            <td>{{ memo.sender.username }}</td>
+                                            <td>{{ memo.subject }}</td>
+                                            <td class="text-muted small">{{ memo.createdAt|date('M d, H:i') }}</td>
+                                            <td><span class="badge bg-warning text-dark">Draft</span></td>
+                                            <td><a href="{{ path('app_memo_view', {id: memo.id}) }}" class="btn btn-sm btn-outline-secondary">Edit</a></td>
+                                        </tr>
+                                    {% else %}
+                                        <tr><td colspan="6" class="text-center text-muted py-4">No drafts.</td></tr>
+                                    {% endfor %}
+                                {% else %}
+                                    {% for item in inbox %}
+                                        <tr class="{{ not item.isRead ? 'table-primary' : '' }}" data-sender="{{ item.memo.sender.username }}" data-subject="{{ item.memo.subject }}" data-date="{{ item.memo.createdAt|date('Y-m-d H:i') }}" data-status="{{ item.memo.status }}">
+                                            <td><input type="checkbox" class="row-checkbox-memoListTable"></td>
+                                            <td>{{ item.memo.sender.username }}</td>
+                                            <td>{{ item.memo.subject }}{% if not item.isRead %} <span class="badge bg-primary">New</span>{% endif %}</td>
+                                            <td class="text-muted small">{{ item.memo.createdAt|date('M d, H:i') }}</td>
+                                            <td><span class="badge bg-{{ item.memo.status == 'approved' ? 'success' : (item.memo.status == 'declined' ? 'danger' : 'info') }}">{{ item.memo.status|capitalize }}</span></td>
+                                            <td><a href="{{ path('app_memo_view', {id: item.memo.id}) }}" class="btn btn-sm btn-outline-primary">View</a></td>
+                                        </tr>
+                                    {% else %}
+                                        <tr><td colspan="6" class="text-center text-muted py-4">Your inbox is empty.</td></tr>
+                                    {% endfor %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <button type="button" id="exportCsv_memoListTable" class="btn btn-sm btn-outline-success"><i class="bi bi-download me-1"></i> Export Selected</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof TaciTableExport !== 'undefined') {
+                TaciTableExport.init('memoListTable', {
+                    selectAllId: 'selectAll_memoListTable',
+                    checkboxClass: 'row-checkbox-memoListTable',
+                    exportBtnId: 'exportCsv_memoListTable',
+                    filename: 'memos.csv',
+                    addSelectColumn: false,
+                    columns: [
+                        { key: 'sender', label: 'Sender' }, { key: 'subject', label: 'Subject' },
+                        { key: 'date', label: 'Date' }, { key: 'status', label: 'Status' }
+                    ]
+                });
+            }
+        });
+    </script>
+{% endblock %}

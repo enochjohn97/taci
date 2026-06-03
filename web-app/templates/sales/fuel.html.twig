@@ -1,0 +1,605 @@
+{# templates/sales/fuel.html.twig #}
+{% extends "base.html.twig" %}
+
+{% block title %}Fuel Sales – {{ app_name }}{% endblock %}
+
+{% block styles %}
+<style>
+    /* ── Page Header ── */
+    .fs-breadcrumb { font-size: 0.78rem; color: var(--text-muted); }
+    .fs-breadcrumb a { color: var(--text-muted); text-decoration: none; }
+    .fs-breadcrumb a:hover { color: var(--primary); }
+    .fs-page-title { font-size: 1.45rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.02em; margin: 0; }
+
+    /* ── KPI Cards ── */
+    .fs-kpi-card {
+        background: var(--bg-card);
+        border-radius: 16px;
+        padding: 1.35rem 1.5rem 1.2rem;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 12px rgba(15,23,42,0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    .fs-kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 28px rgba(15,23,42,0.10);
+    }
+    .fs-kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        border-radius: 16px 16px 0 0;
+    }
+    .fs-kpi-card.c-teal::before   { background: linear-gradient(90deg, #0d9488, #2dd4bf); }
+    .fs-kpi-card.c-amber::before  { background: linear-gradient(90deg, #f59e0b, #fcd34d); }
+    .fs-kpi-card.c-blue::before   { background: linear-gradient(90deg, #3b82f6, #93c5fd); }
+    .fs-kpi-card.c-violet::before { background: linear-gradient(90deg, #8b5cf6, #c4b5fd); }
+    .fs-kpi-card.c-rose::before   { background: linear-gradient(90deg, #ef4444, #fca5a5); }
+
+    .fs-kpi-icon {
+        width: 46px; height: 46px;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.15rem; flex-shrink: 0;
+    }
+    .fs-kpi-label  { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-bottom: 4px; }
+    .fs-kpi-value  { font-size: 1.7rem;  font-weight: 800; color: var(--text-main); line-height: 1.1; letter-spacing: -0.03em; }
+    .fs-kpi-sub    { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+    .fs-kpi-badge  { font-size: 0.72rem; font-weight: 700; padding: 3px 9px; border-radius: 99px; display: inline-flex; align-items: center; gap: 3px; }
+    .fs-kpi-badge.up   { background: rgba(16,185,129,0.12);  color: #059669; }
+    .fs-kpi-badge.down { background: rgba(239,68,68,0.12);   color: #dc2626; }
+    .fs-kpi-badge.flat { background: rgba(100,116,139,0.1);  color: #64748b; }
+
+    /* ── Fuel Type Summary Strip ── */
+    .fs-fuel-strip {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+    .fs-fuel-pill {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 0.9rem 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        transition: transform 0.18s;
+    }
+    .fs-fuel-pill:hover { transform: translateY(-2px); }
+    .fs-fuel-pill-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .fs-fuel-pill-name  { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .fs-fuel-pill-val   { font-size: 1.05rem;  font-weight: 800; color: var(--text-main); line-height: 1.1; }
+    .fs-fuel-pill-litre { font-size: 0.72rem;  color: var(--text-muted); }
+
+    /* ── Filter Bar ── */
+    .fs-filter-bar {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.25rem;
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .fs-filter-bar .form-control,
+    .fs-filter-bar .form-select {
+        font-size: 0.83rem; border-radius: 8px; border-color: var(--border-color);
+        background: var(--bg-page); color: var(--text-main); height: 36px; padding: 0 0.75rem;
+    }
+    .fs-filter-bar .form-control:focus,
+    .fs-filter-bar .form-select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(13,148,136,0.12);
+    }
+    .fs-search-box { flex: 1; min-width: 200px; position: relative; }
+    .fs-search-box .form-control { padding-left: 2.25rem; }
+    .fs-search-icon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem; }
+    .fs-filter-label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+
+    /* ── Table ── */
+    .fs-table-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        box-shadow: 0 2px 12px rgba(15,23,42,0.05);
+        overflow: hidden;
+    }
+    .fs-table-card .card-header-row {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--border-color); gap: 1rem; flex-wrap: wrap;
+    }
+    .fs-table-card .card-header-title { font-size: 0.95rem; font-weight: 700; color: var(--text-main); }
+    .fs-table-card .card-header-count { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; }
+
+    .fs-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.855rem; }
+    .fs-table thead th {
+        background: var(--bg-page); color: var(--text-muted);
+        font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+        padding: 0.8rem 1rem; border-bottom: 1px solid var(--border-color);
+        white-space: nowrap; position: sticky; top: 0; z-index: 1;
+        cursor: pointer; user-select: none; transition: background 0.15s;
+    }
+    .fs-table thead th:hover { background: var(--border-color); }
+    .fs-table thead th.sorted-asc  .sort-icon::after { content: ' ↑'; color: var(--primary); }
+    .fs-table thead th.sorted-desc .sort-icon::after { content: ' ↓'; color: var(--primary); }
+    .fs-table thead th:not(.sorted-asc):not(.sorted-desc) .sort-icon::after { content: ' ⇅'; opacity: 0.3; }
+
+    .fs-table tbody tr { border-bottom: 1px solid var(--border-color); transition: background 0.12s; }
+    .fs-table tbody tr:last-child { border-bottom: none; }
+    .fs-table tbody tr:hover { background: var(--bg-page); }
+    .fs-table td { padding: 0.85rem 1rem; vertical-align: middle; color: var(--text-main); }
+
+    /* Fuel type chips */
+    .fs-fuel-chip { font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; display: inline-flex; align-items: center; gap: 5px; }
+    .fs-fuel-chip.pms  { background: rgba(16,185,129,0.12); color: #059669; }
+    .fs-fuel-chip.ago  { background: rgba(245,158,11,0.12);  color: #d97706; }
+    .fs-fuel-chip.dpk  { background: rgba(59,130,246,0.12);  color: #2563eb; }
+    .fs-fuel-chip.lpg  { background: rgba(139,92,246,0.12);  color: #7c3aed; }
+    .fs-fuel-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+    .fs-badge { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 99px; }
+    .fs-badge.paid    { background: rgba(16,185,129,0.12); color: #059669; }
+    .fs-badge.pending { background: rgba(245,158,11,0.12);  color: #d97706; }
+    .fs-badge.voided  { background: rgba(239,68,68,0.12);   color: #dc2626; }
+    .fs-badge.cash     { background: rgba(59,130,246,0.1);   color: #2563eb; }
+    .fs-badge.pos      { background: rgba(139,92,246,0.1);   color: #7c3aed; }
+    .fs-badge.transfer { background: rgba(245,158,11,0.1);   color: #b45309; }
+    .fs-badge.fleet    { background: rgba(13,148,136,0.1);   color: #0d9488; }
+
+    .fs-amount { font-weight: 700; color: var(--text-main); }
+    .fs-txn-id { font-size: 0.75rem; color: var(--text-muted); font-family: monospace; }
+    .fs-pump-tag { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
+
+    /* Pagination */
+    .fs-pagination { display: flex; align-items: center; gap: 0.4rem; }
+    .fs-page-btn {
+        width: 32px; height: 32px; border-radius: 8px; font-size: 0.8rem; font-weight: 600;
+        border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-muted);
+        display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s;
+    }
+    .fs-page-btn:hover, .fs-page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .fs-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Empty */
+    .fs-empty { padding: 4rem 2rem; text-align: center; }
+    .fs-empty i { font-size: 2.5rem; color: var(--border-color); margin-bottom: 1rem; }
+    .fs-empty p { color: var(--text-muted); font-size: 0.9rem; }
+
+    .fs-export-btn { font-size: 0.78rem; font-weight: 600; border-radius: 8px; padding: 6px 14px; gap: 6px; display: inline-flex; align-items: center; }
+
+    /* Dark mode adjustments */
+    [data-theme="dark"] .fs-kpi-card,
+    [data-theme="dark"] .fs-table-card,
+    [data-theme="dark"] .fs-filter-bar,
+    [data-theme="dark"] .fs-fuel-pill { background: var(--bg-card); border-color: var(--border-color); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+        <div>
+            <nav class="fs-breadcrumb mb-1">
+                <a href="{{ path('app_sales_dashboard') }}">Sales</a>
+                <span class="mx-1">/</span>
+                <span>Fuel Sales</span>
+            </nav>
+            <h1 class="fs-page-title">
+                <i class="fa-solid fa-gas-pump me-2" style="color:#0d9488;"></i> Fuel Sales
+            </h1>
+            <p class="text-muted mb-0 mt-1" style="font-size: 0.85rem;">Monitor fuel dispensing, pump revenue and per-product performance.</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center flex-wrap mt-1">
+            <button id="fs-export-csv" class="fs-export-btn btn btn-outline-secondary">
+                <i class="fa-solid fa-file-csv"></i> Export CSV
+            </button>
+            <a href="{{ path('app_fuel_entry_new') }}" class="btn btn-primary fs-export-btn">
+                <i class="fa-solid fa-plus"></i> Log Fuel Entry
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Cards Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-xl col-lg-4">
+            <div class="fs-kpi-card c-teal">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="fs-kpi-icon" style="background:rgba(13,148,136,0.1);color:#0d9488;">
+                        <i class="fa-solid fa-naira-sign"></i>
+                    </div>
+                    <span class="fs-kpi-badge up"><i class="fa-solid fa-arrow-trend-up"></i> +18.2%</span>
+                </div>
+                <div class="fs-kpi-label">Total Revenue (Month)</div>
+                <div class="fs-kpi-value">₦{{ (total_revenue / 1000000)|number_format(1) }}M</div>
+                <div class="fs-kpi-sub">vs ₦4.45M last month</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl col-lg-4">
+            <div class="fs-kpi-card c-amber">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="fs-kpi-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;">
+                        <i class="fa-solid fa-droplet"></i>
+                    </div>
+                    <span class="fs-kpi-badge up"><i class="fa-solid fa-arrow-trend-up"></i> +9.4%</span>
+                </div>
+                <div class="fs-kpi-label">Total Litres Dispensed</div>
+                <div class="fs-kpi-value">{{ total_volume|number_format(0) }} L</div>
+                <div class="fs-kpi-sub">Across all fuel types</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl col-lg-4">
+            <div class="fs-kpi-card c-blue">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="fs-kpi-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;">
+                        <i class="fa-solid fa-receipt"></i>
+                    </div>
+                    <span class="fs-kpi-badge up"><i class="fa-solid fa-arrow-trend-up"></i> +5.7%</span>
+                </div>
+                <div class="fs-kpi-label">Transactions (Month)</div>
+                <div class="fs-kpi-value">{{ transaction_count|number_format(0) }}</div>
+                <div class="fs-kpi-sub">Avg. ₦6,446 per sale</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl col-lg-4">
+            <div class="fs-kpi-card c-violet">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="fs-kpi-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6;">
+                        <i class="fa-solid fa-id-card"></i>
+                    </div>
+                    <span class="fs-kpi-badge flat"><i class="fa-solid fa-minus"></i> +0.8%</span>
+                </div>
+                <div class="fs-kpi-label">Fleet Card Sales</div>
+                <div class="fs-kpi-value">₦{{ (avg_ticket / 1000000)|number_format(2) }}M</div>
+                <div class="fs-kpi-sub">22.4% of total revenue</div>
+            </div>
+        </div>
+        <div class="col-6 col-xl col-lg-4">
+            <div class="fs-kpi-card c-rose">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="fs-kpi-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;">
+                        <i class="fa-solid fa-gas-pump"></i>
+                    </div>
+                    <span class="fs-kpi-badge down"><i class="fa-solid fa-arrow-trend-down"></i> -1.2%</span>
+                </div>
+                <div class="fs-kpi-label">Active Pumps Today</div>
+                <div class="fs-kpi-value">8 / 8</div>
+                <div class="fs-kpi-sub">Pump 3 &amp; 7 in maintenance</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fuel Type Breakdown Strip -->
+    <div class="fs-fuel-strip mb-4">
+        <div class="fs-fuel-pill">
+            <div>
+                <div class="fs-fuel-pill-name"><span class="fs-fuel-dot me-1" style="background:#10b981;"></span> PMS (Petrol)</div>
+                <div class="fs-fuel-pill-val">₦3.12M</div>
+                <div class="fs-fuel-pill-litre">24,800 Litres · ₦1,260/L</div>
+            </div>
+        </div>
+        <div class="fs-fuel-pill">
+            <div>
+                <div class="fs-fuel-pill-name"><span class="fs-fuel-dot me-1" style="background:#f59e0b;"></span> AGO (Diesel)</div>
+                <div class="fs-fuel-pill-val">₦1.84M</div>
+                <div class="fs-fuel-pill-litre">12,200 Litres · ₦1,510/L</div>
+            </div>
+        </div>
+        <div class="fs-fuel-pill">
+            <div>
+                <div class="fs-fuel-pill-name"><span class="fs-fuel-dot me-1" style="background:#3b82f6;"></span> DPK (Kerosene)</div>
+                <div class="fs-fuel-pill-val">₦220K</div>
+                <div class="fs-fuel-pill-litre">3,800 Litres · ₦580/L</div>
+            </div>
+        </div>
+        <div class="fs-fuel-pill">
+            <div>
+                <div class="fs-fuel-pill-name"><span class="fs-fuel-dot me-1" style="background:#8b5cf6;"></span> LPG (Gas)</div>
+                <div class="fs-fuel-pill-val">₦108K</div>
+                <div class="fs-fuel-pill-litre">1,380 Litres · ₦780/L</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="fs-filter-bar">
+        <span class="fs-filter-label"><i class="fa-solid fa-filter me-1"></i> Filter:</span>
+        <div class="fs-search-box">
+            <i class="fa-solid fa-magnifying-glass fs-search-icon"></i>
+            <input type="text" class="form-control" id="fs-search" placeholder="Search txn ID, attendant, vehicle plate…">
+        </div>
+        <select class="form-select" id="fs-filter-fuel" style="max-width: 160px;">
+            <option value="">All Fuel Types</option>
+            <option value="PMS">PMS (Petrol)</option>
+            <option value="AGO">AGO (Diesel)</option>
+            <option value="DPK">DPK (Kerosene)</option>
+            <option value="LPG">LPG (Gas)</option>
+        </select>
+        <select class="form-select" id="fs-filter-pump" style="max-width: 130px;">
+            <option value="">All Pumps</option>
+            <option value="Pump 1">Pump 1</option>
+            <option value="Pump 2">Pump 2</option>
+            <option value="Pump 3">Pump 3</option>
+            <option value="Pump 4">Pump 4</option>
+            <option value="Pump 5">Pump 5</option>
+            <option value="Pump 6">Pump 6</option>
+        </select>
+        <select class="form-select" id="fs-filter-payment" style="max-width: 155px;">
+            <option value="">All Payments</option>
+            <option value="Cash">Cash</option>
+            <option value="POS">POS</option>
+            <option value="Transfer">Transfer</option>
+            <option value="Fleet Card">Fleet Card</option>
+        </select>
+        <select class="form-select" id="fs-filter-status" style="max-width: 140px;">
+            <option value="">All Statuses</option>
+            <option value="Paid">Paid</option>
+            <option value="Pending">Pending</option>
+            <option value="Voided">Voided</option>
+        </select>
+        <select class="form-select" id="fs-filter-period" style="max-width: 140px;">
+            <option value="">All Time</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month" selected>This Month</option>
+            <option value="quarter">This Quarter</option>
+        </select>
+        <button class="btn btn-sm btn-outline-secondary px-3" id="fs-clear-filters" style="font-size: 0.78rem; font-weight: 600; height: 36px; border-radius: 8px;">
+            <i class="fa-solid fa-xmark me-1"></i> Clear
+        </button>
+    </div>
+
+    <!-- Table Card -->
+    <div class="fs-table-card">
+        <div class="card-header-row">
+            <div>
+                <div class="card-header-title"><i class="fa-solid fa-table-list me-2" style="color:#0d9488;"></i>Fuel Transaction Log</div>
+                <div class="card-header-count">Showing <strong id="fs-showing">0</strong> of <strong id="fs-total">0</strong> entries</div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="fs-filter-label">Per page:</span>
+                <select class="form-select form-select-sm" id="fs-per-page" style="width: 70px; font-size: 0.8rem; border-radius: 8px;">
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-responsive" style="max-height: 540px; overflow-y: auto;">
+            <table class="fs-table" id="fs-table">
+                <thead>
+                    <tr>
+                        <th data-col="txn_id" class="sorted-asc"><span class="sort-icon">#TXN ID</span></th>
+                        <th data-col="date"><span class="sort-icon">Date &amp; Time</span></th>
+                        <th data-col="fuel_type"><span class="sort-icon">Fuel Type</span></th>
+                        <th data-col="pump"><span class="sort-icon">Pump</span></th>
+                        <th data-col="litres"><span class="sort-icon">Litres</span></th>
+                        <th data-col="price_per_litre"><span class="sort-icon">Price/L</span></th>
+                        <th data-col="total"><span class="sort-icon">Total</span></th>
+                        <th data-col="payment"><span class="sort-icon">Payment</span></th>
+                        <th data-col="plate"><span class="sort-icon">Vehicle Plate</span></th>
+                        <th data-col="attendant"><span class="sort-icon">Attendant</span></th>
+                        <th data-col="status"><span class="sort-icon">Status</span></th>
+                    </tr>
+                </thead>
+                <tbody id="fs-tbody">
+                    <!-- Injected by JS -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="fs-empty" class="fs-empty" style="display:none;">
+            <i class="fa-solid fa-gas-pump"></i>
+            <p class="mb-0">No fuel transactions match your filters.</p>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top" style="border-color:var(--border-color)!important;">
+            <div class="text-muted" style="font-size:0.8rem;" id="fs-page-info">Page 1 of 1</div>
+            <div class="fs-pagination" id="fs-pagination"></div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function(){
+    // ── Sample fuel data ──
+    const FUEL_DATA = [
+        { txn_id:'FTX-001', date:'2026-06-03 07:10', fuel_type:'PMS', pump:'Pump 1', litres:20,   price_per_litre:1260, total:25200,  payment:'Cash',       plate:'ABJ-412-KA', attendant:'Chidi A.',  status:'Paid'    },
+        { txn_id:'FTX-002', date:'2026-06-03 07:35', fuel_type:'AGO', pump:'Pump 4', litres:50,   price_per_litre:1510, total:75500,  payment:'Fleet Card',  plate:'LAG-881-GT', attendant:'Ngozi E.',  status:'Paid'    },
+        { txn_id:'FTX-003', date:'2026-06-03 08:05', fuel_type:'PMS', pump:'Pump 2', litres:10,   price_per_litre:1260, total:12600,  payment:'POS',         plate:'PHC-044-QA', attendant:'Chidi A.',  status:'Paid'    },
+        { txn_id:'FTX-004', date:'2026-06-03 08:42', fuel_type:'DPK', pump:'Pump 6', litres:30,   price_per_litre:580,  total:17400,  payment:'Cash',        plate:'KAN-220-BX', attendant:'Musa I.',   status:'Paid'    },
+        { txn_id:'FTX-005', date:'2026-06-03 09:00', fuel_type:'PMS', pump:'Pump 1', litres:15,   price_per_litre:1260, total:18900,  payment:'Transfer',    plate:'ENS-770-HU', attendant:'Ngozi E.',  status:'Pending' },
+        { txn_id:'FTX-006', date:'2026-06-03 09:30', fuel_type:'AGO', pump:'Pump 5', litres:80,   price_per_litre:1510, total:120800, payment:'Fleet Card',  plate:'ABJ-300-FT', attendant:'Musa I.',   status:'Paid'    },
+        { txn_id:'FTX-007', date:'2026-06-03 10:15', fuel_type:'LPG', pump:'Pump 6', litres:12.5, price_per_litre:780,  total:9750,   payment:'Cash',        plate:'LAG-555-ZZ', attendant:'Chidi A.',  status:'Paid'    },
+        { txn_id:'FTX-008', date:'2026-06-03 10:55', fuel_type:'PMS', pump:'Pump 2', litres:25,   price_per_litre:1260, total:31500,  payment:'POS',         plate:'OGU-101-AA', attendant:'Ngozi E.',  status:'Paid'    },
+        { txn_id:'FTX-009', date:'2026-06-03 11:30', fuel_type:'AGO', pump:'Pump 4', litres:40,   price_per_litre:1510, total:60400,  payment:'Transfer',    plate:'RVR-630-PQ', attendant:'Musa I.',   status:'Paid'    },
+        { txn_id:'FTX-010', date:'2026-06-03 12:10', fuel_type:'PMS', pump:'Pump 1', litres:5,    price_per_litre:1260, total:6300,   payment:'Cash',        plate:'ABJ-009-XX', attendant:'Chidi A.',  status:'Voided'  },
+        { txn_id:'FTX-011', date:'2026-06-02 08:00', fuel_type:'PMS', pump:'Pump 2', litres:30,   price_per_litre:1260, total:37800,  payment:'POS',         plate:'LAG-120-SB', attendant:'Ngozi E.',  status:'Paid'    },
+        { txn_id:'FTX-012', date:'2026-06-02 09:20', fuel_type:'AGO', pump:'Pump 5', litres:60,   price_per_litre:1510, total:90600,  payment:'Fleet Card',  plate:'ABJ-560-MN', attendant:'Musa I.',   status:'Paid'    },
+        { txn_id:'FTX-013', date:'2026-06-02 10:45', fuel_type:'DPK', pump:'Pump 6', litres:20,   price_per_litre:580,  total:11600,  payment:'Cash',        plate:'KAD-337-YY', attendant:'Chidi A.',  status:'Paid'    },
+        { txn_id:'FTX-014', date:'2026-06-02 12:00', fuel_type:'PMS', pump:'Pump 1', litres:40,   price_per_litre:1260, total:50400,  payment:'Transfer',    plate:'PHC-800-WA', attendant:'Ngozi E.',  status:'Paid'    },
+        { txn_id:'FTX-015', date:'2026-06-02 14:30', fuel_type:'LPG', pump:'Pump 6', litres:8,    price_per_litre:780,  total:6240,   payment:'Cash',        plate:'IBA-222-CC', attendant:'Musa I.',   status:'Pending' },
+        { txn_id:'FTX-016', date:'2026-06-01 07:50', fuel_type:'PMS', pump:'Pump 2', litres:22,   price_per_litre:1260, total:27720,  payment:'Cash',        plate:'BEN-441-DD', attendant:'Chidi A.',  status:'Paid'    },
+        { txn_id:'FTX-017', date:'2026-06-01 09:10', fuel_type:'AGO', pump:'Pump 4', litres:70,   price_per_litre:1510, total:105700, payment:'Fleet Card',  plate:'LAG-990-EE', attendant:'Ngozi E.',  status:'Paid'    },
+        { txn_id:'FTX-018', date:'2026-06-01 10:30', fuel_type:'PMS', pump:'Pump 1', litres:18,   price_per_litre:1260, total:22680,  payment:'POS',         plate:'OND-123-FF', attendant:'Musa I.',   status:'Paid'    },
+        { txn_id:'FTX-019', date:'2026-06-01 12:45', fuel_type:'DPK', pump:'Pump 6', litres:25,   price_per_litre:580,  total:14500,  payment:'Cash',        plate:'AKW-055-GG', attendant:'Chidi A.',  status:'Paid'    },
+        { txn_id:'FTX-020', date:'2026-06-01 15:00', fuel_type:'AGO', pump:'Pump 5', litres:45,   price_per_litre:1510, total:67950,  payment:'Transfer',    plate:'CRS-770-HH', attendant:'Ngozi E.',  status:'Paid'    },
+    ];
+
+    let filtered   = [...FUEL_DATA];
+    let sortCol    = 'txn_id';
+    let sortDir    = 'asc';
+    let page       = 1;
+    let perPage    = 10;
+
+    const tbody       = document.getElementById('fs-tbody');
+    const emptyEl     = document.getElementById('fs-empty');
+    const showingEl   = document.getElementById('fs-showing');
+    const totalEl     = document.getElementById('fs-total');
+    const pageInfoEl  = document.getElementById('fs-page-info');
+    const paginEl     = document.getElementById('fs-pagination');
+    const searchEl    = document.getElementById('fs-search');
+    const fuelEl      = document.getElementById('fs-filter-fuel');
+    const pumpEl      = document.getElementById('fs-filter-pump');
+    const payEl       = document.getElementById('fs-filter-payment');
+    const statusEl    = document.getElementById('fs-filter-status');
+    const periodEl    = document.getElementById('fs-filter-period');
+    const perPageEl   = document.getElementById('fs-per-page');
+    const clearBtn    = document.getElementById('fs-clear-filters');
+    const exportBtn   = document.getElementById('fs-export-csv');
+
+    const fuelChip  = { PMS:'pms', AGO:'ago', DPK:'dpk', LPG:'lpg' };
+    const fuelColor = { PMS:'#10b981', AGO:'#f59e0b', DPK:'#3b82f6', LPG:'#8b5cf6' };
+    const payBadge  = { Cash:'cash', POS:'pos', Transfer:'transfer', 'Fleet Card':'fleet' };
+    const stBadge   = { Paid:'paid', Pending:'pending', Voided:'voided' };
+
+    function fmt(n){ return '₦' + Number(n).toLocaleString('en-NG'); }
+    function fmtL(n){ return Number(n).toLocaleString() + ' L'; }
+
+    function filterData(){
+        const q   = searchEl.value.toLowerCase().trim();
+        const ft  = fuelEl.value;
+        const pm  = pumpEl.value;
+        const pay = payEl.value;
+        const st  = statusEl.value;
+        const per = periodEl.value;
+        const now = new Date();
+
+        filtered = FUEL_DATA.filter(r => {
+            if (q  && !`${r.txn_id} ${r.plate} ${r.attendant}`.toLowerCase().includes(q)) return false;
+            if (ft  && r.fuel_type !== ft)  return false;
+            if (pm  && r.pump      !== pm)  return false;
+            if (pay && r.payment   !== pay) return false;
+            if (st  && r.status    !== st)  return false;
+            if (per) {
+                const d = new Date(r.date);
+                if (per === 'today')   { if (d.toDateString() !== now.toDateString()) return false; }
+                if (per === 'week')    { const w = new Date(now); w.setDate(now.getDate()-7); if (d < w) return false; }
+                if (per === 'month')   { if (d.getMonth() !== now.getMonth() || d.getFullYear() !== now.getFullYear()) return false; }
+                if (per === 'quarter') { const q3 = new Date(now); q3.setMonth(now.getMonth()-3); if (d < q3) return false; }
+            }
+            return true;
+        });
+        sortData();
+    }
+
+    function sortData(){
+        filtered.sort((a,b) => {
+            let va = a[sortCol], vb = b[sortCol];
+            if (typeof va === 'string') va = va.toLowerCase();
+            if (typeof vb === 'string') vb = vb.toLowerCase();
+            if (va < vb) return sortDir === 'asc' ? -1 : 1;
+            if (va > vb) return sortDir === 'asc' ?  1 : -1;
+            return 0;
+        });
+        page = 1;
+        renderTable();
+    }
+
+    function renderTable(){
+        const total  = filtered.length;
+        const pages  = Math.max(1, Math.ceil(total / perPage));
+        page = Math.min(page, pages);
+        const start  = (page - 1) * perPage;
+        const slice  = filtered.slice(start, start + perPage);
+
+        showingEl.textContent = Math.min(start + perPage, total);
+        totalEl.textContent   = total;
+        pageInfoEl.textContent = `Page ${page} of ${pages}`;
+
+        if (total === 0) {
+            tbody.innerHTML = '';
+            emptyEl.style.display = 'block';
+        } else {
+            emptyEl.style.display = 'none';
+            tbody.innerHTML = slice.map(r => `
+                <tr>
+                    <td><span class="fs-txn-id">${r.txn_id}</span></td>
+                    <td><span style="font-size:0.82rem;">${r.date}</span></td>
+                    <td>
+                        <span class="fs-fuel-chip ${fuelChip[r.fuel_type]||''}">
+                            <span style="width:7px;height:7px;border-radius:50%;background:${fuelColor[r.fuel_type]||'#999'};display:inline-block;"></span>
+                            ${r.fuel_type}
+                        </span>
+                    </td>
+                    <td><span class="fs-pump-tag"><i class="fa-solid fa-gas-pump me-1" style="font-size:0.7rem;"></i>${r.pump}</span></td>
+                    <td><span style="font-weight:600;">${fmtL(r.litres)}</span></td>
+                    <td><span style="font-size:0.83rem;">${fmt(r.price_per_litre)}</span></td>
+                    <td><span class="fs-amount">${fmt(r.total)}</span></td>
+                    <td><span class="fs-badge ${payBadge[r.payment]||''}">${r.payment}</span></td>
+                    <td>
+                        <span style="font-size:0.78rem;font-weight:600;letter-spacing:0.05em;background:var(--bg-page);border:1px solid var(--border-color);padding:2px 8px;border-radius:6px;">
+                            ${r.plate || '—'}
+                        </span>
+                    </td>
+                    <td><span style="font-size:0.82rem;">${r.attendant}</span></td>
+                    <td><span class="fs-badge ${stBadge[r.status]||''}">${r.status}</span></td>
+                </tr>`).join('');
+        }
+        renderPagination(pages);
+    }
+
+    function renderPagination(pages){
+        let html = `<button class="fs-page-btn" onclick="fuelPage(${page-1})" ${page<=1?'disabled':''}>‹</button>`;
+        for(let i=1;i<=pages;i++){
+            if (pages > 7 && (i > 3 && i < pages-2 && Math.abs(i-page) > 1)) {
+                if (i === 4 || i === pages-2) html += `<span class="fs-page-btn" style="cursor:default;">…</span>`;
+                continue;
+            }
+            html += `<button class="fs-page-btn ${i===page?'active':''}" onclick="fuelPage(${i})">${i}</button>`;
+        }
+        html += `<button class="fs-page-btn" onclick="fuelPage(${page+1})" ${page>=pages?'disabled':''}>›</button>`;
+        paginEl.innerHTML = html;
+    }
+
+    window.fuelPage = function(p){ page = p; renderTable(); };
+
+    // Sort on header click
+    document.querySelectorAll('#fs-table thead th[data-col]').forEach(th => {
+        th.addEventListener('click', function(){
+            const col = this.dataset.col;
+            if (sortCol === col) { sortDir = sortDir === 'asc' ? 'desc' : 'asc'; }
+            else { sortCol = col; sortDir = 'asc'; }
+            document.querySelectorAll('#fs-table thead th').forEach(t => t.classList.remove('sorted-asc','sorted-desc'));
+            this.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+            sortData();
+        });
+    });
+
+    // Filters
+    [searchEl, fuelEl, pumpEl, payEl, statusEl, periodEl].forEach(el => el.addEventListener('input', filterData));
+    perPageEl.addEventListener('change', () => { perPage = parseInt(perPageEl.value); page = 1; renderTable(); });
+    clearBtn.addEventListener('click', () => {
+        searchEl.value = ''; fuelEl.value = ''; pumpEl.value = '';
+        payEl.value = ''; statusEl.value = ''; periodEl.value = '';
+        filterData();
+    });
+
+    // CSV Export
+    exportBtn.addEventListener('click', () => {
+        const cols = ['txn_id','date','fuel_type','pump','litres','price_per_litre','total','payment','plate','attendant','status'];
+        const header = ['Txn ID','Date','Fuel Type','Pump','Litres','Price/L','Total','Payment','Vehicle Plate','Attendant','Status'];
+        const rows = filtered.map(r => cols.map(c => `"${r[c]}"`).join(','));
+        const blob = new Blob([header.join(',') + '\n' + rows.join('\n')], {type:'text/csv'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'fuel_sales.csv'; a.click();
+    });
+
+    // Initial render
+    filterData();
+})();
+</script>
+{% endblock %}

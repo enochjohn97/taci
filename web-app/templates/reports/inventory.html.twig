@@ -1,0 +1,76 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Inventory Report – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row align-items-center">
+            <div class="col">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-1" style="font-size:0.8rem;">
+                        <li class="breadcrumb-item"><a href="{{ path('app_reports_dashboard') }}">Reports</a></li>
+                        <li class="breadcrumb-item active">Inventory</li>
+                    </ol>
+                </nav>
+                <h2 class="page-title mt-1">
+                    <i class="bi bi-boxes me-2"></i>Inventory Valuation
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-wrapper mt-4">
+    <div class="container-xl">
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card kpi-card shadow-sm border-0 p-4">
+                    <div class="text-muted small fw-bold text-uppercase mb-1">Total Stock Value</div>
+                    <div class="h2 mb-0 text-success">₦{{ total_value|number_format(2) }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card kpi-card shadow-sm border-0 p-4">
+                    <div class="text-muted small fw-bold text-uppercase mb-1">Items Low in Stock</div>
+                    <div class="h2 mb-0 text-danger">{{ low_stock_count }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product</th>
+                            <th>Stock Qty</th>
+                            <th>Cost Price</th>
+                            <th class="text-end">Total Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in inventory %}
+                        <tr>
+                            <td class="fw-semibold">
+                                {{ item.product.name }}
+                                {% if item.product.isLowStock %}
+                                    <span class="badge bg-danger ms-2">Low Stock</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.product.stockQuantity }}</td>
+                            <td>₦{{ (item.product.costPrice ?? item.product.unitPrice)|number_format(2) }}</td>
+                            <td class="text-end fw-bold">₦{{ item.value|number_format(2) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">No inventory data found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

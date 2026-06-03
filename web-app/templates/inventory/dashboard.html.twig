@@ -146,7 +146,7 @@
                                     <div class="text-muted small">Find products quickly</div>
                                 </div>
                             </a>
-                            {% if is_granted('ROLE_MANAGER') %}
+                            {% if is_granted('ROLE_MANAGER') and not is_granted('ROLE_SUB_ADMIN') %}
                             <a href="{{ path('app_inventory_product_new') }}" class="btn btn-light text-start p-3 rounded-3 hover-elevate border d-flex align-items-center">
                                 <div class="bg-success bg-opacity-10 text-success p-2 rounded me-3"><i class="bi bi-plus-lg fs-5"></i></div>
                                 <div>

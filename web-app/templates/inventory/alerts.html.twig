@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
-            <h2 class="mb-1 text-white">Stock Warnings & Alerts</h2>
+            <h2 class="mb-1 text-primary fw-bold">Stock Warnings & Alerts</h2>
             <p class="text-muted mb-0">Products that have fallen below or are approaching their designated safety reorder thresholds.</p>
         </div>
         <a href="{{ path('app_inventory_valuation') }}" class="btn btn-outline-light btn-sm">
@@ -22,7 +22,7 @@
                 <div class="text-success mb-3">
                     <i class="bi bi-check-circle" style="font-size: 3rem;"></i>
                 </div>
-                <h4 class="text-white">All Stock Levels Normal</h4>
+                <h4 class="text-dark">All Stock Levels Normal</h4>
                 <p class="text-muted mx-auto" style="max-width: 500px;">
                     Great news! No products are currently below their reorder threshold. All inventory safety margins are fully satisfied.
                 </p>
@@ -39,13 +39,13 @@
             </div>
         </div>
 
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-transparent border-bottom border-secondary py-3 d-flex align-items-center justify-content-between">
-                <h5 class="mb-0 text-white">Critical Low Stock Items</h5>
-                <span class="badge bg-danger">{{ products|length }} Items</span>
+        <div class="card shadow-sm border-0 bg-white" style="border-radius: 16px; overflow: hidden;">
+            <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex align-items-center justify-content-between">
+                <h5 class="mb-0 text-dark fw-bold">Critical Low Stock Items</h5>
+                <span class="badge bg-danger rounded-pill">{{ products|length }} Items</span>
             </div>
             <div class="table-responsive">
-                <table class="table table-hover table-dark align-middle mb-0">
+                <table class="table table-hover align-middle mb-0 bg-white">
                     <thead class="table-light text-dark">
                         <tr>
                             <th>Product Details</th>
@@ -65,7 +65,7 @@
                                             <i class="bi bi-box-seam fs-5"></i>
                                         </div>
                                         <div>
-                                            <a href="{{ path('app_inventory_product_view', {id: product.id}) }}" class="fw-bold text-white text-decoration-none hover-primary">
+                                            <a href="{{ path('app_inventory_product_view', {id: product.id}) }}" class="fw-bold text-dark text-decoration-none hover-primary">
                                                 {{ product.name }}
                                             </a>
                                             <small class="text-muted d-block">Selling Price: ₦{{ product.unitPrice|number_format(2) }}</small>
@@ -85,9 +85,11 @@
                                         <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-20">
                                             -{{ product.reorderLevel - product.stockQuantity }} deficit
                                         </span>
-                                        <a href="{{ path('app_inventory_product_edit', {id: product.id}) }}" class="btn btn-outline-primary btn-sm py-1 px-2 fs-7">
-                                            <i class="bi bi-plus-lg"></i> Reorder
+                                        {% if is_granted('ROLE_MANAGER') and not is_granted('ROLE_SUB_ADMIN') %}
+                                        <a href="{{ path('app_inventory_product_edit', {id: product.id}) }}" class="btn btn-outline-primary btn-sm py-1 px-2" title="Reorder">
+                                            <i class="bi bi-cart-plus fs-5"></i>
                                         </a>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
@@ -98,4 +100,13 @@
         </div>
     {% endif %}
 </div>
+
+<script>
+    // Real-time polling for low stock alerts (reloads every 30 seconds if page is visible)
+    setInterval(() => {
+        if (!document.hidden) {
+            window.location.reload();
+        }
+    }, 30000);
+</script>
 {% endblock %}

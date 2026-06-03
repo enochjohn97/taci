@@ -4,91 +4,149 @@
 {% block title %}Suppliers - {{ app_name }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <h3 class="mb-0">Suppliers</h3>
-  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSupplierModal">New Supplier</button>
+<div class="page-header d-print-none mb-4">
+    <div class="container-xl">
+        <div class="row align-items-center">
+            <div class="col">
+                <div class="mb-1">
+                    <ol class="breadcrumb" aria-label="breadcrumbs">
+                        <li class="breadcrumb-item"><a href="{{ path('app_inventory_dashboard') }}">Inventory</a></li>
+                        <li class="breadcrumb-item active" aria-current="page"><a href="#">Suppliers</a></li>
+                    </ol>
+                </div>
+                <h2 class="page-title text-primary fw-bold">
+                    <i class="bi bi-truck me-2"></i> Suppliers
+                </h2>
+            </div>
+            <div class="col-auto ms-auto d-print-none">
+                <div class="d-flex gap-2">
+                    {% if is_granted('ROLE_MANAGER') and not is_granted('ROLE_SUB_ADMIN') %}
+                    <button class="btn btn-primary shadow-sm hover-elevate" data-bs-toggle="modal" data-bs-target="#createSupplierModal">
+                        <i class="bi bi-plus-lg me-2"></i> New Supplier
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
-<div class="row mb-3">
-  <div class="col-md-4">
-    <div class="card bg-dark text-white p-3">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <div class="small text-muted">Total Suppliers</div>
-          <div class="h4 mb-0">{{ total|default(0) }}</div>
+<div class="page-wrapper">
+    <div class="container-xl">
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0" style="border-radius: 12px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-uppercase fw-bold text-muted small mb-1">Total Suppliers</div>
+                                <div class="h2 mb-0 fw-bold text-dark">{{ total|default(0) }}</div>
+                            </div>
+                            <div class="bg-primary bg-opacity-10 p-3 rounded-circle text-primary">
+                                <i class="bi bi-people-fill fs-3"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0" style="border-radius: 12px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-uppercase fw-bold text-muted small mb-1">Active Deliveries</div>
+                                <div class="h2 mb-0 fw-bold text-success">{{ active_deliveries|default(0) }}</div>
+                            </div>
+                            <div class="bg-success bg-opacity-10 p-3 rounded-circle text-success">
+                                <i class="bi bi-truck fs-3"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0" style="border-radius: 12px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-uppercase fw-bold text-muted small mb-1">Pending Invoices</div>
+                                <div class="h2 mb-0 fw-bold text-warning">{{ pending_invoices|default(0) }}</div>
+                            </div>
+                            <div class="bg-warning bg-opacity-10 p-3 rounded-circle text-warning">
+                                <i class="bi bi-file-earmark-text fs-3"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <i class="bi bi-people-fill h2 text-primary"></i>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="card bg-dark text-white p-3">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <div class="small text-muted">Active Deliveries</div>
-          <div class="h4 mb-0">{{ active_deliveries|default(0) }}</div>
-        </div>
-        <i class="bi bi-truck h2 text-accent"></i>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="card bg-dark text-white p-3">
-      <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <div class="small text-muted">Pending Invoices</div>
-          <div class="h4 mb-0">{{ pending_invoices|default(0) }}</div>
-        </div>
-        <i class="bi bi-file-earmark-text h2 text-warning"></i>
-      </div>
-    </div>
-  </div>
-</div>
 
-<div class="card">
-  <div class="card-body">
-    <div class="table-responsive">
-      <table class="table table-hover" id="suppliersTable">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Contact</th>
-            <th>Address</th>
-            <th>Fuel Types</th>
-            <th class="text-end">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for s in suppliers %}
-          <tr data-id="{{ s.id }}">
-            <td><a href="{{ path('inventory_supplier_view', {'id': s.id}) }}">{{ s.name }}</a></td>
-            <td>{{ s.contact }}</td>
-            <td>{{ s.address }}</td>
-            <td>{{ s.fuelTypes }}</td>
-            <td class="text-end">
-              <button class="btn btn-sm btn-outline-secondary edit-supplier-btn">Edit</button>
-              <button class="btn btn-sm btn-outline-danger ms-2 delete-supplier-btn">Delete</button>
-            </td>
-          </tr>
-          {% else %}
-          <tr><td colspan="5" class="text-center text-muted">No suppliers found.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
+        <div class="card shadow-sm border-0 bg-white" style="border-radius: 16px; overflow: hidden;">
+            <div class="card-header bg-white border-bottom pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
+                <h4 class="card-title mb-0 fw-bold">All Suppliers</h4>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 bg-white custom-table" id="suppliersTable">
+                    <thead class="table-light text-muted" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <tr>
+                            <th class="ps-4">Supplier Name</th>
+                            <th>Contact Info</th>
+                            <th>Address</th>
+                            <th>Fuel / Product Types</th>
+                            <th class="pe-4 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for s in suppliers %}
+                        <tr data-id="{{ s.id }}">
+                            <td class="ps-4 fw-bold">
+                                <a href="{{ path('inventory_supplier_view', {'id': s.id}) }}" class="text-decoration-none text-dark hover-primary">{{ s.name }}</a>
+                            </td>
+                            <td>{{ s.contact ?: '<span class="text-muted small">N/A</span>'|raw }}</td>
+                            <td><span class="text-muted small">{{ s.address ?: 'N/A' }}</span></td>
+                            <td>
+                                {% if s.fuelTypes %}
+                                    <span class="badge bg-light text-secondary border px-2 py-1">{{ s.fuelTypes }}</span>
+                                {% else %}
+                                    <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="pe-4 text-end">
+                                {% if is_granted('ROLE_MANAGER') and not is_granted('ROLE_SUB_ADMIN') %}
+                                <button class="btn btn-sm btn-light border rounded-pill px-3 edit-supplier-btn hover-elevate" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger rounded-pill px-3 ms-2 delete-supplier-btn hover-elevate" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-3 text-light"></i>
+                                No suppliers found in the database.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-<nav class="mt-3" aria-label="Suppliers pagination">
-  <ul class="pagination justify-content-end">
-    {% set prev = page - 1 %}
-    <li class="page-item {% if page <= 1 %}disabled{% endif %}"><a class="page-link" href="?page={{ prev }}">Previous</a></li>
-    {% for p in 1..(last|default(1)) %}
-      <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link" href="?page={{ p }}">{{ p }}</a></li>
-    {% endfor %}
-    <li class="page-item {% if page >= (last|default(1)) %}disabled{% endif %}"><a class="page-link" href="?page={{ page + 1 }}">Next</a></li>
-  </ul>
-</nav>
+        <nav class="mt-4" aria-label="Suppliers pagination">
+            <ul class="pagination justify-content-end">
+                {% set prev = page - 1 %}
+                <li class="page-item {% if page <= 1 %}disabled{% endif %}"><a class="page-link shadow-sm border-0 rounded-start-pill" href="?page={{ prev }}">Previous</a></li>
+                {% for p in 1..(last|default(1)) %}
+                    <li class="page-item {% if p == page %}active{% endif %}"><a class="page-link shadow-sm border-0" href="?page={{ p }}">{{ p }}</a></li>
+                {% endfor %}
+                <li class="page-item {% if page >= (last|default(1)) %}disabled{% endif %}"><a class="page-link shadow-sm border-0 rounded-end-pill" href="?page={{ page + 1 }}">Next</a></li>
+            </ul>
+        </nav>
+    </div>
+</div>
 
 <!-- Create/Edit Supplier Modal -->
 <div class="modal fade" id="createSupplierModal" tabindex="-1" aria-hidden="true">
@@ -191,5 +249,12 @@ document.addEventListener('DOMContentLoaded', function() {
   }));
 });
 </script>
+
+<style>
+    .hover-elevate { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .hover-elevate:hover { transform: translateY(-2px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.08)!important; }
+    .custom-table tbody tr { transition: background-color 0.2s ease; }
+    .custom-table tbody tr:hover { background-color: rgba(13, 110, 253, 0.02); }
+</style>
 
 {% endblock %}

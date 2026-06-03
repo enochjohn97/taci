@@ -1,6 +1,6 @@
 // public/sw.js - Service Worker for PWA
 
-const CACHE_VERSION = "app-v1";
+const CACHE_VERSION = "app-v2";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
@@ -71,28 +71,22 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Network-first strategy for API calls
-  if (url.pathname.includes("/api/")) {
+  // Network-first strategy for navigations and API calls
+  if (request.mode === "navigate" || url.pathname.includes("/api/")) {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Clone the response
           const clonedResponse = response.clone();
-          // Cache successful responses
           if (response.ok) {
-            caches
-              .open(DYNAMIC_CACHE)
-              .then((cache) => cache.put(request, clonedResponse));
+            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clonedResponse));
           }
           return response;
         })
         .catch(() => {
-          // Fallback to cache if network fails
           return caches.match(request).then((cachedResponse) => {
             if (cachedResponse) {
               return cachedResponse;
             }
-            // Return offline page if available
             if (request.mode === "navigate") {
               return caches.match("/offline.html");
             }
@@ -101,7 +95,7 @@ self.addEventListener("fetch", (event) => {
               statusText: "Service Unavailable",
             });
           });
-        }),
+        })
     );
     return;
   }
@@ -115,11 +109,7 @@ self.addEventListener("fetch", (event) => {
       return fetch(request)
         .then((response) => {
           // Don't cache non-successful responses
-          if (
-            !response ||
-            response.status !== 200 ||
-            response.type !== "basic"
-          ) {
+          if (!response || response.status !== 200 || response.type !== "basic") {
             return response;
           }
           const clonedResponse = response.clone();
@@ -129,16 +119,12 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(() => {
-          // Return offline page for navigation requests
-          if (request.mode === "navigate") {
-            return caches.match("/offline.html");
-          }
           return new Response("Offline - Resource not available", {
             status: 503,
             statusText: "Service Unavailable",
           });
         });
-    }),
+    })
   );
 });
 
