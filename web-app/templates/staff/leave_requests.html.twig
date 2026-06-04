@@ -1,27 +1,7 @@
 {# templates/staff/leave_requests.html.twig #}
 {% extends "base.html.twig" %}
 
-{% block title %}Leave Requests – {{ app_name|default('TACI') }}{% endblock %}
-
-{% block styles %}
-{{ parent() }}
-<style>
-    .leave-status-badge { font-weight: 600; padding: 0.35em 0.65em; border-radius: 0.5rem; }
-    .status-Approved { background: rgba(16,185,129,0.15); color: #059669; }
-    .status-Pending { background: rgba(245,158,11,0.15); color: #d97706; }
-    .status-Rejected { background: rgba(239,68,68,0.15); color: #dc2626; }
-    
-    .action-icon {
-        cursor: pointer;
-        padding: 6px;
-        border-radius: 4px;
-        transition: background 0.2s;
-    }
-    .action-icon:hover { background: rgba(0,0,0,0.05); }
-    .action-icon.text-primary:hover { background: rgba(13,110,253,0.1); }
-    .action-icon.text-danger:hover { background: rgba(220,53,69,0.1); }
-</style>
-{% endblock %}
+{% block title %}Leave Requests - TACI Petroleum{% endblock %}
 
 {% block content %}
 <div class="page-header d-print-none">
@@ -29,323 +9,75 @@
         <div class="row align-items-center">
             <div class="col">
                 <h2 class="page-title mt-4">
-                    <i class="bi bi-calendar2-minus me-2"></i>Leave Requests
+                    <i class="bi bi-calendar-check me-2"></i>Staff Leave Requests
                 </h2>
             </div>
-            {# Only MANAGER can request leave here, SUPER/SUB admin only oversee #}
-            {% if is_granted('ROLE_MANAGER') and not is_granted('ROLE_SUB_ADMIN') %}
-            <div class="col-auto ms-auto">
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#requestLeaveModal">
-                    <i class="bi bi-plus me-1"></i> Request Leave
-                </button>
+            <div class="col-auto ms-auto d-print-none">
+                <div class="btn-list">
+                    <a href="{{ path('app_dashboard_manager') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                    </a>
+                </div>
             </div>
-            {% endif %}
         </div>
     </div>
 </div>
 
 <div class="page-wrapper mt-4">
     <div class="container-xl">
-        
-        <div class="row g-3 mb-4">
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm border-0" style="background: rgba(255,255,255,0.8); backdrop-filter: blur(10px);">
-                    <div class="d-flex align-items-center">
-                        <div class="subheader">Pending Requests</div>
-                    </div>
-                    <div class="h1 mb-0 text-warning" id="pendingCount">{{ pending_requests|default(0) }}</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm border-0" style="background: rgba(255,255,255,0.8); backdrop-filter: blur(10px);">
-                    <div class="d-flex align-items-center">
-                        <div class="subheader">Approved Leaves (This Month)</div>
-                    </div>
-                    <div class="h1 mb-0 text-success">{{ approved_leaves|default(0) }}</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm border-0" style="background: rgba(255,255,255,0.8); backdrop-filter: blur(10px);">
-                    <div class="d-flex align-items-center">
-                        <div class="subheader">Staff Currently on Leave</div>
-                    </div>
-                    <div class="h1 mb-0 text-primary">{{ on_leave_now|default(0) }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card shadow-sm border-0">
-            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h5 class="mb-0">All Leave Requests</h5>
-                <div class="d-flex gap-2">
-                    <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search staff...">
-                    <select class="form-select form-select-sm" id="statusFilter">
-                        <option value="all">All Statuses</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                    </select>
-                </div>
-            </div>
+        <div class="card shadow-sm">
             <div class="table-responsive">
-                <table class="table table-vcenter card-table table-hover" id="leaveTable">
+                <table class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Staff Member</th>
-                            <th>Leave Type</th>
+                            <th>Type</th>
                             <th>Duration</th>
                             <th>Reason</th>
                             <th>Status</th>
-                            <th>Requested On</th>
-                            <th class="w-1">Actions</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for leave in leaves|default([]) %}
-                        <tr class="leave-row" data-status="{{ leave.status }}" data-id="{{ leave.id }}" data-staff="{{ leave.staff }}" data-type="{{ leave.type }}" data-reason="{{ leave.reason }}">
-                            <td class="staff-name">
-                                <div class="d-flex py-1 align-items-center">
-                                    <span class="avatar avatar-sm me-2 rounded-circle bg-primary-lt">{{ leave.staff|slice(0,2)|upper }}</span>
-                                    <div class="font-weight-medium">{{ leave.staff }}</div>
-                                </div>
-                            </td>
-                            <td class="text-muted">{{ leave.type }}</td>
-                            <td><strong>{{ leave.duration }}</strong></td>
-                            <td class="text-muted text-truncate" style="max-width: 200px;" title="{{ leave.reason }}">{{ leave.reason }}</td>
-                            <td class="status-cell">
-                                <span class="badge leave-status-badge status-{{ leave.status }}">{{ leave.status }}</span>
-                            </td>
-                            <td class="text-muted">{{ leave.date }}</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    {% if is_granted('ROLE_SUB_ADMIN') %}
-                                        {# Admins can preview and approve/decline #}
-                                        <i class="bi bi-eye action-icon text-primary ms-2" title="Preview & Action" onclick="openPreviewModal({{ leave.id }})"></i>
+                        {% for request in leave_requests %}
+                            <tr>
+                                <td class="fw-semibold">{{ request.staff.username }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ request.type }}</span></td>
+                                <td>{{ request.startDate|date('M d, Y') }} - {{ request.endDate|date('M d, Y') }} ({{ request.duration }})</td>
+                                <td>{{ request.reason }}</td>
+                                <td>
+                                    {% if request.status == 'Approved' %}
+                                        <span class="badge bg-success">Approved</span>
+                                    {% elseif request.status == 'Rejected' %}
+                                        <span class="badge bg-danger">Rejected</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
                                     {% endif %}
-                                    
-                                    {% if is_granted('ROLE_MANAGER') and not is_granted('ROLE_SUB_ADMIN') %}
-                                        {# Manager can delete/edit their creations #}
-                                        <i class="bi bi-trash action-icon text-danger ms-2" title="Delete"></i>
+                                </td>
+                                <td>
+                                    {% if request.status == 'Pending' %}
+                                        <form method="post" action="{{ path('app_manager_staff_approve_leave_request', {id: request.id}) }}" style="display:inline-block;">
+                                            <input type="hidden" name="status" value="Approved">
+                                            <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                        </form>
+                                        <form method="post" action="{{ path('app_manager_staff_approve_leave_request', {id: request.id}) }}" style="display:inline-block;">
+                                            <input type="hidden" name="status" value="Rejected">
+                                            <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-muted small">No actions</span>
                                     {% endif %}
-                                </div>
-                            </td>
-                        </tr>
+                                </td>
+                            </tr>
                         {% else %}
-                        <tr id="emptyRow">
-                            <td colspan="7" class="text-center text-muted py-4">
-                                No leave requests found.
-                            </td>
-                        </tr>
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No leave requests found.</td>
+                            </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer d-flex align-items-center">
-                <ul class="pagination m-0 ms-auto" id="pagination">
-                    <!-- Pagination populated by JS -->
-                </ul>
-            </div>
         </div>
     </div>
 </div>
-
-{# Request Leave Modal (Only for Manager) #}
-{% if is_granted('ROLE_MANAGER') and not is_granted('ROLE_SUB_ADMIN') %}
-<div class="modal modal-blur fade" id="requestLeaveModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Request Leave</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="createLeaveForm">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="mb-3">
-                                <label class="form-label">Staff Member</label>
-                                <select class="form-select" name="staff_id">
-                                    <option value="">-- Select Staff --</option>
-                                    {% for staff in staffs %}
-                                        <option value="{{ staff.id }}">{{ staff.username }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="mb-3">
-                                <label class="form-label">Leave Type</label>
-                                <select class="form-select" name="leave_type">
-                                    <option value="Annual Leave">Annual Leave</option>
-                                    <option value="Sick Leave">Sick Leave</option>
-                                    <option value="Personal Leave">Personal Leave</option>
-                                    <option value="Maternity/Paternity Leave">Maternity/Paternity Leave</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="mb-3">
-                                <label class="form-label">Reason</label>
-                                <input type="text" class="form-control" name="reason" placeholder="Brief reason">
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="mb-3">
-                                <label class="form-label">Start Date</label>
-                                <input type="date" class="form-control" name="start_date">
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="mb-3">
-                                <label class="form-label">End Date</label>
-                                <input type="date" class="form-control" name="end_date">
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary ms-auto" onclick="alert('Creation logic requires another controller endpoint. Mock success for now.')" data-bs-dismiss="modal">
-                    <i class="bi bi-send me-1"></i> Submit Request
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-{# Preview & Action Modal for Admin #}
-{% if is_granted('ROLE_SUB_ADMIN') %}
-<div class="modal modal-blur fade" id="previewLeaveModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Leave Request Review</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <strong>Staff Member:</strong> <span id="previewStaff"></span>
-                </div>
-                <div class="mb-3">
-                    <strong>Type:</strong> <span id="previewType"></span>
-                </div>
-                <div class="mb-3">
-                    <strong>Reason:</strong> <span id="previewReason"></span>
-                </div>
-                <input type="hidden" id="previewLeaveId">
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-danger" onclick="handleLeaveAction('decline')">Decline</button>
-                <button type="button" class="btn btn-success ms-auto" onclick="handleLeaveAction('approve')">Approve</button>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
-
-{% endblock %}
-
-{% block scripts %}
-{{ parent() }}
-<script>
-    // Search and filter logic
-    const searchInput = document.getElementById('searchInput');
-    const statusFilter = document.getElementById('statusFilter');
-    const rows = document.querySelectorAll('.leave-row');
-
-    function filterTable() {
-        const query = searchInput.value.toLowerCase();
-        const status = statusFilter.value;
-        
-        rows.forEach(row => {
-            const name = row.querySelector('.staff-name').textContent.toLowerCase();
-            const rowStatus = row.dataset.status;
-            
-            const matchSearch = name.includes(query);
-            const matchStatus = status === 'all' || rowStatus === status;
-            
-            if (matchSearch && matchStatus) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    }
-
-    searchInput.addEventListener('input', filterTable);
-    statusFilter.addEventListener('change', filterTable);
-
-    // Modal logic
-    let previewModal;
-    document.addEventListener('DOMContentLoaded', () => {
-        const modalEl = document.getElementById('previewLeaveModal');
-        if (modalEl) {
-            previewModal = new bootstrap.Modal(modalEl);
-        }
-    });
-
-    window.openPreviewModal = function(id) {
-        const row = document.querySelector(`.leave-row[data-id="${id}"]`);
-        if (!row) return;
-
-        document.getElementById('previewStaff').textContent = row.dataset.staff;
-        document.getElementById('previewType').textContent = row.dataset.type;
-        document.getElementById('previewReason').textContent = row.dataset.reason;
-        document.getElementById('previewLeaveId').value = id;
-
-        previewModal.show();
-    }
-
-    window.handleLeaveAction = function(action) {
-        const id = document.getElementById('previewLeaveId').value;
-        if (!id) return;
-
-        fetch(`/staff/leave-requests/${id}/action`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ action: action })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                previewModal.hide();
-                // Update UI without reload
-                const row = document.querySelector(`.leave-row[data-id="${id}"]`);
-                if (row) {
-                    row.dataset.status = data.status;
-                    const badge = row.querySelector('.status-cell span');
-                    badge.className = `badge leave-status-badge status-${data.status}`;
-                    badge.textContent = data.status;
-                }
-                
-                // Show toast
-                const toastStr = `
-                <div class="toast align-items-center text-bg-success border-0 show" role="alert" aria-live="assertive" aria-atomic="true" style="position:fixed; top:20px; right:20px; z-index:9999;">
-                  <div class="d-flex">
-                    <div class="toast-body">
-                      Leave request ${action}d successfully.
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                  </div>
-                </div>`;
-                document.body.insertAdjacentHTML('beforeend', toastStr);
-                setTimeout(() => {
-                    const t = document.querySelector('.toast');
-                    if(t) t.remove();
-                }, 3000);
-            } else {
-                alert('Error: ' + data.error);
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            alert('A network error occurred.');
-        });
-    }
-</script>
 {% endblock %}

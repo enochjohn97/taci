@@ -49,9 +49,6 @@ class AuthController extends AbstractController
             if (in_array('ROLE_MANAGER', $roles, true)) {
                 return $this->redirectToRoute('app_dashboard_manager');
             }
-            if (in_array('ROLE_STAFF', $roles, true)) {
-                return $this->redirectToRoute('staff_reception');
-            }
         }
 
         // Check if sub-admins exist
@@ -81,7 +78,7 @@ class AuthController extends AbstractController
         }
 
         $normalizedRole = str_replace('_', '-', strtolower($requestedRole));
-        $validRoles = ['super-admin', 'sub-admin', 'manager', 'staff'];
+        $validRoles = ['super-admin', 'sub-admin', 'manager'];
         if (!in_array($normalizedRole, $validRoles, true)) {
             return $this->redirectToRoute('app_role_select');
         }
@@ -90,7 +87,7 @@ class AuthController extends AbstractController
             'super-admin' => 'Super Admin',
             'sub-admin' => 'Sub Admin',
             'manager' => 'Manager',
-            'staff' => 'Staff',
+           
         };
 
         $hasDelegates = (bool) count($this->userRepository->findByRole(UserRole::ROLE_MANAGER->value));

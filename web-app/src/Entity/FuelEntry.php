@@ -24,6 +24,21 @@ class FuelEntry
     #[ORM\JoinColumn(name: 'entered_by', nullable: false, onDelete: 'CASCADE')]
     private User $enteredBy;
 
+    #[ORM\Column(type: 'integer')]
+    private int $pumpNumber;
+
+    #[ORM\Column(type: 'string', length: 50)]
+    private string $fuelType;
+
+    #[ORM\Column(type: 'string', length: 50)]
+    private string $paymentMethod;
+
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    private ?string $vehiclePlate = null;
+
+    #[ORM\Column(type: 'string', length: 255)]
+    private string $attendant;
+
     #[ORM\Column(type: 'datetime')]
     private \DateTime $createdAt;
 
@@ -93,6 +108,61 @@ class FuelEntry
     public function setUpdatedAt(\DateTime $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
+        return $this;
+    }
+
+    public function getPumpNumber(): int
+    {
+        return $this->pumpNumber;
+    }
+
+    public function setPumpNumber(int $pumpNumber): self
+    {
+        $this->pumpNumber = $pumpNumber;
+        return $this;
+    }
+
+    public function getFuelType(): string
+    {
+        return $this->fuelType;
+    }
+
+    public function setFuelType(string $fuelType): self
+    {
+        $this->fuelType = $fuelType;
+        return $this;
+    }
+
+    public function getPaymentMethod(): string
+    {
+        return $this->paymentMethod;
+    }
+
+    public function setPaymentMethod(string $paymentMethod): self
+    {
+        $this->paymentMethod = $paymentMethod;
+        return $this;
+    }
+
+    public function getVehiclePlate(): ?string
+    {
+        return $this->vehiclePlate;
+    }
+
+    public function setVehiclePlate(?string $vehiclePlate): self
+    {
+        $this->vehiclePlate = $vehiclePlate;
+        return $this;
+    }
+
+    public function getAttendant(): string
+    {
+        return $this->attendant;
+    }
+
+    public function setAttendant(string $attendant): self
+    {
+        $this->attendant = $attendant;
         return $this;
     }
 }

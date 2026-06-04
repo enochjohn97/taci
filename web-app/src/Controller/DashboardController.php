@@ -36,9 +36,6 @@ class DashboardController extends AbstractController
         if (in_array('ROLE_MANAGER', $roles, true)) {
             return $this->redirectToRoute('app_dashboard_manager');
         }
-        if (in_array('ROLE_STAFF', $roles, true)) {
-            return $this->redirectToRoute('staff_reception');
-        }
 
         return $this->redirectToRoute('app_role_select');
     }
@@ -123,7 +120,6 @@ class DashboardController extends AbstractController
         $taskList = [];
         $upcomingDelivery = [];
         $safetyChecklist = [];
-        $staffPerformance = [];
         $approvalRequests = [];
 
         // Sparkline revenue and liters for last 7 days (derived from sales)
@@ -173,7 +169,6 @@ class DashboardController extends AbstractController
             'task_list'              => $taskList,
             'upcoming_delivery'      => $upcomingDelivery,
             'safety_checklist'       => $safetyChecklist,
-            'staff_performance'      => $staffPerformance,
         ];
     }
 
@@ -205,6 +200,7 @@ class DashboardController extends AbstractController
     }
 
     #[Route('/analytics', name: 'app_analytics')]
+    #[IsGranted('ROLE_MANAGER')]
     public function analytics(): Response
     {
         $thirtyDaysAgo = (new \DateTime())->modify('-30 days');

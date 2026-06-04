@@ -72,7 +72,6 @@ class ImpersonationController extends AbstractController
             'iat' => $now,
             'exp' => $now + $ttl,
             'sub' => (string) $target->getId(),
-            'role' => $target->getRole()->value ?? ($target->getRoles()[0] ?? 'ROLE_STAFF'),
             'impersonator' => (string) $this->getUser()->getId(),
         ];
 

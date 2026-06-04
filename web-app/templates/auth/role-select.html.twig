@@ -8,11 +8,11 @@
 
 	<div class="role-select-wrapper">
 		<div class="container text-center py-5 mt-4">
-		
+
 			<div class="logo mb-4">
 				<img src="{{ asset('images/taci.jpg') }}" alt="TACI Petroleum" style="max-width: 180px; height: auto; background-color: #ffffff; padding: 10px; border-radius: 8px;">
 			</div>
-			
+
 			<h2 class="fw-bold mb-2">How are you planning to use TACI Petroleum?</h2>
 			<p class="text-muted mb-5">Pick the role that best describes how you'll use TACI Petroleum.</p>
 
@@ -57,18 +57,6 @@
 					<p class="text-muted small mb-0">Manage teams, daily operations, and station targets.</p>
 				</a>
 
-				<!-- Staff -->
-				<a href="{{ path('app_login', {'role': 'staff'}) }}" class="role-card role-staff">
-					<div class="card-radio">
-						<i class="bi bi-circle"></i>
-					</div>
-					<div class="role-icon-box">
-						<i class="fas fa-user"></i>
-					</div>
-					<h5 class="fw-bold text-dark mt-3 mb-1">Staff</h5>
-					<p class="text-muted small mb-0">Process transactions, log hours, and track progress.</p>
-				</a>
-
 			</div>
 		</div>
 	</div>
@@ -82,7 +70,7 @@
 			justify-content: center;
 			font-family: 'Inter', sans-serif;
 		}
-		
+
 		.logo {
 			display: flex;
 			justify-content: center;
@@ -93,13 +81,13 @@
 			/* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); */
 			display: inline-block;
 		}
-		
+
 		.logo img {
 			max-width: 180px;
 			height: auto;
 			display: block;
 		}
-		
+
 		.role-card {
 			background: #ffffff;
 			border: 1.5px solid #f1f5f9;
@@ -192,38 +180,11 @@
 		.role-card.role-manager:hover .card-radio i::before {
 			content: "\F26A";
 		}
-
-		/* Staff: Wine #6B2E4A */
-		.role-card.role-staff:hover {
-			border-color: #6B2E4A;
-			box-shadow: 0 12px 24px rgba(107, 46, 74, 0.08);
-			transform: translateY(-4px);
-		}
-		.role-card.role-staff:hover .role-icon-box {
-			background: linear-gradient(135deg, rgba(107, 46, 74, 0.05), rgba(107, 46, 74, 0.15));
-			color: #6B2E4A;
-		}
-		.role-card.role-staff:hover .card-radio {
-			color: #6B2E4A;
-		}
-		.role-card.role-staff:hover .card-radio i::before {
-			content: "\F26A";
-		}
 	</style>
 
 	<script>
 		document.addEventListener('DOMContentLoaded', function () {
-const roleCards = document.querySelectorAll('.role-card');
-roleCards.forEach(card => {
-card.addEventListener('click', function () { // Generate unique attempt ID and store in sessionStorage
-const roleAttemptId = crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-var r = Math.random() * 16 | 0,
-v = c == 'x' ? r : (r & 0x3 | 0x8);
-return v.toString(16);
-});
-sessionStorage.setItem('role_attempt_id', roleAttemptId);
-});
-});
-});
+            // Role select script
+        });
 	</script>
 {% endblock %}

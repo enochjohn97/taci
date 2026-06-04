@@ -11,7 +11,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/sales')]
-#[IsGranted('ROLE_STAFF')]
+#[IsGranted('ROLE_MANAGER')]
 class SalesController extends AbstractController
 {
     public function __construct(private EntityManagerInterface $em) {}
@@ -75,6 +75,9 @@ class SalesController extends AbstractController
             'avg_ticket' => $transactionCount > 0 ? $totalRevenue / $transactionCount : 0,
             'total_volume' => $totalVolume,
             'recent_sales' => array_slice($filteredSales, 0, 10),
+            'active_pumps' => 6,
+            'total_pumps' => 6,
+            'pumps_out_of_service' => 0,
         ];
     }
 
@@ -86,13 +89,7 @@ class SalesController extends AbstractController
         return $this->render('sales/dashboard.html.twig', $data);
     }
     
-    #[Route('/store', name: 'app_sales_store')]
-    public function store(): Response
-    {
-        $data = $this->getSalesData('store');
-        $data['view_mode'] = 'sales_store';
-        return $this->render('sales/store.html.twig', $data);
-    }
+
 
     #[Route('/fuel', name: 'app_sales_fuel')]
     public function fuel(): Response

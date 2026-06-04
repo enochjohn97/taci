@@ -1134,18 +1134,65 @@
                         <div class="card-body">
                             <div id="fuelAlert"></div>
                             <form id="fuelEntryForm">
-                                <div class="mb-4">
-                                    <label class="form-label fw-semibold">Liters Received <span class="text-danger">*</span></label>
-                                    <div class="input-group input-group-lg">
-                                        <input type="number" id="liters" name="liters" class="form-control" step="0.01" min="1" required placeholder="e.g. 33000">
-                                        <span class="input-group-text">L</span>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Pump <span class="text-danger">*</span></label>
+                                        <select id="pumpNumber" name="pumpNumber" class="form-select form-select-lg" required>
+                                            <option value="">Select Pump</option>
+                                            <option value="1">Pump 1</option>
+                                            <option value="2">Pump 2</option>
+                                            <option value="3">Pump 3</option>
+                                            <option value="4">Pump 4</option>
+                                            <option value="5">Pump 5</option>
+                                            <option value="6">Pump 6</option>
+                                            <option value="7">Pump 7</option>
+                                            <option value="8">Pump 8</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Fuel Type <span class="text-danger">*</span></label>
+                                        <select id="fuelType" name="fuelType" class="form-select form-select-lg" required>
+                                            <option value="">Select Type</option>
+                                            <option value="PMS">PMS (Petrol)</option>
+                                            <option value="AGO">AGO (Diesel)</option>
+                                            <option value="DPK">DPK (Kerosene)</option>
+                                            <option value="LPG">LPG (Gas)</option>
+                                        </select>
                                     </div>
                                 </div>
-                                <div class="mb-4">
-                                    <label class="form-label fw-semibold">Unit Price per Litre (₦) <span class="text-danger">*</span></label>
-                                    <div class="input-group input-group-lg">
-                                        <span class="input-group-text">₦</span>
-                                        <input type="number" id="unitPrice" name="unitPrice" class="form-control" step="0.01" min="1" required placeholder="e.g. 650.00">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Liters Dispensed <span class="text-danger">*</span></label>
+                                        <div class="input-group input-group-lg">
+                                            <input type="number" id="liters" name="liters" class="form-control" step="0.01" min="1" required placeholder="e.g. 50">
+                                            <span class="input-group-text">L</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Unit Price per Litre (₦) <span class="text-danger">*</span></label>
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text">₦</span>
+                                            <input type="number" id="unitPrice" name="unitPrice" class="form-control" step="0.01" min="1" required placeholder="e.g. 650.00">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Payment <span class="text-danger">*</span></label>
+                                        <select id="paymentMethod" name="paymentMethod" class="form-select form-select-lg" required>
+                                            <option value="Cash">Cash</option>
+                                            <option value="POS">POS</option>
+                                            <option value="Transfer">Transfer</option>
+                                            <option value="Fleet Card">Fleet Card</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Vehicle Plate</label>
+                                        <input type="text" id="vehiclePlate" name="vehiclePlate" class="form-control form-control-lg" placeholder="Optional">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Attendant <span class="text-danger">*</span></label>
+                                        <input type="text" id="attendant" name="attendant" class="form-control form-control-lg" required placeholder="Name">
                                     </div>
                                 </div>
                                 <div class="alert alert-secondary d-none" id="fuelCalc">
@@ -1188,7 +1235,12 @@
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({
                             liters: parseFloat(document.getElementById('liters').value),
-                            unitPrice: parseFloat(document.getElementById('unitPrice').value)
+                            unitPrice: parseFloat(document.getElementById('unitPrice').value),
+                            pumpNumber: parseInt(document.getElementById('pumpNumber').value),
+                            fuelType: document.getElementById('fuelType').value,
+                            paymentMethod: document.getElementById('paymentMethod').value,
+                            vehiclePlate: document.getElementById('vehiclePlate').value,
+                            attendant: document.getElementById('attendant').value
                         })
                     });
                     const data = await res.json();

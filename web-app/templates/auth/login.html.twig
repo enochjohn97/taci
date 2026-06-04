@@ -74,7 +74,6 @@
                     Login
                 </button>
             </div>
-            <input type="hidden" name="role_attempt_id" id="role_attempt_id" value="">
             <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
         </form>
         
@@ -195,14 +194,6 @@
 {% block scripts %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Enforce role_attempt_id
-        const attemptId = sessionStorage.getItem('role_attempt_id');
-        if (!attemptId) {
-            window.location.href = "{{ path('app_role_select') }}";
-            return;
-        }
-        document.getElementById('role_attempt_id').value = attemptId;
-
         // Password toggle
         const toggleIcon = document.getElementById('togglePasswordIcon');
         const passwordInput = document.getElementById('password');

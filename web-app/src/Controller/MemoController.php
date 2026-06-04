@@ -73,6 +73,15 @@ class MemoController extends AbstractController
                 return $this->redirectToRoute('app_memo_new');
             }
             
+            $status = $data['status'] ?? 'draft';
+            $recipientIds = $data['recipientIds'] ?? [];
+            $recipientRoles = $data['recipientRoles'] ?? [];
+            
+            if ($status === 'sent' && empty($recipientIds) && empty($recipientRoles)) {
+                $this->addFlash('error', 'Please select at least one recipient before sending.');
+                return $this->redirectToRoute('app_memo_new');
+            }
+            
             $memo = new Memo();
             $memo->setSender($this->getUser());
             $memo->setSubject($data['subject']);
@@ -84,8 +93,7 @@ class MemoController extends AbstractController
             // Add recipients with role-aware restrictions
             $sender = $this->getUser();
             $allowedRecipientRoles = $this->getAllowedRecipientRoles($sender->getRole()->value);
-            $recipientIds = $data['recipientIds'] ?? [];
-            $recipientRoles = array_values(array_filter($data['recipientRoles'] ?? [], fn($r) => in_array($r, $allowedRecipientRoles, true)));
+            $recipientRoles = array_values(array_filter($recipientRoles, fn($r) => in_array($r, $allowedRecipientRoles, true)));
 
             foreach ($recipientIds as $recipientId) {
                 $recipient = $this->em->getRepository(User::class)->find($recipientId);
@@ -350,25 +358,17 @@ class MemoController extends AbstractController
     {
         // Each role may address all other roles (sender's own role is always excluded at the user-filter level).
         return match ($senderRole) {
-            UserRole::ROLE_STAFF->value => [
-                UserRole::ROLE_SUPER_ADMIN->value,
-                UserRole::ROLE_SUB_ADMIN->value,
-                UserRole::ROLE_MANAGER->value,
-            ],
             UserRole::ROLE_MANAGER->value => [
                 UserRole::ROLE_SUPER_ADMIN->value,
                 UserRole::ROLE_SUB_ADMIN->value,
-                UserRole::ROLE_STAFF->value,
             ],
             UserRole::ROLE_SUB_ADMIN->value => [
                 UserRole::ROLE_SUPER_ADMIN->value,
                 UserRole::ROLE_MANAGER->value,
-                UserRole::ROLE_STAFF->value,
             ],
             UserRole::ROLE_SUPER_ADMIN->value => [
                 UserRole::ROLE_SUB_ADMIN->value,
                 UserRole::ROLE_MANAGER->value,
-                UserRole::ROLE_STAFF->value,
             ],
             default => [UserRole::ROLE_MANAGER->value],
         };

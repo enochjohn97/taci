@@ -64,39 +64,7 @@
 			</li>
 		{% endif %}
 
-		{# Staff Management — Super Admin, Sub-Admin & Manager #}
-		{% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') %}
-			{% set staffOpen = app.request.get('_route') starts with 'app_staff' %}
-			<li class="sb-item sb-has-sub">
-				<button type="button" class="sb-link sb-toggle {% if staffOpen %}active{% endif %}" data-bs-toggle="collapse" data-bs-target="#staffMenu" aria-expanded="{{ staffOpen ? 'true' : 'false' }}" aria-controls="staffMenu" data-tooltip="Staff">
-					<i class="fa-solid fa-users sb-icon"></i>
-					<span class="sb-label">Staff Management</span>
-					<i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
-				</button>
-				<ul class="sb-sub collapse {% if staffOpen %}show{% endif %}" id="staffMenu">
-					<li>
-						<a class="sb-sub-link" href="{{ path('app_staff_dashboard') }}">Dashboard</a>
-					</li>
-					<li>
-						<a class="sb-sub-link" href="{{ path('app_staff_directory') }}">Staffs</a>
-					</li>
-					<li>
-						<a class="sb-sub-link" href="{{ path('app_staff_shifts') }}">Shifts &amp; Roster</a>
-					</li>
-					<li>
-						<a class="sb-sub-link" href="{{ path('app_staff_leave_requests') }}">Leave Requests</a>
-					</li>
-					{% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') %}
-						<li>
-							<a class="sb-sub-link" href="{{ path('app_staff_attendance') }}">Attendance Log</a>
-						</li>
-						<li>
-							<a class="sb-sub-link" href="{{ path('app_staff_payroll') }}">Payroll Summary</a>
-						</li>
-					{% endif %}
-				</ul>
-			</li>
-		{% endif %}
+
 
 		{# Inventory — all roles #}
 		{% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') or is_granted('ROLE_STAFF') %}
@@ -129,8 +97,29 @@
 			</li>
 		{% endif %}
 
-		{# Sales (Fuel & Store) #}
-		{% set salesOpen = app.request.get('_route') starts with 'app_sales' or app.request.get('_route') == 'staff_reception' or app.request.get('_route') == 'app_sales_store' or app.request.get('_route') == 'app_sales_fuel' %}
+		{# Staff Management - Manager #}
+		{% if is_granted('ROLE_MANAGER') %}
+			{% set staffOpen = app.request.get('_route') starts with 'app_manager_staff_' %}
+			<li class="sb-item sb-has-sub">
+				<button type="button" class="sb-link sb-toggle {% if staffOpen %}active{% endif %}" data-bs-toggle="collapse" data-bs-target="#staffMenu" aria-expanded="{{ staffOpen ? 'true' : 'false' }}" aria-controls="staffMenu" data-tooltip="Staff">
+					<i class="fa-solid fa-users sb-icon"></i>
+					<span class="sb-label">Staff Management</span>
+					<i class="fa-solid fa-chevron-down sb-chevron sb-label"></i>
+				</button>
+				<ul class="sb-sub collapse {% if staffOpen %}show{% endif %}" id="staffMenu">
+					<li>
+						<a class="sb-sub-link" href="{{ path('app_manager_staff_leave_requests') }}">Leave Requests</a>
+					</li>
+					<li>
+						<a class="sb-sub-link" href="{{ path('app_manager_staff_shifts') }}">Shifts</a>
+					</li>
+				</ul>
+			</li>
+		{% endif %}
+
+		{# Sales (Fuel) - Super Admin, Sub-Admin & Manager #}
+		{% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') %}
+		{% set salesOpen = app.request.get('_route') starts with 'app_sales' or app.request.get('_route') == 'app_sales_fuel' %}
 		<li class="sb-item sb-has-sub">
 			<button type="button" class="sb-link sb-toggle {% if salesOpen %}active{% endif %}" data-bs-toggle="collapse" data-bs-target="#salesMenu" aria-expanded="{{ salesOpen ? 'true' : 'false' }}" aria-controls="salesMenu" data-tooltip="Sales">
 				<i class="fa-solid fa-cart-shopping sb-icon"></i>
@@ -142,13 +131,11 @@
 					<a class="sb-sub-link" href="{{ path('app_sales_dashboard') }}">Dashboard</a>
 				</li>
 				<li>
-					<a class="sb-sub-link" href="{{ path('app_sales_store') }}">Store Sales</a>
-				</li>
-				<li>
 					<a class="sb-sub-link" href="{{ path('app_sales_fuel') }}">Fuel Sales</a>
 				</li>
 			</ul>
 		</li>
+		{% endif %}
 
 		{# POS (Digital Transactions) - Super Admin, Sub-Admin & Manager #}
 		{% if is_granted('ROLE_SUPER_ADMIN') or is_granted('ROLE_SUB_ADMIN') or is_granted('ROLE_MANAGER') %}

@@ -39,11 +39,6 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
         $username = $request->request->getString('username', '');
         $password = $request->request->getString('password', '');
         $csrfToken = $request->request->getString('_csrf_token', '');
-        $roleAttemptId = $request->request->getString('role_attempt_id', '');
-
-        if (!$roleAttemptId) {
-            throw new CustomUserMessageAuthenticationException('Invalid session attempt. Please return to role selection.');
-        }
 
         $request->getSession()->set(SecurityRequestAttributes::LAST_USERNAME, $username);
 
@@ -51,7 +46,6 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
         if ($role) {
             $normalizedRole = str_replace('_', '-', strtolower($role));
             $request->getSession()->set('LAST_LOGIN_ROLE', $normalizedRole);
-            $request->getSession()->set('PENDING_ROLE_ATTEMPT_ID', $roleAttemptId);
         }
 
         $normalizedRole = $role ? str_replace('_', '-', strtolower($role)) : null;
@@ -94,7 +88,6 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
         $lastRole = $session->get('LAST_LOGIN_ROLE');
         if ($lastRole) {
             $session->set('LAST_LOGIN_ROLE', $lastRole);
-            $session->remove('PENDING_ROLE_ATTEMPT_ID');
         }
 
         // Log successful login attempt
@@ -120,7 +113,6 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
             'super-admin' => 'app_dashboard_super_admin',
             'sub-admin'   => 'app_dashboard_sub_admin',
             'manager'     => 'app_dashboard_manager',
-            'staff'       => 'staff_reception',
         ];
 
         if ($selectedRole && isset($roleRouteMap[$selectedRole])) {
@@ -137,9 +129,6 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
         }
         if (in_array('ROLE_MANAGER', $roles, true)) {
             return new RedirectResponse($this->urlGenerator->generate('app_dashboard_manager'));
-        }
-        if (in_array('ROLE_STAFF', $roles, true)) {
-            return new RedirectResponse($this->urlGenerator->generate('staff_reception'));
         }
 
         return new RedirectResponse($this->urlGenerator->generate('app_role_select'));

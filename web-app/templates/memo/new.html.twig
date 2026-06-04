@@ -1,62 +1,795 @@
 {% extends "base.html.twig" %}
 
-{% block body %}
-	<div class="row">
-		<div class="col-lg-8 mx-auto">
-			<div class="card shadow-lg border-0 memo-branded memo-watermark">
-				<div class="card-header border-0 text-white py-3" style="background: linear-gradient(90deg, var(--primary), var(--primary-dark));">
-					<div class="fw-bold fs-5">{{ app_name }}</div>
-					<div class="small opacity-75">Compose Internal Memo</div>
-				</div>
-				<div class="card-body px-4">
-					<form action="{{ path('app_memo_new') }}" method="POST" enctype="multipart/form-data">
-						<div class="mb-3">
-							<label class="form-label">Recipients</label>
-							<div class="row">
-								<div class="col-md-6">
-									<label class="small text-muted">Specific Users</label>
-									<select name="recipientIds[]" class="form-select" multiple size="5">
-										{% for user in users %}
-											{% if user != app.user %}
-												<option value="{{ user.id }}">{{ user.username }}</option>
-											{% endif %}
-										{% endfor %}
-									</select>
-								</div>
-								<div class="col-md-6">
-									<label class="small text-muted">By Role</label>
-									<select name="recipientRoles[]" class="form-select" multiple size="5">
-										{% for role in roles %}
-											<option value="{{ role }}">{{ role|replace({'ROLE_': ''})|capitalize }}</option>
-										{% endfor %}
-									</select>
-								</div>
-							</div>
-							<div class="form-text">Hold Ctrl/Cmd to select multiple.</div>
-						</div>
-						<div class="mb-3">
-							<label class="form-label">Subject</label>
-							<input type="text" name="subject" class="form-control" required placeholder="e.g. Request for Stock Replenishment">
-						</div>
-						<div class="mb-3">
-							<label class="form-label">Message Body</label>
-							<textarea name="body" class="form-control" rows="8" required></textarea>
-						</div>
-						<div class="mb-3">
-							<label class="form-label">Attachments (Optional)</label>
-							<input type="file" name="attachments[]" class="form-control" multiple>
-							<div class="form-text">Max 10MB per file.</div>
-						</div>
-						<div class="d-flex justify-content-between mt-4">
-							<a href="{{ path('app_memo_dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
-							<div>
-								<button type="submit" name="status" value="draft" class="btn btn-outline-primary me-2">Save Draft</button>
-								<button type="submit" name="status" value="sent" class="btn btn-primary px-4">Send Memo</button>
-							</div>
-						</div>
-					</form>
+{% block title %}New Memo –
+	{{ app_name }}
+{% endblock %}
+
+{% block styles %}
+	<style>
+		/* ── Page Layout ── */
+		.memo-compose-wrap {
+			max-width: 820px;
+			margin: 0 auto;
+		}
+
+		.memo-page-title {
+			font-size: 1.45rem;
+			font-weight: 800;
+			color: var(--text-main);
+			letter-spacing: -0.02em;
+			margin: 0;
+		}
+		.memo-breadcrumb {
+			font-size: 0.78rem;
+			color: var(--text-muted);
+			margin-bottom: 4px;
+		}
+		.memo-breadcrumb a {
+			color: var(--text-muted);
+			text-decoration: none;
+		}
+		.memo-breadcrumb a:hover {
+			color: var(--primary);
+		}
+
+		/* ── Compose Card ── */
+		.compose-card {
+			background: var(--bg-card);
+			border: 1px solid var(--border-color);
+			border-radius: 20px;
+			box-shadow: 0 4px 24px rgba(15, 23, 42, 0.07);
+			overflow: hidden;
+		}
+		.compose-header {
+			background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+			padding: 1.5rem 1.75rem;
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+		}
+		.compose-header-icon {
+			width: 46px;
+			height: 46px;
+			border-radius: 14px;
+			background: rgba(255, 255, 255, 0.15);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 1.25rem;
+			color: #fff;
+			flex-shrink: 0;
+		}
+		.compose-header-title {
+			font-size: 1.8rem;
+			font-weight: 700;
+			color: #fff;
+			margin: 0;
+		}
+		.compose-header-sub {
+			font-size: 0.8rem;
+			color: rgba(255, 255, 255, 0.7);
+			margin: 0;
+		}
+
+		.compose-body {
+			padding: 1.75rem;
+		}
+
+		/* ── Meta Row (From / Date) ── */
+		.memo-meta-row {
+			display: flex;
+			gap: 1rem;
+			flex-wrap: wrap;
+			background: var(--bg-page);
+			border: 1px solid var(--border-color);
+			border-radius: 12px;
+			padding: 1rem 1.25rem;
+			margin-bottom: 1.25rem;
+		}
+		.memo-meta-item {
+			display: flex;
+			align-items: center;
+			gap: 0.6rem;
+			flex: 1;
+			min-width: 200px;
+		}
+		.memo-meta-label {
+			font-size: 0.72rem;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.07em;
+			color: var(--text-muted);
+			white-space: nowrap;
+		}
+		.memo-meta-value {
+			font-size: 0.88rem;
+			font-weight: 600;
+			color: var(--text-main);
+		}
+		.memo-meta-icon {
+			font-size: 0.9rem;
+			color: var(--primary);
+			flex-shrink: 0;
+		}
+
+		/* ── Section Labels ── */
+		.compose-section-label {
+			font-size: 0.75rem;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
+			color: var(--text-muted);
+			margin-bottom: 0.6rem;
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+		}
+		.compose-section-label i {
+			color: var(--primary);
+		}
+
+		/* ── Recipient Section ── */
+		.recipient-tabs {
+			display: flex;
+			gap: 0.5rem;
+			margin-bottom: 0.75rem;
+			flex-wrap: wrap;
+		}
+		.rtab {
+			font-size: 0.78rem;
+			font-weight: 600;
+			padding: 5px 14px;
+			border-radius: 20px;
+			border: 1.5px solid var(--border-color);
+			background: var(--bg-page);
+			color: var(--text-muted);
+			cursor: pointer;
+			transition: all 0.15s;
+			user-select: none;
+		}
+		.rtab.active {
+			background: var(--primary);
+			color: #fff;
+			border-color: var(--primary);
+		}
+		.rtab:hover:not(.active) {
+			border-color: var(--primary);
+			color: var(--primary);
+		}
+
+		.recipient-panel {
+			display: none;
+		}
+		.recipient-panel.active {
+			display: block;
+		}
+
+		/* ── User Chip Grid ── */
+		.user-chip-grid {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+			padding: 0.85rem;
+			background: var(--bg-page);
+			border: 1.5px solid var(--border-color);
+			border-radius: 12px;
+			min-height: 60px;
+			transition: border-color 0.15s;
+		}
+		.user-chip-grid:focus-within {
+			border-color: var(--primary);
+		}
+		.user-chip {
+			display: inline-flex;
+			align-items: center;
+			gap: 5px;
+			padding: 4px 10px 4px 8px;
+			background: rgba(13, 148, 136, 0.10);
+			color: #0d9488;
+			border-radius: 99px;
+			font-size: 0.78rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: background 0.12s;
+			border: 1px solid rgba(13, 148, 136, 0.2);
+			user-select: none;
+		}
+		.user-chip.role-chip {
+			background: rgba(139, 92, 246, 0.10);
+			color: #7c3aed;
+			border-color: rgba(139, 92, 246, 0.2);
+		}
+		.user-chip:hover {
+			background: rgba(13, 148, 136, 0.2);
+		}
+		.user-chip.role-chip:hover {
+			background: rgba(139, 92, 246, 0.2);
+		}
+		.user-chip.selected {
+			background: rgba(13, 148, 136, 0.18);
+			border-color: #0d9488;
+			font-weight: 700;
+		}
+		.user-chip.selected::after {
+			content: ' \00D7';
+			font-weight: 900;
+			margin-left: 4px;
+		}
+		.user-chip.role-chip.selected {
+			background: rgba(139, 92, 246, 0.18);
+			border-color: #7c3aed;
+		}
+
+		.recipient-search {
+			width: 100%;
+			font-size: 0.83rem;
+			border-radius: 8px;
+			border: 1.5px solid var(--border-color);
+			background: var(--bg-page);
+			color: var(--text-main);
+			padding: 7px 12px;
+			margin-bottom: 0.65rem;
+			transition: border-color 0.15s;
+			outline: none;
+		}
+		.recipient-search:focus {
+			border-color: var(--primary);
+		}
+
+		/* ── Role badges ── */
+		.role-badge {
+			display: inline-block;
+			font-size: 0.65rem;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+			padding: 2px 7px;
+			border-radius: 99px;
+			margin-left: 4px;
+		}
+		.role-badge.super-admin {
+			background: rgba(239, 68, 68, 0.12);
+			color: #dc2626;
+		}
+		.role-badge.sub-admin {
+			background: rgba(245, 158, 11, 0.12);
+			color: #d97706;
+		}
+		.role-badge.manager {
+			background: rgba(59, 130, 246, 0.12);
+			color: #2563eb;
+		}
+		.role-badge.staff {
+			background: rgba(16, 185, 129, 0.12);
+			color: #059669;
+		}
+
+		/* ── Subject / Body ── */
+		.compose-input {
+			width: 100%;
+			font-size: 0.9rem;
+			border: 1.5px solid var(--border-color);
+			background: var(--bg-page);
+			color: var(--text-main);
+			border-radius: 10px;
+			padding: 0.7rem 1rem;
+			transition: border-color 0.15s;
+			outline: none;
+		}
+		.compose-input:focus {
+			border-color: var(--primary);
+			box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.10);
+		}
+		.compose-textarea {
+			resize: vertical;
+			min-height: 200px;
+			line-height: 1.65;
+			font-family: inherit;
+		}
+
+		/* ── Attachment zone ── */
+		.attachment-dropzone {
+			border: 2px dashed var(--border-color);
+			border-radius: 12px;
+			padding: 1.25rem;
+			text-align: center;
+			color: var(--text-muted);
+			cursor: pointer;
+			transition: all 0.18s;
+			font-size: 0.85rem;
+		}
+		.attachment-dropzone:hover,
+		.attachment-dropzone.drag-over {
+			border-color: var(--primary);
+			color: var(--primary);
+			background: rgba(13, 148, 136, 0.04);
+		}
+		.attachment-list {
+			margin-top: 0.75rem;
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+		}
+		.attachment-pill {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 5px 12px;
+			border-radius: 8px;
+			background: var(--bg-page);
+			border: 1px solid var(--border-color);
+			font-size: 0.78rem;
+			font-weight: 600;
+			color: var(--text-main);
+		}
+		.attachment-pill button {
+			background: none;
+			border: none;
+			color: var(--text-muted);
+			cursor: pointer;
+			padding: 0;
+			line-height: 1;
+			font-size: 0.9rem;
+		}
+
+		/* ── Action Bar ── */
+		.compose-actions {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 1.25rem 1.75rem;
+			border-top: 1px solid var(--border-color);
+			gap: 1rem;
+			flex-wrap: wrap;
+		}
+		.compose-actions .btn {
+			font-weight: 600;
+			border-radius: 10px;
+			padding: 8px 22px;
+		}
+		.btn-send {
+			background: linear-gradient(135deg, #0d9488, #0f766e);
+			color: #fff;
+			border: none;
+			box-shadow: 0 3px 12px rgba(13, 148, 136, 0.25);
+			transition: all 0.18s;
+		}
+		.btn-send:hover {
+			transform: translateY(-1px);
+			box-shadow: 0 5px 18px rgba(13, 148, 136, 0.35);
+			color: #fff;
+		}
+		.btn-send:disabled {
+			opacity: 0.6;
+			transform: none;
+		}
+
+		/* ── Selected Summary ── */
+		.selected-summary {
+			font-size: 0.78rem;
+			color: var(--text-muted);
+			padding: 6px 12px;
+			background: var(--bg-page);
+			border-radius: 8px;
+			margin-top: 0.5rem;
+		}
+		.selected-summary span {
+			color: var(--primary);
+			font-weight: 700;
+		}
+
+		/* Dark mode */
+		[data-theme="dark"] .compose-card {
+			box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+		}
+	</style>
+{% endblock %}
+
+{% block content %}
+	<div
+		class="memo-compose-wrap">
+
+		{# ── Header ── #}
+		<div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
+			<div>
+				
+				<h1 class="memo-page-title">
+					<i class="fa-solid fa-envelope-circle-check me-2" style="color:#0d9488;"></i>Compose Memo
+				</h1>
+			</div>
+			<a href="{{ path('app_memo_dashboard') }}" class="btn btn-sm btn-outline-secondary" style="border-radius:10px;font-weight:600;">
+				<i class="fa-solid fa-arrow-left me-1"></i>
+				Back to Memos
+			</a>
+		</div>
+
+		{# ── Flash Messages ── #}
+		{% for msg in app.flashes('error') %}
+			<div class="alert alert-danger d-flex align-items-center gap-2 mb-3" style="border-radius:12px;">
+				<i class="fa-solid fa-circle-exclamation"></i>
+				{{ msg }}
+			</div>
+		{% endfor %}
+
+		{# ── Compose Card ── #}
+		<div class="compose-card">
+			<div class="compose-header">
+				<img src="{{ asset('/images/taci.jpg') }}" alt="Taci Logo" class="compose-logo" style="width: 64px; height: 64px; margin-right: 16px; border-radius: 50%;">
+				<div>
+					<p class="compose-header-title">Taci Petroleum</p>
+					<p class="compose-header-sub"></p>
 				</div>
 			</div>
+
+			<form
+				action="{{ path('app_memo_new') }}" method="POST" enctype="multipart/form-data" id="memoForm">
+
+				{# Hidden fields for selected recipients #}
+				<div id="hiddenRecipientIds"></div>
+				<div id="hiddenRecipientRoles"></div>
+
+				<div
+					class="compose-body">
+
+					{# ── From / Date meta row ── #}
+					<div class="memo-meta-row mb-4">
+						<div class="memo-meta-item">
+							<i class="fa-solid fa-user memo-meta-icon"></i>
+							<div>
+								<div class="memo-meta-label">From</div>
+								<div class="memo-meta-value">{{ app.user.username }}</div>
+							</div>
+						</div>
+						<div class="memo-meta-item">
+							<i class="fa-solid fa-shield-halved memo-meta-icon" style="color:#8b5cf6;"></i>
+							<div>
+								<div class="memo-meta-label">Role</div>
+								<div class="memo-meta-value">
+									{% set roleVal = app.user.role.value %}
+									{% if roleVal == 'ROLE_SUPER_ADMIN' %}
+										<span class="role-badge super-admin">Super Admin</span>
+									{% elseif roleVal == 'ROLE_SUB_ADMIN' %}
+										<span class="role-badge sub-admin">Sub-Admin</span>
+									{% elseif roleVal == 'ROLE_MANAGER' %}
+										<span class="role-badge manager">Manager</span>
+									{% else %}
+										<span class="role-badge staff">Staff</span>
+									{% endif %}
+								</div>
+							</div>
+						</div>
+						<div class="memo-meta-item">
+							<i class="fa-solid fa-calendar memo-meta-icon" style="color:#f59e0b;"></i>
+							<div>
+								<div class="memo-meta-label">Date</div>
+								<div class="memo-meta-value" id="memoDate">{{ "now"|date("d M Y") }}</div>
+							</div>
+						</div>
+					</div>
+
+					{# ── Recipients ── #}
+					<div class="mb-4">
+						<div class="compose-section-label">
+							<i class="fa-solid fa-users"></i>
+							To (Recipients)
+							<span class="ms-auto" style="font-size:0.72rem;color:var(--text-muted);text-transform:none;font-weight:500;">
+								Select users or entire roles
+							</span>
+						</div>
+
+						{# Roles Selection #}
+						<div class="user-chip-grid mb-3" id="roleChipGrid">
+							{% for role in roles %}
+								{% set roleName = role|replace({'ROLE_': ''})|replace({'_': ' '})|lower|title %}
+								<div class="user-chip role-chip" data-role="{{ role }}" onclick="toggleRole(this)">
+									<i class="fa-solid fa-user-tie" style="font-size:0.65rem;"></i>
+									{{ roleName }}
+								</div>
+							{% endfor %}
+							<div class="user-chip role-chip" id="selectAllRolesBtn" onclick="toggleAllRoles(this)">
+								<i class="fa-solid fa-users" style="font-size:0.65rem;"></i>
+								All
+							</div>
+						</div>
+
+						<div class="selected-summary" id="selectedSummary">
+							<i class="fa-solid fa-circle-info me-1"></i>
+							No recipients selected yet — select users or a role above.
+						</div>
+					</div>
+
+					{# ── Subject ── #}
+					<div class="mb-4">
+						<div class="compose-section-label">
+							<i class="fa-solid fa-heading"></i>
+							Subject
+						</div>
+						<input type="text" name="subject" class="compose-input" required placeholder="e.g. Request for Stock Replenishment" id="memoSubject" autocomplete="off">
+					</div>
+
+					{# ── Body ── #}
+					<div class="mb-4">
+						<div class="compose-section-label">
+							<i class="fa-solid fa-align-left"></i>
+							Message Body
+						</div>
+						<textarea name="body" class="compose-input compose-textarea" required placeholder="Type your memo here…" id="memoBody"></textarea>
+						<div class="d-flex justify-content-end mt-1">
+							<span id="charCount" style="font-size:0.72rem;color:var(--text-muted);">0 chars</span>
+						</div>
+					</div>
+
+					{# ── Attachments ── #}
+					<div class="mb-2">
+						<div class="compose-section-label">
+							<i class="fa-solid fa-paperclip"></i>
+							Attachments
+							<span style="text-transform:none;font-weight:500;font-size:0.72rem;color:var(--text-muted);">Optional · Max 10MB per file</span>
+						</div>
+						<label class="attachment-dropzone" for="fileInput" id="dropzone">
+							<i class="fa-solid fa-cloud-arrow-up fa-lg mb-2 d-block"></i>
+							Click to select files or drag &amp; drop here
+							<input type="file" name="attachments[]" id="fileInput" multiple class="d-none">
+						</label>
+						<div class="attachment-list" id="attachmentList"></div>
+					</div>
+
+				</div>
+				{# end compose-body #}
+
+				{# ── Action Bar ── #}
+				<div class="compose-actions">
+					<a href="{{ path('app_memo_dashboard') }}" class="btn btn-outline-secondary">
+						<i class="fa-solid fa-xmark me-1"></i>Cancel
+					</a>
+					<div class="d-flex gap-2 flex-wrap">
+						<button type="submit" name="status" value="draft" class="btn btn-outline-primary" id="draftBtn">
+							<i class="fa-solid fa-floppy-disk me-1"></i>Save Draft
+						</button>
+						<button type="submit" name="status" value="sent" class="btn btn-send" id="sendBtn">
+							<i class="fa-solid fa-paper-plane me-1"></i>Send Memo
+						</button>
+					</div>
+				</div>
+
+			</form>
 		</div>
+
 	</div>
+{% endblock %}
+
+{% block extra_scripts %}
+	<script>
+		(function () { // ── Live clock in header ──
+function updateDate() {
+const now = new Date();
+document.getElementById('memoDate').textContent = now.toLocaleDateString('en-NG', {
+weekday: 'short',
+day: 'numeric',
+month: 'short',
+year: 'numeric'
+});
+}
+updateDate();
+
+// ── Selected state ──
+const selectedUsers = new Set();
+const selectedRoles = new Set();
+
+window.toggleUser = function (el) {
+const id = el.dataset.id;
+const name = el.dataset.name;
+if (selectedUsers.has(id)) {
+selectedUsers.delete(id);
+el.classList.remove('selected');
+} else {
+selectedUsers.add(id);
+el.classList.add('selected');
+} syncHidden();
+updateSummary();
+};
+
+window.toggleRole = function (el) {
+const role = el.dataset.role;
+if (selectedRoles.has(role)) {
+selectedRoles.delete(role);
+el.classList.remove('selected');
+} else {
+selectedRoles.add(role);
+el.classList.add('selected');
+} 
+
+// Check if all roles are selected to sync "All" button
+const allRoles = Array.from(document.querySelectorAll('#roleChipGrid .role-chip[data-role]')).map(c => c.dataset.role);
+const allSelected = allRoles.length > 0 && allRoles.every(r => selectedRoles.has(r));
+const btnAll = document.getElementById('selectAllRolesBtn');
+if (btnAll) {
+    if (allSelected) btnAll.classList.add('selected');
+    else btnAll.classList.remove('selected');
+}
+
+syncHidden();
+updateSummary();
+};
+
+window.toggleAllRoles = function(el) {
+const isSelected = el.classList.contains('selected');
+const roleChips = document.querySelectorAll('#roleChipGrid .role-chip[data-role]');
+
+if (isSelected) {
+    el.classList.remove('selected');
+    roleChips.forEach(chip => {
+        if (selectedRoles.has(chip.dataset.role)) {
+            selectedRoles.delete(chip.dataset.role);
+            chip.classList.remove('selected');
+        }
+    });
+} else {
+    el.classList.add('selected');
+    roleChips.forEach(chip => {
+        if (!selectedRoles.has(chip.dataset.role)) {
+            selectedRoles.add(chip.dataset.role);
+            chip.classList.add('selected');
+        }
+    });
+}
+syncHidden();
+updateSummary();
+};
+
+function syncHidden() { // Sync user IDs
+const idContainer = document.getElementById('hiddenRecipientIds');
+idContainer.innerHTML = '';
+selectedUsers.forEach(id => {
+const inp = document.createElement('input');
+inp.type = 'hidden';
+inp.name = 'recipientIds[]';
+inp.value = id;
+idContainer.appendChild(inp);
+});
+// Sync roles
+const roleContainer = document.getElementById('hiddenRecipientRoles');
+roleContainer.innerHTML = '';
+selectedRoles.forEach(role => {
+const inp = document.createElement('input');
+inp.type = 'hidden';
+inp.name = 'recipientRoles[]';
+inp.value = role;
+roleContainer.appendChild(inp);
+});
+}
+
+function updateSummary() {
+const total = selectedUsers.size + selectedRoles.size;
+const summaryEl = document.getElementById('selectedSummary');
+if (total === 0) {
+summaryEl.innerHTML = '<i class="fa-solid fa-circle-info me-1"></i>No recipients selected yet — select users or a role above.';
+} else {
+const parts = [];
+if (selectedUsers.size > 0) 
+parts.push(`<span>${
+selectedUsers.size
+} user${
+selectedUsers.size > 1 ? 's' : ''
+}</span>`);
+
+if (selectedRoles.size > 0) 
+parts.push(`<span>${
+selectedRoles.size
+} role group${
+selectedRoles.size > 1 ? 's' : ''
+}</span>`);
+
+summaryEl.innerHTML = '<i class="fa-solid fa-circle-check me-1" style="color:#0d9488;"></i>Sending to: ' + parts.join(' + ');
+}
+}
+
+	// ── User search filter (only wire up if the element exists) ──
+	const userSearchEl = document.getElementById('userSearch');
+	if (userSearchEl) {
+		userSearchEl.addEventListener('input', function () {
+			const q = this.value.toLowerCase().trim();
+			document.querySelectorAll('#userChipGrid .user-chip').forEach(chip => {
+				const name = chip.dataset.name.toLowerCase();
+				chip.style.display = (!q || name.includes(q)) ? '' : 'none';
+			});
+		});
+	}
+
+// ── Char counter ──
+const bodyEl = document.getElementById('memoBody');
+const charEl = document.getElementById('charCount');
+const updateCharCount = function () {
+charEl.textContent = bodyEl.value.length + ' chars';
+};
+bodyEl.addEventListener('input', updateCharCount);
+updateCharCount(); // Initialize count
+
+// ── File attachment UI ──
+const fileInput = document.getElementById('fileInput');
+const dropzone = document.getElementById('dropzone');
+const attachList = document.getElementById('attachmentList');
+const dt = new DataTransfer();
+
+fileInput.addEventListener('change', function () {
+Array.from(this.files).forEach(f => addFile(f));
+});
+
+['dragover', 'dragleave', 'drop'].forEach(evt => {
+dropzone.addEventListener(evt, e => {
+e.preventDefault();
+if (evt === 'dragover') 
+dropzone.classList.add('drag-over');
+
+if (evt === 'dragleave') 
+dropzone.classList.remove('drag-over');
+
+if (evt === 'drop') {
+dropzone.classList.remove('drag-over');
+Array.from(e.dataTransfer.files).forEach(f => addFile(f));
+}
+});
+});
+
+function addFile(file) {
+if (file.size > 10485760) {
+alert (`${
+file.name
+} exceeds 10MB limit.`);
+return;
+}
+dt.items.add(file);
+fileInput.files = dt.files;
+
+const pill = document.createElement('div');
+pill.className = 'attachment-pill';
+pill.innerHTML = `<i class="fa-solid fa-file" style="color:var(--primary);"></i>
+            <span>${
+file.name
+}</span>
+            <span style="color:var(--text-muted);">(${
+(file.size / 1024).toFixed(0)
+} KB)</span>
+            <button type="button" onclick="removeFile(this, '${
+file.name
+}')" title="Remove">×</button>`;
+attachList.appendChild(pill);
+}
+
+window.removeFile = function (btn, name) { // Remove from DataTransfer
+const newDt = new DataTransfer();
+Array.from(dt.files).filter(f => f.name !== name).forEach(f => {
+newDt.items.add(f);
+dt.items.clear();
+});
+fileInput.files = newDt.files;
+btn.closest('.attachment-pill').remove();
+};
+
+// ── Form validation ──
+document.getElementById('memoForm').addEventListener('submit', function (e) {
+const subject = document.getElementById('memoSubject').value.trim();
+const body = document.getElementById('memoBody').value.trim();
+const total = selectedUsers.size + selectedRoles.size;
+
+if (! subject || ! body) {
+e.preventDefault();
+alert('Subject and body are required.');
+return;
+}
+
+// Only enforce recipients if "Send" (not draft)
+const status = e.submitter && e.submitter.value;
+if (status === 'sent' && total === 0) {
+e.preventDefault();
+alert('Please select at least one recipient before sending.');
+return;
+}
+
+document.getElementById('sendBtn').disabled = true;
+document.getElementById('draftBtn').disabled = true;
+});
+
+})();
+	</script>
 {% endblock %}

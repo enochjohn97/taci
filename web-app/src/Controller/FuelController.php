@@ -53,13 +53,18 @@ class FuelController extends AbstractController
         if ($request->isMethod('POST')) {
             $data = json_decode($request->getContent(), true);
             
-            if (!$data || !isset($data['liters']) || !isset($data['unitPrice'])) {
-                return $this->json(['error' => 'Invalid data: liters and unitPrice are required'], 400);
+            if (!$data || !isset($data['liters']) || !isset($data['unitPrice']) || !isset($data['pumpNumber']) || !isset($data['fuelType']) || !isset($data['paymentMethod']) || !isset($data['attendant'])) {
+                return $this->json(['error' => 'Invalid data: liters, unitPrice, pumpNumber, fuelType, paymentMethod, and attendant are required'], 400);
             }
             
             $entry = new FuelEntry();
             $entry->setLiterQuantity((float) $data['liters']);
             $entry->setUnitPrice((float) $data['unitPrice']);
+            $entry->setPumpNumber((int) $data['pumpNumber']);
+            $entry->setFuelType((string) $data['fuelType']);
+            $entry->setPaymentMethod((string) $data['paymentMethod']);
+            $entry->setVehiclePlate(isset($data['vehiclePlate']) && !empty($data['vehiclePlate']) ? (string) $data['vehiclePlate'] : null);
+            $entry->setAttendant((string) $data['attendant']);
             $entry->setEnteredBy($this->getUser());
 
             $this->em->persist($entry);

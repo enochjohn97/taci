@@ -217,11 +217,11 @@
                     <div class="fs-kpi-icon" style="background:rgba(13,148,136,0.1);color:#0d9488;">
                         <i class="fa-solid fa-naira-sign"></i>
                     </div>
-                    <span class="fs-kpi-badge up"><i class="fa-solid fa-arrow-trend-up"></i> +18.2%</span>
+                    <span class="fs-kpi-badge up"><i class="fa-solid fa-arrow-trend-up"></i> 0%</span>
                 </div>
                 <div class="fs-kpi-label">Total Revenue (Month)</div>
-                <div class="fs-kpi-value">₦{{ (total_revenue / 1000000)|number_format(1) }}M</div>
-                <div class="fs-kpi-sub">vs ₦4.45M last month</div>
+                <div class="fs-kpi-value">₦{{ (total_revenue / 1000000)|number_format(0) }}M</div>
+                <div class="fs-kpi-sub">vs ₦0 last month</div>
             </div>
         </div>
         <div class="col-6 col-xl col-lg-4">
@@ -230,7 +230,7 @@
                     <div class="fs-kpi-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;">
                         <i class="fa-solid fa-droplet"></i>
                     </div>
-                    <span class="fs-kpi-badge up"><i class="fa-solid fa-arrow-trend-up"></i> +9.4%</span>
+                    <span class="fs-kpi-badge up"><i class="fa-solid fa-arrow-trend-up"></i> 0%</span>
                 </div>
                 <div class="fs-kpi-label">Total Litres Dispensed</div>
                 <div class="fs-kpi-value">{{ total_volume|number_format(0) }} L</div>
@@ -243,11 +243,11 @@
                     <div class="fs-kpi-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;">
                         <i class="fa-solid fa-receipt"></i>
                     </div>
-                    <span class="fs-kpi-badge up"><i class="fa-solid fa-arrow-trend-up"></i> +5.7%</span>
+                    <span class="fs-kpi-badge up"><i class="fa-solid fa-arrow-trend-up"></i> 0%</span>
                 </div>
                 <div class="fs-kpi-label">Transactions (Month)</div>
                 <div class="fs-kpi-value">{{ transaction_count|number_format(0) }}</div>
-                <div class="fs-kpi-sub">Avg. ₦6,446 per sale</div>
+                <div class="fs-kpi-sub">Avg. ₦0 per sale</div>
             </div>
         </div>
         <div class="col-6 col-xl col-lg-4">
@@ -256,11 +256,11 @@
                     <div class="fs-kpi-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6;">
                         <i class="fa-solid fa-id-card"></i>
                     </div>
-                    <span class="fs-kpi-badge flat"><i class="fa-solid fa-minus"></i> +0.8%</span>
+                    <span class="fs-kpi-badge flat"><i class="fa-solid fa-minus"></i> 0%</span>
                 </div>
                 <div class="fs-kpi-label">Fleet Card Sales</div>
-                <div class="fs-kpi-value">₦{{ (avg_ticket / 1000000)|number_format(2) }}M</div>
-                <div class="fs-kpi-sub">22.4% of total revenue</div>
+                <div class="fs-kpi-value">₦{{ (avg_ticket / 1000000)|number_format(0) }}M</div>
+                <div class="fs-kpi-sub">0% of total revenue</div>
             </div>
         </div>
         <div class="col-6 col-xl col-lg-4">
@@ -269,11 +269,11 @@
                     <div class="fs-kpi-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;">
                         <i class="fa-solid fa-gas-pump"></i>
                     </div>
-                    <span class="fs-kpi-badge down"><i class="fa-solid fa-arrow-trend-down"></i> -1.2%</span>
+                    <span class="fs-kpi-badge down"><i class="fa-solid fa-arrow-trend-down"></i> 0%</span>
                 </div>
                 <div class="fs-kpi-label">Active Pumps Today</div>
-                <div class="fs-kpi-value">8 / 8</div>
-                <div class="fs-kpi-sub">Pump 3 &amp; 7 in maintenance</div>
+                <div class="fs-kpi-value">{{ active_pumps }} / {{ total_pumps }}</div>
+                <div class="fs-kpi-sub">{{ pumps_out_of_service }} out of service</div>
             </div>
         </div>
     </div>
@@ -283,29 +283,29 @@
         <div class="fs-fuel-pill">
             <div>
                 <div class="fs-fuel-pill-name"><span class="fs-fuel-dot me-1" style="background:#10b981;"></span> PMS (Petrol)</div>
-                <div class="fs-fuel-pill-val">₦3.12M</div>
-                <div class="fs-fuel-pill-litre">24,800 Litres · ₦1,260/L</div>
+                <div class="fs-fuel-pill-val">₦{{ (total_revenue / 1000000)|number_format(0) }}M</div>
+                <div class="fs-fuel-pill-litre">{{ total_volume|number_format(0) }} Litres · ₦{{ (total_volume > 0 ? (total_revenue / total_volume) : 0)|number_format(0) }}/L</div>
             </div>
         </div>
         <div class="fs-fuel-pill">
             <div>
                 <div class="fs-fuel-pill-name"><span class="fs-fuel-dot me-1" style="background:#f59e0b;"></span> AGO (Diesel)</div>
-                <div class="fs-fuel-pill-val">₦1.84M</div>
-                <div class="fs-fuel-pill-litre">12,200 Litres · ₦1,510/L</div>
+                <div class="fs-fuel-pill-val">₦{{ (total_revenue / 1000000)|number_format(0) }}M</div>
+                <div class="fs-fuel-pill-litre">{{ total_volume|number_format(0) }} Litres · ₦{{ (total_volume > 0 ? (total_revenue / total_volume) : 0)|number_format(0) }}/L</div>
             </div>
         </div>
         <div class="fs-fuel-pill">
             <div>
                 <div class="fs-fuel-pill-name"><span class="fs-fuel-dot me-1" style="background:#3b82f6;"></span> DPK (Kerosene)</div>
-                <div class="fs-fuel-pill-val">₦220K</div>
-                <div class="fs-fuel-pill-litre">3,800 Litres · ₦580/L</div>
+                <div class="fs-fuel-pill-val">₦{{ (total_revenue / 1000000)|number_format(0) }}M</div>
+                <div class="fs-fuel-pill-litre">{{ total_volume|number_format(0) }} Litres · ₦{{ (total_volume > 0 ? (total_revenue / total_volume) : 0)|number_format(0) }}/L</div>
             </div>
         </div>
         <div class="fs-fuel-pill">
             <div>
                 <div class="fs-fuel-pill-name"><span class="fs-fuel-dot me-1" style="background:#8b5cf6;"></span> LPG (Gas)</div>
-                <div class="fs-fuel-pill-val">₦108K</div>
-                <div class="fs-fuel-pill-litre">1,380 Litres · ₦780/L</div>
+                <div class="fs-fuel-pill-val">₦{{ (total_revenue / 1000000)|number_format(0) }}M</div>
+                <div class="fs-fuel-pill-litre">{{ total_volume|number_format(0) }} Litres · ₦{{ (total_volume > 0 ? (total_revenue / total_volume) : 0)|number_format(0) }}/L</div>
             </div>
         </div>
     </div>
@@ -478,17 +478,21 @@
         const st  = statusEl.value;
         const per = periodEl.value;
         const now = new Date();
+        now.setHours(0,0,0,0);
 
         filtered = FUEL_DATA.filter(r => {
-            if (q  && !`${r.txn_id} ${r.plate} ${r.attendant}`.toLowerCase().includes(q)) return false;
+            const searchStr = `${r.txn_id||''} ${r.plate||''} ${r.attendant||''} ${r.pump||''} ${r.fuel_type||''}`.toLowerCase();
+            if (q  && !searchStr.includes(q)) return false;
             if (ft  && r.fuel_type !== ft)  return false;
             if (pm  && r.pump      !== pm)  return false;
             if (pay && r.payment   !== pay) return false;
             if (st  && r.status    !== st)  return false;
             if (per) {
                 const d = new Date(r.date);
-                if (per === 'today')   { if (d.toDateString() !== now.toDateString()) return false; }
-                if (per === 'week')    { const w = new Date(now); w.setDate(now.getDate()-7); if (d < w) return false; }
+                const dDate = new Date(d);
+                dDate.setHours(0,0,0,0);
+                if (per === 'today')   { if (dDate.getTime() !== now.getTime()) return false; }
+                if (per === 'week')    { const w = new Date(now); w.setDate(now.getDate()-7); if (dDate < w) return false; }
                 if (per === 'month')   { if (d.getMonth() !== now.getMonth() || d.getFullYear() !== now.getFullYear()) return false; }
                 if (per === 'quarter') { const q3 = new Date(now); q3.setMonth(now.getMonth()-3); if (d < q3) return false; }
             }
@@ -499,12 +503,21 @@
 
     function sortData(){
         filtered.sort((a,b) => {
-            let va = a[sortCol], vb = b[sortCol];
-            if (typeof va === 'string') va = va.toLowerCase();
-            if (typeof vb === 'string') vb = vb.toLowerCase();
-            if (va < vb) return sortDir === 'asc' ? -1 : 1;
-            if (va > vb) return sortDir === 'asc' ?  1 : -1;
-            return 0;
+            let va = a[sortCol];
+            let vb = b[sortCol];
+            
+            if (va === null || va === undefined) va = '';
+            if (vb === null || vb === undefined) vb = '';
+
+            if (typeof va === 'number' && typeof vb === 'number') {
+                return sortDir === 'asc' ? va - vb : vb - va;
+            }
+
+            va = String(va).toLowerCase();
+            vb = String(vb).toLowerCase();
+            
+            const cmp = va.localeCompare(vb, undefined, { numeric: true, sensitivity: 'base' });
+            return sortDir === 'asc' ? cmp : -cmp;
         });
         page = 1;
         renderTable();
