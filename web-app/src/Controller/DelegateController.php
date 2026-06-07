@@ -9,10 +9,13 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 #[IsGranted('ROLE_SUPER_ADMIN')]
 #[Route('/admin/delegates', name: 'app_delegates_')]
@@ -21,6 +24,8 @@ class DelegateController extends AbstractController
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly UserPasswordHasherInterface $passwordHasher,
+        private readonly MailerInterface $mailer,
+        private readonly TranslatorInterface $translator,
     ) {
     }
 
@@ -42,6 +47,7 @@ class DelegateController extends AbstractController
             $data = $request->request->all();
             
             $fullName = $data['full_name'] ?? '';
+            $email = $data['email'] ?? '';
             $permissionLevel = $data['permission_level'] ?? 'general';
             $selectedPermissions = $data['permissions'] ?? [];
 
@@ -50,35 +56,37 @@ class DelegateController extends AbstractController
                 return $this->redirectToRoute('app_delegates_create');
             }
 
-            // Auto-generate username
-            $firstName = explode(' ', trim($fullName))[0];
-            // Use cryptographically secure random suffix for uniqueness
-            $randomSuffix = str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
-            $username = 'delegate_' . strtolower($firstName) . $randomSuffix;
+            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $this->addFlash('error', 'A valid email address is required to send credentials.');
+                return $this->redirectToRoute('app_delegates_create');
+            }
 
-            // Check for username uniqueness
+            // Generate unique username
+            $cleanFullName = str_replace(' ', '', $fullName);
+            $randomSuffix = str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+            $username = strtolower($cleanFullName) . $randomSuffix;
+
             $existingUser = $this->em->getRepository(User::class)->findOneBy(['username' => $username]);
             if ($existingUser) {
                 $this->addFlash('error', 'Generated username already exists. Please try again.');
                 return $this->redirectToRoute('app_delegates_create');
             }
 
-            // Auto-generate temporary password
             $tempPassword = $this->generateTemporaryPassword();
 
             $delegate = new User();
             $delegate->setUsername($username);
-            $delegate->setEmail($data['email'] ?? '');
+            $delegate->setEmail($email);
             $delegate->setRole(UserRole::ROLE_MANAGER);
             $delegate->setStatus('active');
-
-            $hashedPassword = $this->passwordHasher->hashPassword($delegate, $tempPassword);
-            $delegate->setPassword($hashedPassword);
+            $delegate->setPassword($this->passwordHasher->hashPassword($delegate, $tempPassword));
 
             $this->em->persist($delegate);
             $this->em->flush();
 
-            // Store in session for display
+            // Send email with credentials
+            $this->sendCredentialsEmail($delegate, $tempPassword);
+
             $request->getSession()->set('delegate_created', [
                 'username' => $username,
                 'password' => $tempPassword,
@@ -88,7 +96,8 @@ class DelegateController extends AbstractController
                 'permissions' => $selectedPermissions,
             ]);
 
-            return $this->redirectToRoute('app_delegates_credentials');
+            $this->addFlash('success', 'Delegate created. Login credentials have been sent to ' . $email);
+            return $this->redirectToRoute('app_delegates_index');
         }
 
         return $this->render('admin/delegates/create.html.twig');
@@ -121,12 +130,9 @@ class DelegateController extends AbstractController
         }
 
         if ($request->isMethod('POST')) {
-            $data = $request->request->all();
-            
-            $delegate->setEmail($data['email'] ?? $delegate->getEmail());
-            $delegate->setStatus($data['status'] ?? $delegate->getStatus());
+            $delegate->setEmail($request->request->get('email', $delegate->getEmail()));
+            $delegate->setStatus($request->request->get('status', $delegate->getStatus()));
 
-            $this->em->persist($delegate);
             $this->em->flush();
 
             $this->addFlash('success', 'Delegate updated successfully.');
@@ -140,7 +146,7 @@ class DelegateController extends AbstractController
 
     #[IsGranted('ROLE_SUPER_ADMIN')]
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
-    public function delete(int $id, Request $request): Response
+    public function delete(int $id): Response
     {
         $delegate = $this->em->getRepository(User::class)->find($id);
         
@@ -166,18 +172,17 @@ class DelegateController extends AbstractController
         }
 
         $tempPassword = $this->generateTemporaryPassword();
-        $hashedPassword = $this->passwordHasher->hashPassword($delegate, $tempPassword);
-        $delegate->setPassword($hashedPassword);
-
-        $this->em->persist($delegate);
+        $delegate->setPassword($this->passwordHasher->hashPassword($delegate, $tempPassword));
         $this->em->flush();
+
+        $this->sendResetPasswordEmail($delegate, $tempPassword);
 
         $request->getSession()->set('delegate_password_reset', [
             'username' => $delegate->getUsername(),
             'password' => $tempPassword,
         ]);
 
-        $this->addFlash('success', 'Password reset. Credentials displayed.');
+        $this->addFlash('success', 'Password reset. New credentials sent to ' . $delegate->getEmail());
         return $this->redirectToRoute('app_delegates_show_password', ['id' => $id]);
     }
 
@@ -197,18 +202,48 @@ class DelegateController extends AbstractController
         ]);
     }
 
-    /**
-     * Generate a temporary 8-character alphanumeric password
-     */
+    private function sendCredentialsEmail(User $delegate, string $plainPassword): void
+    {
+        $loginUrl = $this->generateUrl('app_login', [], UrlGeneratorInterface::ABSOLUTE_URL);
+        $htmlContent = $this->renderView('emails/delegate_credentials.html.twig', [
+            'delegate' => $delegate,
+            'password' => $plainPassword,
+            'loginUrl' => $loginUrl,
+        ]);
+
+        $email = (new Email())
+            ->from($this->getParameter('app.mailer_from') ?? 'no-reply@example.com')
+            ->to($delegate->getEmail())
+            ->subject($this->translator->trans('Your delegate account has been created'))
+            ->html($htmlContent);
+
+        $this->mailer->send($email);
+    }
+
+    private function sendResetPasswordEmail(User $delegate, string $newPassword): void
+    {
+        $loginUrl = $this->generateUrl('app_login', [], UrlGeneratorInterface::ABSOLUTE_URL);
+        $htmlContent = $this->renderView('emails/delegate_password_reset.html.twig', [
+            'delegate' => $delegate,
+            'newPassword' => $newPassword,
+            'loginUrl' => $loginUrl,
+        ]);
+
+        $email = (new Email())
+            ->from($this->getParameter('app.mailer_from') ?? 'no-reply@example.com')
+            ->to($delegate->getEmail())
+            ->subject($this->translator->trans('Your delegate account password has been reset'))
+            ->html($htmlContent);
+
+        $this->mailer->send($email);
+    }
+
     private function generateTemporaryPassword(): string
     {
-        // Generate a 12-character cryptographically secure password
-        $bytes = random_bytes(9); // 9 bytes -> 12-character base64 without padding approx
+        $bytes = random_bytes(9);
         $password = rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
-        // Ensure it contains an extra symbol for complexity
         $symbols = '!@#$%&*?';
         $password .= $symbols[random_int(0, strlen($symbols) - 1)];
-
         return $password;
     }
 }

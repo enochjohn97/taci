@@ -1,149 +1,152 @@
 {# templates/admin/delegates/create.html.twig #}
 {% extends "base.html.twig" %}
 
-{% block title %}Create Delegate - {{ app_name }}{% endblock %}
+{% block title %}Create Delegate -
+	{{ app_name }}
+{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="fas fa-user-plus"></i> Create New Manager Delegate</h5>
-                </div>
-                <div class="card-body p-5">
-                    <form method="POST" action="{{ path('app_delegates_create') }}" novalidate>
-                        <div class="mb-4">
-                            <label for="full_name" class="form-label fw-bold">Full Name *</label>
-                            <input type="text" 
-                                   class="form-control form-control-lg" 
-                                   id="full_name" 
-                                   name="full_name" 
-                                   required 
-                                   placeholder="e.g., Adekunle Okafor"
-                                   autocomplete="off">
-                            <small class="form-text text-muted">Used to auto-generate username</small>
-                        </div>
+	<div class="container-fluid py-4">
+		<div class="row">
+			<div class="col-lg-8">
+				<div class="card shadow-sm">
+					<div class="card-header bg-primary text-white">
+						<h5 class="mb-0">
+							<i class="fas fa-user-plus"></i>
+							Create New Delegate</h5>
+					</div>
+					<div class="card-body p-5">
+						<form method="POST" action="{{ path('app_delegates_create') }}" novalidate>
+							<div class="mb-4">
+								<label for="full_name" class="form-label fw-bold">Full Name *</label>
+								<input type="text" class="form-control form-control-lg" id="full_name" name="full_name" required placeholder="e.g., Adekunle Okafor" autocomplete="off">
+								<small class="form-text text-muted">Used to auto-generate username</small>
+							</div>
 
-                        <div class="mb-4">
-                            <label for="email" class="form-label fw-bold">Email Address</label>
-                            <input type="email" 
-                                   class="form-control form-control-lg" 
-                                   id="email" 
-                                   name="email" 
-                                   placeholder="delegate@example.com">
-                        </div>
+							<div class="mb-4">
+								<label for="email" class="form-label fw-bold">Email Address</label>
+								<input type="email" class="form-control form-control-lg" id="email" name="email" placeholder="delegate@example.com">
+							</div>
 
-                        <div class="mb-4">
-                            <label for="permission_level" class="form-label fw-bold">Permission Level</label>
-                            <select class="form-select form-select-lg" id="permission_level" name="permission_level" onchange="togglePermissions()">
-                                <option value="general">General (Full Admin Access)</option>
-                                <option value="limited">Limited (Custom Permissions)</option>
-                            </select>
-                            <small class="form-text text-muted">General delegates have all permissions</small>
-                        </div>
+							<div class="mb-4">
+								<label for="permission_level" class="form-label fw-bold">Permission Level</label>
+								<select class="form-select form-select-lg" id="permission_level" name="permission_level" onchange="togglePermissions()">
+									<option value="general">General (Full Admin Access)</option>
+									<option value="limited">Limited (Custom Permissions)</option>
+								</select>
+								<small class="form-text text-muted">General delegates have all permissions</small>
+							</div>
 
-                        <div id="permissions-section" style="display: none;" class="mb-4">
-                            <label class="form-label fw-bold">Custom Permissions</label>
-                            <div class="card border-light">
-                                <div class="card-body">
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="permissions" value="approve" id="perm_approve">
-                                        <label class="form-check-label" for="perm_approve">
-                                            Approve/Decline Requests
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="permissions" value="manage_staff" id="perm_staff">
-                                        <label class="form-check-label" for="perm_staff">
-                                            Manage Staff Accounts
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="permissions" value="view_reports" id="perm_reports">
-                                        <label class="form-check-label" for="perm_reports">
-                                            View Financial Reports
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="permissions" value="manage_pricing" id="perm_pricing">
-                                        <label class="form-check-label" for="perm_pricing">
-                                            Manage Fuel Pricing
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="permissions" value="manage_inventory" id="perm_inventory">
-                                        <label class="form-check-label" for="perm_inventory">
-                                            Manage Inventory
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="permissions" value="handle_pos" id="perm_pos">
-                                        <label class="form-check-label" for="perm_pos">
-                                            Handle POS Transactions
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="permissions" value="send_memos" id="perm_memos">
-                                        <label class="form-check-label" for="perm_memos">
-                                            Send/Receive Memos
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="permissions" value="view_analytics" id="perm_analytics">
-                                        <label class="form-check-label" for="perm_analytics">
-                                            View Tank Analytics
-                                        </label>
-                                    </div>
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="checkbox" name="permissions" value="manage_credit" id="perm_credit">
-                                        <label class="form-check-label" for="perm_credit">
-                                            Manage Credit Sales
-                                        </label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="permissions" value="manage_shifts" id="perm_shifts">
-                                        <label class="form-check-label" for="perm_shifts">
-                                            Manage Shifts
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+							<div id="permissions-section" style="display: none;" class="mb-4">
+								<label class="form-label fw-bold">Custom Permissions</label>
+								<div class="card border-light">
+									<div class="card-body">
+										<div class="form-check mb-2">
+											<input class="form-check-input" type="checkbox" name="permissions" value="approve" id="perm_approve">
+											<label class="form-check-label" for="perm_approve">
+												Approve/Decline Requests
+											</label>
+										</div>
+										<div class="form-check mb-2">
+											<input class="form-check-input" type="checkbox" name="permissions" value="manage_staff" id="perm_staff">
+											<label class="form-check-label" for="perm_staff">
+												Manage Staff Accounts
+											</label>
+										</div>
+										<div class="form-check mb-2">
+											<input class="form-check-input" type="checkbox" name="permissions" value="view_reports" id="perm_reports">
+											<label class="form-check-label" for="perm_reports">
+												View Financial Reports
+											</label>
+										</div>
+										<div class="form-check mb-2">
+											<input class="form-check-input" type="checkbox" name="permissions" value="manage_pricing" id="perm_pricing">
+											<label class="form-check-label" for="perm_pricing">
+												Manage Fuel Pricing
+											</label>
+										</div>
+										<div class="form-check mb-2">
+											<input class="form-check-input" type="checkbox" name="permissions" value="manage_inventory" id="perm_inventory">
+											<label class="form-check-label" for="perm_inventory">
+												Manage Inventory
+											</label>
+										</div>
+										<div class="form-check mb-2">
+											<input class="form-check-input" type="checkbox" name="permissions" value="handle_pos" id="perm_pos">
+											<label class="form-check-label" for="perm_pos">
+												Handle POS Transactions
+											</label>
+										</div>
+										<div class="form-check mb-2">
+											<input class="form-check-input" type="checkbox" name="permissions" value="send_memos" id="perm_memos">
+											<label class="form-check-label" for="perm_memos">
+												Send/Receive Memos
+											</label>
+										</div>
+										<div class="form-check mb-2">
+											<input class="form-check-input" type="checkbox" name="permissions" value="view_analytics" id="perm_analytics">
+											<label class="form-check-label" for="perm_analytics">
+												View Tank Analytics
+											</label>
+										</div>
+										<div class="form-check mb-2">
+											<input class="form-check-input" type="checkbox" name="permissions" value="manage_credit" id="perm_credit">
+											<label class="form-check-label" for="perm_credit">
+												Manage Credit Sales
+											</label>
+										</div>
+										<div class="form-check">
+											<input class="form-check-input" type="checkbox" name="permissions" value="manage_shifts" id="perm_shifts">
+											<label class="form-check-label" for="perm_shifts">
+												Manage Shifts
+											</label>
+										</div>
+									</div>
+								</div>
+							</div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-check"></i> Create Delegate
-                            </button>
-                            <a href="{{ path('app_delegates_index') }}" class="btn btn-outline-secondary">Cancel</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+							<div class="d-grid gap-2">
+								<button type="submit" class="btn btn-primary btn-lg">
+									<i class="fas fa-check"></i>
+									Create Delegate
+								</button>
+								<a href="{{ path('app_delegates_index') }}" class="btn btn-outline-secondary">Cancel</a>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
 
-        <div class="col-lg-4">
-            <div class="card border-info bg-light">
-                <div class="card-body">
-                    <h6 class="card-title text-info"><i class="fas fa-info-circle"></i> What happens next?</h6>
-                    <ul class="small mb-0">
-                        <li>A <strong>unique username</strong> will be auto-generated</li>
-                        <li>A <strong>temporary password</strong> will be created</li>
-                        <li>Credentials will be displayed for copying</li>
-                        <li>Delegate account is <strong>immediately active</strong></li>
-                        <li>You can reset password anytime</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+			<div class="col-lg-4">
+				<div class="card border-info bg-light">
+					<div class="card-body">
+						<h6 class="card-title text-info">
+							<i class="fas fa-info-circle"></i>
+							What happens next?</h6>
+						<ul class="small mb-0">
+							<li>A
+								<strong>unique username</strong>
+								will be auto-generated</li>
+							<li>A
+								<strong>temporary password</strong>
+								will be created</li>
+							<li>Credentials will be displayed for copying</li>
+							<li>Delegate account is
+								<strong>immediately active</strong>
+							</li>
+							<li>You can reset password anytime</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 
-<script>
-    function togglePermissions() {
-        const level = document.getElementById('permission_level').value;
-        const permSection = document.getElementById('permissions-section');
-        permSection.style.display = level === 'limited' ? 'block' : 'none';
-    }
-</script>
+	<script>
+		function togglePermissions() {
+const level = document.getElementById('permission_level').value;
+const permSection = document.getElementById('permissions-section');
+permSection.style.display = level === 'limited' ? 'block' : 'none';
+}
+	</script>
 {% endblock %}

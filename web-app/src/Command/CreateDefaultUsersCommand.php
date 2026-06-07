@@ -42,7 +42,6 @@ class CreateDefaultUsersCommand extends Command
         // Use environment-provided passwords when available, otherwise generate secure random passwords
         $superPass = $_ENV['DEFAULT_SUPERADMIN_PASSWORD'] ?? getenv('DEFAULT_SUPERADMIN_PASSWORD') ?: bin2hex(random_bytes(12));
         $managerPass = $_ENV['DEFAULT_MANAGER_PASSWORD'] ?? getenv('DEFAULT_MANAGER_PASSWORD') ?: bin2hex(random_bytes(12));
-        $staffPass = $_ENV['DEFAULT_STAFF_PASSWORD'] ?? getenv('DEFAULT_STAFF_PASSWORD') ?: bin2hex(random_bytes(12));
 
         // Super Admin
         $superAdmin = new User();
@@ -63,13 +62,13 @@ class CreateDefaultUsersCommand extends Command
         $this->em->persist($manager);
 
         // Staff
-        $staff = new User();
-        $staff->setUsername('staff');
-        $staff->setEmail('staff@taci.com');
-        $staff->setRole(UserRole::ROLE_STAFF);
-        $hashedPassword = $this->passwordHasher->hashPassword($staff, $staffPass);
-        $staff->setPassword($hashedPassword);
-        $this->em->persist($staff);
+        // $staff = new User();
+        // $staff->setUsername('staff');
+        // $staff->setEmail('staff@taci.com');
+        // $staff->setRole(UserRole::ROLE_STAFF);
+        // $hashedPassword = $this->passwordHasher->hashPassword($staff, $staffPass);
+        // $staff->setPassword($hashedPassword);
+        // $this->em->persist($staff);
 
         $this->em->flush();
 
