@@ -187,9 +187,9 @@ async function toggleStatus(userId, currentStatus) {
         });
         const data = await res.json();
         if (data.success) window.location.reload();
-        else alert('Failed: ' + (data.error || 'Unknown error'));
+        else toast.error('Failed: ' + (data.error || 'Unknown error'));
     } catch (err) {
-        alert('Network error.');
+        toast.error('Network error.');
     }
 }
 </script>

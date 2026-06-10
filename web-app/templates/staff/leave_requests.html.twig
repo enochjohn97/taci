@@ -13,6 +13,11 @@
                 </h2>
             </div>
             <div class="col-auto ms-auto d-print-none">
+                {% if is_granted('ROLE_MANAGER') and not is_granted('ROLE_SUB_ADMIN') %}
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#leaveModal">
+                        <i class="fa-solid fa-plane-departure me-1"></i> Create Leave
+                    </button>
+                {% endif %}
             </div>
         </div>
     </div>

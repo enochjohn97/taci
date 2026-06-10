@@ -29,7 +29,7 @@ class SupplierController extends AbstractController
     }
 
     #[Route('/supplier/new', name: 'inventory_supplier_new', methods: ['POST'])]
-    #[IsGranted('ROLE_SUB_ADMIN')]
+    #[IsGranted('ROLE_MANAGER')]
     public function createSupplier(Request $request): JsonResponse
     {
         $data = $request->request->all();
@@ -96,7 +96,7 @@ class SupplierController extends AbstractController
     }
 
     #[Route('/supplier/{id}/edit', name: 'inventory_supplier_edit', methods: ['POST'])]
-    #[IsGranted('ROLE_SUB_ADMIN')]
+    #[IsGranted('ROLE_MANAGER')]
     public function editSupplier(Supplier $supplier, Request $request): JsonResponse
     {
         $data = $request->request->all();
@@ -111,7 +111,7 @@ class SupplierController extends AbstractController
     }
 
     #[Route('/supplier/{id}/delete', name: 'inventory_supplier_delete', methods: ['POST','DELETE'])]
-    #[IsGranted('ROLE_SUB_ADMIN')]
+    #[IsGranted('ROLE_MANAGER')]
     public function deleteSupplier(Supplier $supplier): JsonResponse
     {
         $this->em->remove($supplier);
@@ -120,7 +120,7 @@ class SupplierController extends AbstractController
     }
 
     #[Route('/suppliers/manage', name: 'inventory_suppliers_manage', methods: ['GET'])]
-    #[IsGranted('ROLE_SUB_ADMIN')]
+    #[IsGranted('ROLE_MANAGER')]
     public function manageSuppliers(Request $request): Response
     {
         $page = max(1, (int) $request->query->get('page', 1));
@@ -162,7 +162,7 @@ class SupplierController extends AbstractController
     }
 
     #[Route('/supplier/{id}', name: 'inventory_supplier_view', methods: ['GET'])]
-    #[IsGranted('ROLE_SUB_ADMIN')]
+    #[IsGranted('ROLE_MANAGER')]
     public function viewSupplier(Supplier $supplier): Response
     {
         $invoices = $this->em->getRepository(\App\Entity\Invoice::class)

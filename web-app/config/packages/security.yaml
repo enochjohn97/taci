@@ -32,7 +32,7 @@ security:
       access_denied_url: /dashboard
       logout:
         path: app_logout
-        target: app_role_select
+        target: app_logout_success
         delete_cookies:
           - PHPSESSID
       remember_me:

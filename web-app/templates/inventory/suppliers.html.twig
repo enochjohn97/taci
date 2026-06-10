@@ -112,7 +112,7 @@
                                 {% endif %}
                             </td>
                             <td class="pe-4 text-end">
-                                {% if is_granted('ROLE_MANAGER') and not is_granted('ROLE_SUB_ADMIN') %}
+                                {% if is_granted('ROLE_MANAGER') %}
                                 <button class="btn btn-sm btn-light border rounded-pill px-3 edit-supplier-btn hover-elevate" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </button>

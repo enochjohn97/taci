@@ -14,6 +14,11 @@
             </div>
             <div class="col-auto ms-auto d-print-none">
                 <div class="btn-list d-flex gap-2">
+                    {% if is_granted('ROLE_MANAGER') and not is_granted('ROLE_SUB_ADMIN') %}
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createShiftModal">
+                            <i class="fa-solid fa-calendar-plus me-1"></i> Create Shift
+                        </button>
+                    {% endif %}
                 </div>
             </div>
         </div>

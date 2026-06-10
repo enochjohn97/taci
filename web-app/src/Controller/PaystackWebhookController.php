@@ -13,7 +13,12 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class PaystackWebhookController extends AbstractController
 {
-    public function __construct(private PaymentService $paymentService, private ReceiptService $receiptService, private EntityManagerInterface $em) {}
+    public function __construct(
+        private PaymentService $paymentService,
+        private ReceiptService $receiptService,
+        private EntityManagerInterface $em,
+        private \App\Service\NotificationService $notificationService,
+    ) {}
 
     #[Route('/paystack/webhook', name: 'paystack_webhook', methods: ['POST'])]
     public function webhook(Request $request): Response
@@ -49,10 +54,18 @@ class PaystackWebhookController extends AbstractController
                 $sale = $payment->getSale();
                 try {
                     $receiptUrl = $this->receiptService->generateSaleReceipt($sale);
-                    // Optionally notify cashier
                 } catch (\Exception $e) {
-                    // log but continue
                     error_log('Failed to generate receipt: ' . $e->getMessage());
+                }
+
+                // Notify all managers + admins about the completed payment in real-time
+                try {
+                    $this->notificationService->notifyPaymentReceived(
+                        $sale->getCashier(),
+                        $payment->getAmount()
+                    );
+                } catch (\Exception $e) {
+                    error_log('Failed to send payment notification: ' . $e->getMessage());
                 }
             }
             return new Response('Webhook processed', Response::HTTP_OK);

@@ -63,7 +63,7 @@ document.getElementById('select-all').addEventListener('change', function(e){
 document.getElementById('export-selected').addEventListener('click', function(){
     const checked = Array.from(document.querySelectorAll('input[name="selected[]"]:checked')).map(c=>c.value);
     if (!checked.length) {
-        alert('Please select rows to export');
+        toast.warning('Please select rows to export');
         return;
     }
 
@@ -84,7 +84,7 @@ document.getElementById('export-selected').addEventListener('click', function(){
         document.body.appendChild(a);
         a.click();
         a.remove();
-    }).catch(err => { console.error(err); alert('Export failed') });
+    }).catch(err => { console.error(err); toast.error('Export failed') });
 });
 </script>
 {% endblock %}

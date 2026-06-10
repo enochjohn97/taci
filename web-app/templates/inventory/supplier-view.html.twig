@@ -151,27 +151,24 @@
           if(!res.ok) throw new Error(json.error || 'Failed');
           // reload to show invoice
           location.reload();
-        }catch(err){
-          alert('Error creating invoice: ' + err.message);
+        } catch (err) {
+          toast.error('Error creating invoice: ' + err.message);
         }
       });
     }
 
     const deliveryForm = document.getElementById('createDeliveryForm');
-    if(deliveryForm){
-      deliveryForm.addEventListener('submit', async function(e){
+    if (deliveryForm) {
+      deliveryForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const fd = new FormData(this);
-        try{
-          const res = await fetch(`/inventory/supplier/${supplierId}/delivery/new`, {
-            method: 'POST',
-            body: fd
-          });
+        try {
+          const res = await fetch(`/inventory/supplier/${supplierId}/delivery/new`, { method: 'POST', body: fd });
           const json = await res.json();
-          if(!res.ok) throw new Error(json.error || 'Failed');
-          location.reload();
-        }catch(err){
-          alert('Error scheduling delivery: ' + err.message);
+          if (!res.ok) throw new Error(json.error || 'Failed');
+          window.location.reload();
+        } catch (err) {
+          toast.error('Error scheduling delivery: ' + err.message);
         }
       });
     }

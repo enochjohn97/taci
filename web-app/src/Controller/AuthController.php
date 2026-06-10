@@ -37,18 +37,8 @@ class AuthController extends AbstractController
     #[Route('/role-select', name: 'app_role_select')]
     public function roleSelect(): Response
     {
-        // If already authenticated, redirect to correct role-specific dashboard
         if ($this->getUser()) {
-            $roles = $this->getUser()->getRoles();
-            if (in_array('ROLE_SUPER_ADMIN', $roles, true)) {
-                return $this->redirectToRoute('app_dashboard_super_admin');
-            }
-            if (in_array('ROLE_SUB_ADMIN', $roles, true)) {
-                return $this->redirectToRoute('app_dashboard_sub_admin');
-            }
-            if (in_array('ROLE_MANAGER', $roles, true)) {
-                return $this->redirectToRoute('app_dashboard_manager');
-            }
+            return $this->redirectToRoute('app_logout');
         }
 
         // Check if sub-admins exist
@@ -105,6 +95,13 @@ class AuthController extends AbstractController
     public function logout(): Response
     {
         throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
+    }
+
+    #[Route('/logout-success', name: 'app_logout_success')]
+    public function logoutSuccess(): Response
+    {
+        $this->addFlash('success', 'You have been successfully logged out.');
+        return $this->redirectToRoute('app_role_select');
     }
 
     #[Route('/password-recovery', name: 'app_password_recovery', methods: ['GET', 'POST'])]

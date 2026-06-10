@@ -466,7 +466,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			if (typeof Swal !== 'undefined') {
 				Swal.fire({ title: 'No recipient selected', text: 'Please select at least one recipient.',
 					icon: 'warning', confirmButtonColor: 'var(--primary)' });
-			} else { alert('Please select at least one recipient.'); }
+			} else { toast.warning('Please select at least one recipient.'); }
 		}
 	});
 

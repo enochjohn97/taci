@@ -397,10 +397,6 @@
 					<i class="fa-solid fa-envelope-circle-check me-2" style="color:#0d9488;"></i>Compose Memo
 				</h1>
 			</div>
-			<a href="{{ path('app_memo_dashboard') }}" class="btn btn-sm btn-outline-secondary" style="border-radius:10px;font-weight:600;">
-				<i class="fa-solid fa-arrow-left me-1"></i>
-				Back to Memos
-			</a>
 		</div>
 
 		{# ── Flash Messages ── #}
@@ -488,8 +484,19 @@
 							{% endfor %}
 							<div class="user-chip role-chip" id="selectAllRolesBtn" onclick="toggleAllRoles(this)">
 								<i class="fa-solid fa-users" style="font-size:0.65rem;"></i>
-								All
+								All Roles
 							</div>
+						</div>
+
+						{# Users Selection #}
+						<input type="text" id="userSearch" class="recipient-search" placeholder="Search specific staff or managers...">
+						<div class="user-chip-grid mb-3" id="userChipGrid">
+							{% for u in users %}
+								<div class="user-chip" data-id="{{ u.id }}" data-name="{{ u.username }}" onclick="toggleUser(this)">
+									<i class="fa-solid fa-user" style="font-size:0.65rem;"></i>
+									{{ u.username }}
+								</div>
+							{% endfor %}
 						</div>
 
 						<div class="selected-summary" id="selectedSummary">
@@ -689,10 +696,23 @@ summaryEl.innerHTML = '<i class="fa-solid fa-circle-check me-1" style="color:#0d
 	if (userSearchEl) {
 		userSearchEl.addEventListener('input', function () {
 			const q = this.value.toLowerCase().trim();
+			let anyVisible = false;
 			document.querySelectorAll('#userChipGrid .user-chip').forEach(chip => {
-				const name = chip.dataset.name.toLowerCase();
-				chip.style.display = (!q || name.includes(q)) ? '' : 'none';
+				const name = (chip.dataset.name || chip.textContent || '').toLowerCase();
+				const visible = !q || name.includes(q);
+				chip.style.display = visible ? '' : 'none';
+				if (visible) anyVisible = true;
 			});
+			// Show a "no results" message if needed
+			let noResult = document.getElementById('userChipNoResult');
+			if (!noResult) {
+				noResult = document.createElement('p');
+				noResult.id = 'userChipNoResult';
+				noResult.className = 'text-muted small mt-2';
+				noResult.textContent = 'No users match your search.';
+				document.getElementById('userChipGrid').after(noResult);
+			}
+			noResult.style.display = q && !anyVisible ? '' : 'none';
 		});
 	}
 
@@ -773,17 +793,21 @@ const body = document.getElementById('memoBody').value.trim();
 const total = selectedUsers.size + selectedRoles.size;
 
 if (! subject || ! body) {
-e.preventDefault();
-alert('Subject and body are required.');
-return;
+
+if (!subject || !body) {
+    e.preventDefault();
+    toast.warning('Subject and body are required.');
+    return;
 }
 
 // Only enforce recipients if "Send" (not draft)
 const status = e.submitter && e.submitter.value;
-if (status === 'sent' && total === 0) {
-e.preventDefault();
-alert('Please select at least one recipient before sending.');
-return;
+if (status === 'sent') {
+    if (selectedRoles.size === 0 && selectedUsers.size === 0) {
+        e.preventDefault();
+        toast.warning('Please select at least one recipient before sending.');
+        return;
+    }
 }
 
 document.getElementById('sendBtn').disabled = true;

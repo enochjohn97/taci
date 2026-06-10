@@ -442,7 +442,7 @@
                                         <div style="font-size:0.72rem;color:var(--color-success);font-weight:600;margin-top:2px;">{{ pump.liters }} L</div>
                                     {% endif %}
                                     <button class="btn btn-sm w-100 mt-2" style="font-size:0.7rem;padding:3px 6px;background:var(--border-color);border:none;color:var(--text-muted);"
-                                            onclick="alert('Memo to cashier coming soon')">
+                                            onclick="toast.info('Memo to cashier coming soon')">
                                         <i class="fa-solid fa-comment-sms me-1"></i>Message Cashier
                                     </button>
                                 </div>
@@ -468,7 +468,7 @@
                         </div>
                         <div class="d-flex gap-2 mt-3">
                             <input type="text" class="form-control form-control-sm" placeholder="Add a shift note…" id="shiftNoteInput">
-                            <button class="btn btn-sm btn-primary" style="white-space:nowrap;" onclick="alert('Shift notes coming soon')">Send</button>
+                            <button class="btn btn-sm btn-primary" style="white-space:nowrap;" onclick="toast.info('Shift notes coming soon')">Send</button>
                         </div>
                     </div>
                 </div>
@@ -851,7 +851,7 @@
             async function submitAdjust() {
                 const qty = parseInt(document.getElementById('ajQty').value);
                 const notes = document.getElementById('ajNotes').value;
-                if (!qty || isNaN(qty)) { alert('Enter a valid quantity.'); return; }
+                if (!qty || isNaN(qty)) { toast.warning('Enter a valid quantity.'); return; }
                 try {
                     const res = await fetch(`/inventory/product/${ajProductId}/adjust`, {
                         method: 'POST',
@@ -860,8 +860,8 @@
                     });
                     const data = await res.json();
                     if (data.success) { location.reload(); }
-                    else { alert('Error: ' + (data.error || 'Unknown')); }
-                } catch(e) { alert('Network error.'); }
+                    else { toast.error('Error: ' + (data.error || 'Unknown')); }
+                } catch(e) { toast.error('Network error.'); }
             }
             </script>
 
@@ -1025,12 +1025,9 @@
             </div>
             <div class="modal fade" id="fuelAnalyticsModal" tabindex="-1">
                 <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title"><i class="bi bi-fuel-pump me-2"></i>Fuel Profit/Loss Analytics</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body" id="fuelAnalyticsBody">
+                    <div class="modal-content" style="border: none; border-radius: 0;">
+                        <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close" style="z-index: 1050;"></button>
+                        <div class="modal-body p-0" id="fuelAnalyticsBody">
                             <div class="text-center py-4"><div class="spinner-border text-primary"></div><p class="text-muted mt-2 mb-0">Computing quota projections…</p></div>
                         </div>
                     </div>
@@ -1087,7 +1084,7 @@
                 async function computeFuelAnalytics(entryId) {
                     const modal = new bootstrap.Modal(document.getElementById('fuelAnalyticsModal'));
                     const body = document.getElementById('fuelAnalyticsBody');
-                    body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary"></div></div>';
+                    body.innerHTML = '<div class="text-center py-4"><div class="spinner-border" style="color: #0d9488;"></div></div>';
                     modal.show();
                     const response = await fetch('{{ path('app_fuel_quota_compute') }}', {
                         method: 'POST',
@@ -1096,29 +1093,219 @@
                     });
                     const data = await response.json();
                     if (!data.success) {
-                        body.innerHTML = '<div class="alert alert-danger">Unable to compute analytics.</div>';
+                        body.innerHTML = '<div class="alert alert-danger m-4">Unable to compute analytics.</div>';
                         return;
                     }
                     const m = data.metrics;
+                    const dateObj = new Date();
+                    const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    const timeStr = dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+                    
                     body.innerHTML = `
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-3"><div class="card bg-light p-3 text-center"><div class="small text-muted">Total Liters</div><div class="h4">${Number(m.totalLiters).toLocaleString()} L</div></div></div>
-                            <div class="col-md-3"><div class="card bg-light p-3 text-center"><div class="small text-muted">Daily Quota</div><div class="h4 text-primary">${Number(m.dailyQuota).toFixed(0)} L</div></div></div>
-                            <div class="col-md-3"><div class="card bg-light p-3 text-center"><div class="small text-muted">Projected Revenue</div><div class="h5 text-success">₦${Number(m.projectedRevenue).toLocaleString()}</div></div></div>
-                            <div class="col-md-3"><div class="card bg-light p-3 text-center"><div class="small text-muted">Profit Margin</div><div class="h4 text-warning">${Number(m.profitMargin).toFixed(1)}%</div></div></div>
+                        <div class="px-5 py-5" style="font-family: Arial, sans-serif; background: #ffffff;" id="fuelReportPrintableArea">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h2 style="color: #0d9488; font-weight: bold; margin-bottom: 0;">TACI_Petroleum</h2>
+                                    <p style="color: #6c757d; font-size: 0.95rem; margin-bottom: 0.5rem;">Fuel Accounting & Quota Intelligence Report</p>
+                                </div>
+                                <div class="d-print-none gap-2 d-flex btn-action-container">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="console.log('Print clicked'); window.printFuelReport();"><i class="bi bi-printer"></i> Print</button>
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="console.log('Download clicked'); window.downloadFuelReportPdf();"><i class="bi bi-download"></i> Download PDF</button>
+                                </div>
+                            </div>
+                            <p style="color: #adb5bd; font-size: 0.85rem; border-bottom: 3px solid #0d9488; padding-bottom: 1rem; margin-bottom: 2rem;">
+                                Generated ${dateStr} at ${timeStr} &bull; Entry logged by superadmin
+                            </p>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-3">
+                                    <div class="card h-100" style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 6px;">
+                                        <div class="card-body p-3">
+                                            <div style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">TOTAL LITERS</div>
+                                            <div style="font-size: 1.4rem; font-weight: bold; color: #1e293b;">${Number(m.totalLiters).toLocaleString()} L</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card h-100" style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 6px;">
+                                        <div class="card-body p-3">
+                                            <div style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">UNIT PRICE</div>
+                                            <div style="font-size: 1.4rem; font-weight: bold; color: #1e293b;">₦${Number(m.unitPrice).toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card h-100" style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 6px;">
+                                        <div class="card-body p-3">
+                                            <div style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">PERIOD</div>
+                                            <div style="font-size: 1.4rem; font-weight: bold; color: #1e293b;">${m.daysInPeriod} days</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-3">
+                                    <div class="card h-100" style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 6px;">
+                                        <div class="card-body p-3">
+                                            <div style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">BASE DAILY QUOTA</div>
+                                            <div style="font-size: 1.4rem; font-weight: bold; color: #1e293b;">${Number(m.dailyQuota).toFixed(0)}L/day</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h6 style="color: #0d9488; font-weight: bold; margin-bottom: 0.75rem; font-size: 1.15rem;">Day-Type Quota Breakdown</h6>
+                            <table class="table table-bordered mb-4" style="border-color: #e2e8f0;">
+                                <thead style="background: #14b8a6; color: white;">
+                                    <tr>
+                                        <th style="font-weight: 600; padding: 12px; border-color: #14b8a6;">Scenario</th>
+                                        <th style="font-weight: 600; padding: 12px; border-color: #14b8a6;">Days</th>
+                                        <th style="font-weight: 600; padding: 12px; border-color: #14b8a6;">Daily Quota(L)</th>
+                                        <th style="font-weight: 600; padding: 12px; border-color: #14b8a6;">Share of Period</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding: 12px; color: #475569;">Good Days (60%)</td>
+                                        <td style="padding: 12px; color: #475569;">${Math.round(m.daysInPeriod * 0.6)}</td>
+                                        <td style="padding: 12px; color: #475569;">${(Number(m.dailyQuota) * 1.15).toFixed(2)}</td>
+                                        <td style="padding: 12px; color: #475569;">60%</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px; color: #475569;">Bad Days (40%)</td>
+                                        <td style="padding: 12px; color: #475569;">${Math.round(m.daysInPeriod * 0.4)}</td>
+                                        <td style="padding: 12px; color: #475569;">${(Number(m.dailyQuota) * 0.85).toFixed(2)}</td>
+                                        <td style="padding: 12px; color: #475569;">40%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <h6 style="color: #0d9488; font-weight: bold; margin-bottom: 0.75rem; font-size: 1.15rem;">Financial Projection</h6>
+                            <table class="table table-bordered mb-4" style="border-color: #e2e8f0;">
+                                <thead style="background: #14b8a6; color: white;">
+                                    <tr>
+                                        <th style="font-weight: 600; padding: 12px; border-color: #14b8a6;">Metric</th>
+                                        <th style="font-weight: 600; padding: 12px; border-color: #14b8a6;">Amount (NGN)</th>
+                                        <th style="font-weight: 600; padding: 12px; border-color: #14b8a6;">Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding: 12px; color: #475569;">Projected Revenue</td>
+                                        <td style="padding: 12px; color: #475569;">${Number(m.projectedRevenue).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                                        <td style="padding: 12px; color: #64748b;">Blended good/bad day sales</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px; color: #475569;">Cost of Goods Sold</td>
+                                        <td style="padding: 12px; color: #475569;">${Number(m.projectedCogs).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                                        <td style="padding: 12px; color: #64748b;">Fuel acquisition cost</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px; color: #475569;">Projected Profit / Loss</td>
+                                        <td style="padding: 12px; font-weight: bold; color: #1e293b;">${Number(m.projectedProfit).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                                        <td style="padding: 12px; color: #64748b;">Revenue minus COGS</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px; color: #475569;">Profit Margin</td>
+                                        <td style="padding: 12px; font-weight: bold; color: #1e293b;">${Number(m.profitMargin).toFixed(2)}%</td>
+                                        <td style="padding: 12px; color: #64748b;">Net margin on projected sales</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px; color: #475569;">Inventory Value at Entry</td>
+                                        <td style="padding: 12px; color: #475569;">${(Number(m.totalLiters) * Number(m.unitPrice)).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                                        <td style="padding: 12px; color: #64748b;">Liters &times; unit price</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <p style="color: #94a3b8; font-size: 0.8rem; border-top: 1px solid #e2e8f0; padding-top: 1rem; margin-bottom: 0;">
+                                Confidential — For internal management use only. TACI_Petroleum Company Limited.
+                            </p>
                         </div>
-                        <table class="table table-bordered">
-                            <tr><th>Projected COGS</th><td>₦${Number(m.projectedCogs).toLocaleString()}</td></tr>
-                            <tr><th>Projected Profit</th><td class="text-success fw-bold">₦${Number(m.projectedProfit).toLocaleString()}</td></tr>
-                            <tr><th>Period</th><td>${m.daysInPeriod} days (60% good / 40% bad)</td></tr>
-                            <tr><th>Unit Price at Entry</th><td>₦${Number(m.unitPrice).toLocaleString()}</td></tr>
-                        </table>
-                        <div class="d-flex flex-wrap gap-2 mt-3">
-                            <a class="btn btn-primary" href="${data.urls.view}"><i class="bi bi-box-arrow-up-right me-1"></i> Full Report</a>
-                            <a class="btn btn-outline-danger" href="${data.urls.pdf}"><i class="bi bi-file-pdf me-1"></i> PDF</a>
-                            ${data.urls.excel ? `<a class="btn btn-outline-success" href="${data.urls.excel}"><i class="bi bi-file-excel me-1"></i> Excel</a>` : ''}
-                        </div>`;
+                    `;
                 }
+
+                window.printFuelReport = function() {
+                    const printableArea = document.getElementById('fuelReportPrintableArea');
+                    if (!printableArea) {
+                        console.error('Printable area not found');
+                        return;
+                    }
+                    
+                    const iframe = document.createElement('iframe');
+                    iframe.style.position = 'fixed';
+                    iframe.style.right = '0';
+                    iframe.style.bottom = '0';
+                    iframe.style.width = '0';
+                    iframe.style.height = '0';
+                    iframe.style.border = '0';
+                    document.body.appendChild(iframe);
+                    
+                    const doc = iframe.contentWindow.document;
+                    doc.open();
+                    doc.write('<html><head><title>Fuel Report</title>');
+                    doc.write('<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">');
+                    doc.write('</head><body style="padding:20px;">');
+                    doc.write(printableArea.innerHTML);
+                    doc.write('</body></html>');
+                    doc.close();
+                    
+                    setTimeout(function() {
+                        try {
+                            iframe.contentWindow.focus();
+                            iframe.contentWindow.print();
+                        } catch (e) {
+                            console.error('Print failed', e);
+                        }
+                        setTimeout(() => document.body.removeChild(iframe), 1000);
+                    }, 500);
+                    
+                    return true;
+                };
+
+                window.downloadFuelReportPdf = function() {
+                    console.log('downloadFuelReportPdf called');
+                    try {
+                        if (typeof html2pdf === 'undefined') {
+                            const script = document.createElement('script');
+                            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+                            script.onload = () => { generatePdf(); };
+                            script.onerror = () => { toast.error('Failed to load PDF library. Please check your internet connection.'); };
+                            document.head.appendChild(script);
+                        } else {
+                            generatePdf();
+                        }
+                    } catch (e) {
+                        console.error('Error starting PDF download:', e);
+                        toast.error('An error occurred starting the download.');
+                    }
+
+                    function generatePdf() {
+                        const element = document.getElementById('fuelReportPrintableArea');
+                        if (!element) {
+                            toast.error('Could not find report content.');
+                            return;
+                        }
+                        const btnContainer = element.querySelector('.btn-action-container');
+                        if(btnContainer) btnContainer.style.display = 'none';
+
+                        const opt = {
+                            margin:       0.5,
+                            filename:     'Fuel_Report.pdf',
+                            image:        { type: 'jpeg', quality: 0.98 },
+                            html2canvas:  { scale: 2, useCORS: true },
+                            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                        };
+                        html2pdf().set(opt).from(element).save().then(() => {
+                            if(btnContainer) btnContainer.style.display = '';
+                        }).catch(err => {
+                            console.error('PDF generation error:', err);
+                            toast.error('An error occurred while generating the PDF.');
+                            if(btnContainer) btnContainer.style.display = '';
+                        });
+                    }
+                };
             </script>
             {% else %}
                 <div class="alert alert-info">No fuel entries yet. <a href="{{ path('app_fuel_entry_new') }}">Log your first entry</a>.</div>

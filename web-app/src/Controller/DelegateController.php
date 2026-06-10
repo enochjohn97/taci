@@ -32,7 +32,7 @@ class DelegateController extends AbstractController
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
-        $delegates = $this->em->getRepository(User::class)->findByRole(UserRole::ROLE_MANAGER->value);
+        $delegates = $this->em->getRepository(User::class)->findByRole(UserRole::ROLE_SUB_ADMIN->value);
 
         return $this->render('admin/delegates/index.html.twig', [
             'delegates' => $delegates,
@@ -66,6 +66,12 @@ class DelegateController extends AbstractController
             $randomSuffix = str_pad((string) random_int(0, 9999), 4, '0', STR_PAD_LEFT);
             $username = strtolower($cleanFullName) . $randomSuffix;
 
+            $existingEmail = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
+            if ($existingEmail) {
+                $this->addFlash('error', 'A user with this email address already exists. Please use a different email.');
+                return $this->redirectToRoute('app_delegates_create');
+            }
+
             $existingUser = $this->em->getRepository(User::class)->findOneBy(['username' => $username]);
             if ($existingUser) {
                 $this->addFlash('error', 'Generated username already exists. Please try again.');
@@ -77,7 +83,7 @@ class DelegateController extends AbstractController
             $delegate = new User();
             $delegate->setUsername($username);
             $delegate->setEmail($email);
-            $delegate->setRole(UserRole::ROLE_MANAGER);
+            $delegate->setRole(UserRole::ROLE_SUB_ADMIN);
             $delegate->setStatus('active');
             $delegate->setPassword($this->passwordHasher->hashPassword($delegate, $tempPassword));
 
@@ -125,7 +131,7 @@ class DelegateController extends AbstractController
     {
         $delegate = $this->em->getRepository(User::class)->find($id);
         
-        if (!$delegate || $delegate->getRole() !== UserRole::ROLE_MANAGER) {
+        if (!$delegate || $delegate->getRole() !== UserRole::ROLE_SUB_ADMIN) {
             throw $this->createNotFoundException('Delegate not found.');
         }
 
@@ -150,7 +156,7 @@ class DelegateController extends AbstractController
     {
         $delegate = $this->em->getRepository(User::class)->find($id);
         
-        if (!$delegate || $delegate->getRole() !== UserRole::ROLE_MANAGER) {
+        if (!$delegate || $delegate->getRole() !== UserRole::ROLE_SUB_ADMIN) {
             throw $this->createNotFoundException('Delegate not found.');
         }
 
@@ -167,7 +173,7 @@ class DelegateController extends AbstractController
     {
         $delegate = $this->em->getRepository(User::class)->find($id);
         
-        if (!$delegate || $delegate->getRole() !== UserRole::ROLE_MANAGER) {
+        if (!$delegate || $delegate->getRole() !== UserRole::ROLE_SUB_ADMIN) {
             throw $this->createNotFoundException('Delegate not found.');
         }
 

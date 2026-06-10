@@ -20,6 +20,11 @@
             <i class="fa-solid fa-bars"></i>
         </button>
 
+        {# Global Back Button #}
+        <button class="btn btn-sm btn-outline-secondary d-none d-md-flex align-items-center" onclick="history.back()" title="Go Back" style="border-radius: 8px; font-weight: 600;">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back
+        </button>
+
         {# Live indicator #}
         <div class="nb-live" title="Data refreshed live">
             <span class="pulse-dot"></span>
@@ -36,10 +41,10 @@
 
     {# ── CENTER: Global Search Bar ── #}
     <div class="nb-center d-none d-md-flex mx-3" style="flex: 1; max-width: 400px;">
-        <div class="input-group" style="border-radius: 99px; overflow: hidden; background: var(--bg-card); border: 1px solid var(--border-color); align-items: center; padding: 2px 10px;">
+        <form action="{{ path('app_search') }}" method="GET" class="input-group" style="border-radius: 99px; overflow: hidden; background: var(--bg-card); border: 1px solid var(--border-color); align-items: center; padding: 2px 10px; width: 100%;">
             <i class="fa-solid fa-magnifying-glass text-muted" style="font-size: 0.85rem;"></i>
-            <input type="text" class="form-control border-0 shadow-none bg-transparent" placeholder="Search staff, transactions, alerts..." aria-label="Global search" style="font-size: 0.85rem;">
-        </div>
+            <input type="text" name="q" class="form-control border-0 shadow-none bg-transparent" placeholder="Search staff, transactions, alerts..." aria-label="Global search" style="font-size: 0.85rem;" required>
+        </form>
     </div>
 
     {# ── RIGHT: actions ── #}

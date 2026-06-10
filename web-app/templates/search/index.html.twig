@@ -1,0 +1,110 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Search Results - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+    <div class="d-flex align-items-center mb-4">
+        <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary me-3" style="border-radius:10px;">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back
+        </a>
+        <h2 class="mb-0">
+            <i class="fa-solid fa-search me-2 text-primary"></i>Search Results
+        </h2>
+    </div>
+
+    {% if query is empty %}
+        <div class="alert alert-info border-0 shadow-sm rounded-4 text-center p-5">
+            <i class="fa-solid fa-magnifying-glass fs-1 text-muted mb-3 d-block"></i>
+            <h4 class="fw-bold">No search query provided</h4>
+            <p class="text-muted mb-0">Please enter a search term in the search bar above.</p>
+        </div>
+    {% else %}
+        <div class="mb-4">
+            <p class="text-muted">Showing results for: <strong class="text-dark">"{{ query }}"</strong></p>
+        </div>
+
+        <div class="row g-4">
+            {# Staff Results #}
+            <div class="col-12 col-md-4">
+                <div class="card shadow-sm border-0 rounded-4 h-100">
+                    <div class="card-header bg-white border-bottom-0 pt-4 pb-2">
+                        <h5 class="fw-bold mb-0"><i class="fa-solid fa-users me-2 text-primary"></i>Staff & Users ({{ staff|length }})</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            {% for user in staff %}
+                                <li class="list-group-item px-4 py-3 border-light">
+                                    <div class="fw-bold">{{ user.username }}</div>
+                                    <div class="text-muted small">{{ user.email }}</div>
+                                    <div class="mt-1">
+                                        <span class="badge bg-light text-dark border">{{ user.role.value|replace({'ROLE_': ''})|replace({'_': ' '})|capitalize }}</span>
+                                    </div>
+                                </li>
+                            {% else %}
+                                <li class="list-group-item px-4 py-4 text-center text-muted border-light">
+                                    No staff found.
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {# Memo Results #}
+            <div class="col-12 col-md-4">
+                <div class="card shadow-sm border-0 rounded-4 h-100">
+                    <div class="card-header bg-white border-bottom-0 pt-4 pb-2">
+                        <h5 class="fw-bold mb-0"><i class="fa-solid fa-envelope me-2 text-success"></i>Memos ({{ memos|length }})</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            {% for memo in memos %}
+                                <a href="{{ path('app_memo_view', {'id': memo.id}) }}" class="list-group-item list-group-item-action px-4 py-3 border-light">
+                                    <div class="fw-bold text-dark">{{ memo.subject }}</div>
+                                    <div class="text-muted small text-truncate">{{ memo.body|striptags }}</div>
+                                    <div class="mt-1 text-muted" style="font-size:0.7rem;">
+                                        {{ memo.createdAt|date('M d, Y h:i A') }}
+                                    </div>
+                                </a>
+                            {% else %}
+                                <li class="list-group-item px-4 py-4 text-center text-muted border-light">
+                                    No memos found.
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {# Supplier Results #}
+            <div class="col-12 col-md-4">
+                <div class="card shadow-sm border-0 rounded-4 h-100">
+                    <div class="card-header bg-white border-bottom-0 pt-4 pb-2">
+                        <h5 class="fw-bold mb-0"><i class="fa-solid fa-truck me-2 text-warning"></i>Suppliers ({{ suppliers|length }})</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            {% for supplier in suppliers %}
+                                <a href="{{ path('inventory_supplier_view', {'id': supplier.id}) }}" class="list-group-item list-group-item-action px-4 py-3 border-light">
+                                    <div class="fw-bold text-dark">{{ supplier.name }}</div>
+                                    <div class="text-muted small">{{ supplier.contact }}</div>
+                                    {% if supplier.fuelTypes %}
+                                        <div class="mt-1">
+                                            <span class="badge bg-light text-dark border">{{ supplier.fuelTypes }}</span>
+                                        </div>
+                                    {% endif %}
+                                </a>
+                            {% else %}
+                                <li class="list-group-item px-4 py-4 text-center text-muted border-light">
+                                    No suppliers found.
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

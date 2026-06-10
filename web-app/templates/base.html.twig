@@ -123,12 +123,13 @@
             --sidebar-accent: #1d4ed8;
         }
         body.role-manager {
-            --primary: #0F4C3A; --primary-dark: #0a3328;
-            --sidebar-bg: #0F4C3A;
-            --sidebar-text: rgba(255,255,255,0.75);
-            --sidebar-active-bg: rgba(255,255,255,0.12);
+            --primary: #047857; --primary-dark: #064e3b;
+            --bg-page: #ecfdf5;
+            --sidebar-bg: #022c22;
+            --sidebar-text: rgba(255,255,255,0.8);
+            --sidebar-active-bg: rgba(255,255,255,0.15);
             --sidebar-active-text: #ffffff;
-            --sidebar-accent: #F5A623;
+            --sidebar-accent: #10b981;
         }
         body.role-staff {
             --primary: #6B2E4A; --primary-dark: #5a2740;
@@ -599,41 +600,90 @@
 {% block extra_scripts %}{% endblock %}
 
 <script>
-// Mercure real-time subscription for notifications (if MERCURE_PUBLIC_URL provided)
+// Real-time subscription via Mercure (if hub is configured)
 {% if app.user %}
 (function(){
-    const mercureUrl = '{{ mercure_public_url|default("/hub") }}';
-    const userTopic = 'notifications/' + {{ app.user.id }};
+    const mercureUrl = '{{ mercure_public_url|default("") }}';
+    if (!mercureUrl) return; // Skip if Mercure not configured
+    const userTopic = 'notifications/{{ app.user.id }}';
     try {
-        const url = new URL(mercureUrl, window.location.origin);
+        const url = new URL(mercureUrl);
         url.searchParams.append('topic', userTopic);
-        const es = new EventSource(url.toString());
-        es.onmessage = function(e){
-            try{
+        const es = new EventSource(url.toString(), { withCredentials: false });
+
+        es.onmessage = function(e) {
+            try {
                 const payload = JSON.parse(e.data);
-                // increment badge
-                const badge = document.querySelector('.nb-badge');
-                if(badge) {
+
+                // If it's a read-acknowledgement, just decrement badge
+                if (payload.action === 'marked_read') {
+                    const badge = document.querySelector('.nb-badge');
+                    if (badge) {
+                        const current = Math.max(0, (parseInt(badge.textContent) || 1) - 1);
+                        badge.textContent = current > 0 ? current.toString() : '';
+                        if (current === 0) badge.style.display = 'none';
+                    }
+                    return;
+                }
+
+                // Increment badge
+                const badgeContainer = document.getElementById('nav-notification-badge-container');
+                if (badgeContainer) {
+                    let badge = badgeContainer.querySelector('.nb-badge');
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'nb-badge';
+                        badgeContainer.appendChild(badge);
+                    }
                     const current = parseInt(badge.textContent) || 0;
-                    badge.textContent = (current + 1).toString();
+                    badge.textContent = current + 1;
                 }
-                // simple toast
-                const toast = document.createElement('div');
-                toast.textContent = payload.message || 'Notification';
-                toast.style.position='fixed';toast.style.right='20px';toast.style.bottom='20px';toast.style.background='#111';toast.style.color='#fff';toast.style.padding='10px 14px';toast.style.borderRadius='6px';toast.style.boxShadow='0 6px 18px rgba(0,0,0,0.2)';toast.style.zIndex=9999;
-                
-                if (payload.link) {
-                    toast.style.cursor = 'pointer';
-                    toast.addEventListener('click', function() {
-                        window.location.href = payload.link;
+
+                // Pick icon + type based on notification type
+                const typeMap = {
+                    'payment_received':   { icon: '💳', toastType: 'success' },
+                    'transfer_completed': { icon: '🏦', toastType: 'success' },
+                    'memo_received':      { icon: '✉️',  toastType: 'info'    },
+                    'memo_approved':      { icon: '✅',  toastType: 'success' },
+                    'memo_declined':      { icon: '❌',  toastType: 'error'   },
+                    'low_stock':          { icon: '⚠️',  toastType: 'warning' },
+                    'user_activity':      { icon: '👤',  toastType: 'info'    },
+                    'inventory_restocked':{ icon: '📦',  toastType: 'success' },
+                };
+                const meta = typeMap[payload.type] || { icon: '🔔', toastType: 'info' };
+                const message = (meta.icon + ' ' + (payload.message || 'New notification')).trim();
+
+                if (typeof toast !== 'undefined') {
+                    toast.show(message, meta.toastType, 6000);
+                }
+
+                // If notification has a link, make toast clickable via Swal
+                if (payload.link && typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: meta.toastType === 'error' ? 'error' : meta.toastType,
+                        title: message,
+                        html: '<a href="' + payload.link + '" style="color:#fff;text-decoration:underline;font-size:0.8rem;">View →</a>',
+                        showConfirmButton: false,
+                        timer: 7000,
+                        timerProgressBar: true,
+                        background: meta.toastType === 'success' ? '#10b981' : meta.toastType === 'error' ? '#ef4444' : meta.toastType === 'warning' ? '#f59e0b' : '#3b82f6',
+                        color: '#ffffff',
+                        iconColor: '#ffffff',
+                        customClass: { popup: 'colored-toast' }
                     });
+                    return;
                 }
-                
-                document.body.appendChild(toast);
-                setTimeout(()=>toast.remove(),5000);
-            }catch(e){ console.error('Mercure message parse failed', e); }
+
+            } catch(err) { console.error('Mercure message parse failed', err); }
         };
-    }catch(e){ console.warn('Mercure init failed', e); }
+
+        es.onerror = function() {
+            console.warn('Mercure EventSource disconnected. Real-time updates paused.');
+        };
+
+    } catch(e) { console.warn('Mercure init failed:', e.message); }
 })();
 {% endif %}
 </script>
@@ -886,9 +936,14 @@
 
                         if (conflicts.length > 0) {
                             console.warn('Sync conflicts', conflicts);
-                            // shallow UI: show first few conflicts in toast and console; detailed reconcile UI is next step
-                            const preview = conflicts.slice(0,5).map(c => `${c.offlineId || 'n/a'}: ${c.message || 'conflict'}`).join('\n');
-                            alert('Sync conflicts detected:\n' + preview + (conflicts.length > 5 ? '\n(see console for more)' : ''));
+                            const preview = conflicts.slice(0,5).map(c => `• ${c.offlineId || 'n/a'}: ${c.message || 'conflict'}`).join('<br>');
+                            Swal.fire({
+                                title: '⚠️ Sync Conflicts Detected',
+                                html: preview + (conflicts.length > 5 ? '<br><em>...and more. See console for details.</em>' : ''),
+                                icon: 'warning',
+                                confirmButtonColor: '#f59e0b',
+                                confirmButtonText: 'OK'
+                            });
                         }
                     } else {
                         const txt = await res.text();
