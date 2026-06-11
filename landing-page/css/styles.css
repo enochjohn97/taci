@@ -6,7 +6,7 @@
 :root {
   --bg-primary: #EEEEEE;         /* Page background */
   --bg-white: #FFFFFF;           /* Card/section backgrounds */
-  --bg-navy: #121f04;            /* Dark sections (stats bar, footer) */
+  --bg-navy: #0d1801;            /* Dark sections (stats bar, footer) */
   --bg-navy-mid: #7CB342;        /* Alternate dark panels */
   --text-primary: #0D0D0D;       /* Main body text */
   --text-secondary: #444444;     /* Subtext, captions */
