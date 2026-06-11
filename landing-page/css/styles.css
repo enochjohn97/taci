@@ -15,7 +15,9 @@
   --icon-bg: #1A3A6B;            /* Icon container backgrounds */
   --icon-color: #FFFFFF;         /* All icon colors */
   --border: #DDDDDD;             /* Subtle borders */
-  --cta-hover: #1040B0;          /* Button hover state */
+  --cta-hover: #1040B0;
+  --dark-gray: #343A40;
+  --dark-green: #1B4332;          /* Button hover state */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 2px 12px rgba(0, 0, 0, 0.07);
   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.1);
@@ -310,12 +312,12 @@ p {
 }
 
 .logo-text {
-  color: green;
+  color: var(--dark-gray);
   font-family: "Poppins", sans-serif;
 }
 
 .logo-highlight {
-  color: var(--text-primary);
+  color: var(--dark-green);
 }
 
 .nav-menu {
@@ -1448,7 +1450,7 @@ p {
    FOOTER
    ============================================ */
 .footer {
-  background: #1F2937 ;
+  background: #121212;
   color: var(--text-white);
   padding: 2rem clamp(1rem, 2vw, 2rem) 3rem;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
