@@ -7,17 +7,17 @@
   --bg-primary: #EEEEEE;         /* Page background */
   --bg-white: #FFFFFF;           /* Card/section backgrounds */
   --bg-navy: #0d1801;            /* Dark sections (stats bar, footer) */
-  --bg-navy-mid: #7CB342;        /* Alternate dark panels */
+  --bg-navy-mid: #387002;        /* Alternate dark panels */
   --text-primary: #0D0D0D;       /* Main body text */
   --text-secondary: #444444;     /* Subtext, captions */
   --text-white: #FFFFFF;         /* Text on dark backgrounds */
-  --accent-blue: #7CB342;        /* Primary CTA buttons, highlights */
-  --icon-bg: #7CB342;            /* Icon container backgrounds */
+  --accent-blue: #387002;        /* Primary CTA buttons, highlights */
+  --icon-bg: #387002;            /* Icon container backgrounds */
   --icon-color: #FFFFFF;         /* All icon colors */
   --border: #DDDDDD;             /* Subtle borders */
-  --cta-hover: #59743c;
+  --cta-hover: #264d02;
   --dark-gray: #303132;
-  --dark-green: #7CB342;          /* Button hover state */
+  --dark-green: #387002;          /* Button hover state */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 2px 12px rgba(0, 0, 0, 0.07);
   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.1);
