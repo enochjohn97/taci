@@ -117,8 +117,8 @@ class ParticleBackground {
     }
     
     animate = () => {
-        this.ctx.fillStyle = 'rgba(10, 22, 40, 0.1)';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        // Clear each frame so the hero background video stays visible
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
         this.particles.forEach(particle => {
             // Update position
