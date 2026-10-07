@@ -44,6 +44,22 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="css/styles.min.css?v=1.1">
+    <style>
+        #about .about-images {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            transform: translateY(-1.5rem);
+        }
+
+        #about .about-images .slider-container {
+            margin: 0 auto;
+        }
+
+        #about .about-images .slider-container + .slider-container .slide img {
+            border-radius: 10px;
+        }
+    </style>
 
     <title>TACI Petroleum - Powering Nigeria, One Delivery at a Time</title>
 </head>
@@ -218,54 +234,103 @@
                         </div>
                     </div>
 
-                    <div class="slider-container">
-                        <div class="slider-wrapper">
-                            <div class="slider-track">
-                                <!-- Slide 1: Fleet -->
-                                <div class="slide">
-                                    <img src="./assets/images/fillingstation.png"
-                                        alt="Taci Petroleum truck fleet on the road" loading="lazy" width="800"
-                                        height="600">
-                                </div>
+                    <div class="about-images">
+                        <div class="slider-container">
+                            <div class="slider-wrapper">
+                                <div class="slider-track">
+                                    <!-- Slide 1: Fleet -->
+                                    <div class="slide">
+                                        <img src="./assets/images/fillingstation.png"
+                                            alt="Taci Petroleum truck fleet on the road" loading="lazy" width="800"
+                                            height="600">
+                                    </div>
 
-                                <!-- Slide 2: Daytime Station Overview -->
-                                <div class="slide">
-                                    <img src="./assets/images/fs.png"
-                                        alt="Modern Taci Petroleum fuel station daytime overview" loading="lazy"
-                                        width="800" height="600">
-                                </div>
+                                    <!-- Slide 2: Daytime Station Overview -->
+                                    <div class="slide">
+                                        <img src="./assets/images/fs.png"
+                                            alt="Modern Taci Petroleum fuel station daytime overview" loading="lazy"
+                                            width="800" height="600">
+                                    </div>
 
-                                <!-- Slide 3: Evening View -->
-                                <div class="slide">
-                                    <img src="./assets/images/fs1.png"
-                                        alt="Taci Petroleum fuel station at dusk with canopy lights on" loading="lazy"
-                                        width="800" height="600">
-                                </div>
+                                    <!-- Slide 3: Evening View -->
+                                    <div class="slide">
+                                        <img src="./assets/images/fs1.png"
+                                            alt="Taci Petroleum fuel station at dusk with canopy lights on" loading="lazy"
+                                            width="800" height="600">
+                                    </div>
 
-                                <!-- Slide 4: Night View -->
-                                <div class="slide">
-                                    <img src="./assets/images/fs2.png"
-                                        alt="Taci Petroleum fuel station illuminated at night" loading="lazy"
-                                        width="800" height="600">
-                                </div>
+                                    <!-- Slide 4: Night View -->
+                                    <div class="slide">
+                                        <img src="./assets/images/fs2.png"
+                                            alt="Taci Petroleum fuel station illuminated at night" loading="lazy"
+                                            width="800" height="600">
+                                    </div>
 
-                                <!-- Slide 5: Alternative Angle -->
-                                <div class="slide">
-                                    <img src="./assets/images/fs3.png"
-                                        alt="Taci Petroleum fuel station busy with customers buying fuel" loading="lazy"
-                                        width="800" height="600">
-                                </div>
+                                    <!-- Slide 5: Alternative Angle -->
+                                    <div class="slide">
+                                        <img src="./assets/images/fs3.png"
+                                            alt="Taci Petroleum fuel station busy with customers buying fuel" loading="lazy"
+                                            width="800" height="600">
+                                    </div>
 
-                                <!-- CLONE of Slide 1 for seamless infinite loop -->
-                                <div class="slide">
-                                    <img src="./assets/images/fillingstation.png"
-                                        alt="Taci Petroleum truck fleet on the road" loading="lazy" width="800"
-                                        height="600">
+                                    <!-- CLONE of Slide 1 for seamless infinite loop -->
+                                    <div class="slide">
+                                        <img src="./assets/images/fillingstation.png"
+                                            alt="Taci Petroleum truck fleet on the road" loading="lazy" width="800"
+                                            height="600">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="slider-container">
+                            <div class="slider-wrapper">
+                                <div class="slider-track">
+                                    <!-- Slide 1: Fleet -->
+                                    <div class="slide">
+                                        <img src="./assets/images/eterna.jpeg"
+                                            alt="Taci Petroleum truck fleet on the road" loading="lazy" width="800"
+                                            height="600">
+                                    </div>
+
+                                    <!-- Slide 2: Daytime Station Overview -->
+                                    <div class="slide">
+                                        <img src="./assets/images/et2.jpg"
+                                            alt="Modern Taci Petroleum fuel station daytime overview" loading="lazy"
+                                            width="800" height="600">
+                                    </div>
+
+                                    <!-- Slide 3: Evening View -->
+                                    <div class="slide">
+                                        <img src="./assets/images/et3.jpeg"
+                                            alt="Taci Petroleum fuel station at dusk with canopy lights on" loading="lazy"
+                                            width="800" height="600">
+                                    </div>
+
+                                    <!-- Slide 4: Night View -->
+                                    <div class="slide">
+                                        <img src="./assets/images/et4.jpeg"
+                                            alt="Taci Petroleum fuel station illuminated at night" loading="lazy"
+                                            width="800" height="600">
+                                    </div>
+
+                                    <!-- Slide 5: Alternative Angle -->
+                                    <div class="slide">
+                                        <img src="./assets/images/et5.jpeg"
+                                            alt="Taci Petroleum fuel station busy with customers buying fuel" loading="lazy"
+                                            width="800" height="600">
+                                    </div>
+
+                                    <!-- CLONE of Slide 1 for seamless infinite loop -->
+                                    <div class="slide">
+                                        <img src="./assets/images/eterna.jpeg"
+                                            alt="Taci Petroleum truck fleet on the road" loading="lazy" width="800"
+                                            height="600">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </section>
@@ -596,7 +661,7 @@
                                         loading="lazy">
                                     <div class="author-info">
                                         <h3>Ayesha Ibrahim</h3>
-                                        <p>Fleet Administrator, TransNation Logistics</p>
+                                        <p>Fleet Administrator, Transnation Logistics</p>
                                     </div>
                                 </div>
                             </div>
@@ -644,7 +709,7 @@
                                         loading="lazy">
                                     <div class="author-info">
                                         <h3>Emeka Nwosu</h3>
-                                        <p>Station Franchisee, Capital Drive Fuel Hub</p>
+                                        <p>Station Franchise, Capital Drive Fuel Hub</p>
                                     </div>
                                 </div>
                             </div>
@@ -680,7 +745,6 @@
             </div> -->
             </div>
         </section>
-        >
 
         <!-- Contact Section -->
         <section id="contact" class="contact">
@@ -812,7 +876,7 @@
                         <h4>Contact Us</h4>
                         <ul>
                             <li><span class="footer-icon">📍</span> 19 Egypt Rd, Barnawa, Kaduna State, Nigeria</li>
-                            <li><span class="footer-icon">📞</span> <a href="tel:+234803788018">+234 803-788-0018</a>
+                            <li><span class="footer-icon">📞</span> <a href="tel:+234803788018">+234 803 788 0018</a>
                             </li>
                             <li><span class="footer-icon">📧</span> <a
                                     href="mailto:bishopankeli@gmail.com">bishopankeli@gmail.com</a></li>

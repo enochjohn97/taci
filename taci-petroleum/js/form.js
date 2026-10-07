@@ -236,5 +236,5 @@ class AutoScrollCarousel {
 document.addEventListener('DOMContentLoaded', () => {
     new FormValidator();
     new CarouselManager('#fleet-carousel .carousel-track', '.carousel-prev', '.carousel-next');
-    new AutoScrollCarousel('#testimonials-carousel .testimonials-track', 4000);
+    new AutoScrollCarousel('#testimonials-carousel .testimonials-track', 120000);
 });
